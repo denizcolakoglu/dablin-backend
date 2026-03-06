@@ -72,7 +72,8 @@ console.log("Auth object:", JSON.stringify(req.auth));
 if (!clerkId) {
   return res.status(401).json({ error: "Unauthorized - no userId" });
 }
-const user = await getOrCreateUser(
+console.log("AUTH DEBUG:", JSON.stringify(req.auth));
+    const user = await getOrCreateUser(
   clerkId,
   req.auth.sessionClaims?.email
 );
@@ -94,6 +95,7 @@ app.post("/api/generate", requireAuth(), generateLimiter, async (req, res) => {
 
   try {
     // 1. Get user + check credits
+    console.log("AUTH DEBUG:", JSON.stringify(req.auth));
     const user = await getOrCreateUser(
       req.auth?.userId,
       req.auth.sessionClaims?.email
@@ -161,6 +163,7 @@ app.post("/api/generate/bulk", requireAuth(), async (req, res) => {
   }
 
   try {
+    console.log("AUTH DEBUG:", JSON.stringify(req.auth));
     const user = await getOrCreateUser(
       req.auth?.userId,
       req.auth.sessionClaims?.email
@@ -287,6 +290,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
   }
 
   try {
+    console.log("AUTH DEBUG:", JSON.stringify(req.auth));
     const user = await getOrCreateUser(
       req.auth?.userId,
       req.auth.sessionClaims?.email
