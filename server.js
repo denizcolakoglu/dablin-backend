@@ -12,7 +12,7 @@ const express      = require("express");
 const cors         = require("cors");
 const helmet       = require("helmet");
 const rateLimit    = require("express-rate-limit");
-const { ClerkExpressRequireAuth, ClerkExpressWithAuth } = require("@clerk/express");
+const { requireAuth } = require("@clerk/express");
 const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Pool }     = require("pg");
 
