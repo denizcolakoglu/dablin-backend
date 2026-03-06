@@ -12,7 +12,7 @@ const express      = require("express");
 const cors         = require("cors");
 const helmet       = require("helmet");
 const rateLimit    = require("express-rate-limit");
-const { requireAuth } = require("@clerk/express");
+const { ClerkExpressRequireAuth, ClerkExpressWithAuth } = require("@clerk/express");
 const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Pool }     = require("pg");
 
@@ -23,7 +23,13 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // ── MIDDLEWARE ────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
+app.use(cors({ 
+  origin: [
+    "http://localhost:5173",
+    "https://dablin.vercel.app",
+    "https://dablin-backend-production.up.railway.app"
+  ]
+}));
 
 // Raw body needed for Stripe webhooks — must come BEFORE express.json()
 app.use("/api/webhook/stripe", express.raw({ type: "application/json" }));
