@@ -12,13 +12,14 @@ const express      = require("express");
 const cors         = require("cors");
 const helmet       = require("helmet");
 const rateLimit    = require("express-rate-limit");
-const { requireAuth } = require("@clerk/express");
+const { requireAuth, clerkMiddleware } = require("@clerk/express");
 const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Pool }     = require("pg");
 
 const { generateWithCategory } = require("./lib/categories");
 
 const app  = express();app.set('trust proxy', 1);
+app.use(clerkMiddleware());
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // ── MIDDLEWARE ────────────────────────────────────────────────
