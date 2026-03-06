@@ -18,7 +18,7 @@ const { Pool }     = require("pg");
 
 const { generateWithCategory } = require("./lib/categories");
 
-const app  = express();
+const app  = express();app.set('trust proxy', 1);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // ── MIDDLEWARE ────────────────────────────────────────────────
@@ -67,10 +67,15 @@ app.get("/api/health", (req, res) => {
 // Returns current credit balance for logged-in user
 app.get("/api/credits", requireAuth(), async (req, res) => {
   try {
-    const user = await getOrCreateUser(
-      req.auth.userId,
-      req.auth.sessionClaims?.email
-    );
+    const clerkId = req.auth?.userId;
+console.log("Auth object:", JSON.stringify(req.auth));
+if (!clerkId) {
+  return res.status(401).json({ error: "Unauthorized - no userId" });
+}
+const user = await getOrCreateUser(
+  clerkId,
+  req.auth.sessionClaims?.email
+);
     res.json({ credits: user.credits });
   } catch (err) {
     console.error("GET /api/credits error:", err);
@@ -90,7 +95,7 @@ app.post("/api/generate", requireAuth(), generateLimiter, async (req, res) => {
   try {
     // 1. Get user + check credits
     const user = await getOrCreateUser(
-      req.auth.userId,
+      req.auth?.userId,
       req.auth.sessionClaims?.email
     );
 
@@ -119,7 +124,7 @@ app.post("/api/generate", requireAuth(), generateLimiter, async (req, res) => {
       await client.query(
         `INSERT INTO generations (clerk_id, input_json, output_json)
          VALUES ($1, $2, $3)`,
-        [req.auth.userId, JSON.stringify(req.body), JSON.stringify(result)]
+        [req.auth?.userId, JSON.stringify(req.body), JSON.stringify(result)]
       );
       await client.query("COMMIT");
     } catch (err) {
@@ -157,7 +162,7 @@ app.post("/api/generate/bulk", requireAuth(), async (req, res) => {
 
   try {
     const user = await getOrCreateUser(
-      req.auth.userId,
+      req.auth?.userId,
       req.auth.sessionClaims?.email
     );
 
@@ -244,7 +249,7 @@ app.get("/api/history", requireAuth(), async (req, res) => {
        WHERE clerk_id = $1
        ORDER BY created_at DESC
        LIMIT $2 OFFSET $3`,
-      [req.auth.userId, limit, offset]
+      [req.auth?.userId, limit, offset]
     );
 
     const count = await pool.query(
@@ -283,7 +288,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
 
   try {
     const user = await getOrCreateUser(
-      req.auth.userId,
+      req.auth?.userId,
       req.auth.sessionClaims?.email
     );
 
@@ -301,7 +306,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
       success_url: `${process.env.FRONTEND_URL}/dashboard?payment=success&credits=${pkg.credits}`,
       cancel_url:  `${process.env.FRONTEND_URL}/pricing?payment=cancelled`,
       metadata: {
-        clerk_id:  req.auth.userId,
+        clerk_id:  req.auth?.userId,
         credits:   pkg.credits.toString(),
         packageId,
       },
