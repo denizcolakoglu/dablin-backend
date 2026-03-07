@@ -70,16 +70,16 @@ app.get("/api/health", (req, res) => {
 // Returns current credit balance for logged-in user
 app.get("/api/credits", requireAuth(), async (req, res) => {
   try {
+    const authObj = getAuth(req);
+    req.auth = authObj;
     const clerkId = req.auth?.userId;
-if (!clerkId) {
-  return res.status(401).json({ error: "Unauthorized - no userId" });
-}
-const authObj = getAuth(req);
-req.auth = authObj;
+    if (!clerkId) {
+      return res.status(401).json({ error: "Unauthorized - no userId" });
+    }
     const user = await getOrCreateUser(
-  clerkId,
-  req.auth.sessionClaims?.email
-);
+      clerkId,
+      req.auth.sessionClaims?.email
+    );
     res.json({ credits: user.credits });
   } catch (err) {
     console.error("GET /api/credits error:", err);
