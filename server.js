@@ -250,7 +250,8 @@ app.post("/api/generate/bulk", requireAuth(), async (req, res) => {
 // ── GET /api/history ─────────────────────────────────────────
 // Returns past generations for the logged-in user
 app.get("/api/history", requireAuth(), async (req, res) => {
-  try {
+  try {const authObj = getAuth(req);
+    req.auth = authObj;
     const page  = parseInt(req.query.page)  || 1;
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
