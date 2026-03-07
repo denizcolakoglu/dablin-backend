@@ -319,8 +319,8 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
         quantity: 1,
       }],
       mode: "payment",
-      success_url: `${process.env.FRONTEND_URL}/dashboard?payment=success&credits=${pkg.credits}`,
-      cancel_url:  `${process.env.FRONTEND_URL}/pricing?payment=cancelled`,
+      success_url: `${process.env.FRONTEND_URL}/?payment=success&credits=${pkg.credits}`,
+      cancel_url:  `${process.env.FRONTEND_URL}/`,
       metadata: {
         clerk_id:  req.auth?.userId,
         credits:   pkg.credits.toString(),
