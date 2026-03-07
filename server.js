@@ -100,7 +100,9 @@ app.post("/api/generate", requireAuth(), generateLimiter, async (req, res) => {
 
   try {
     // 1. Get user + check credits
-    console.log("AUTH DEBUG:", JSON.stringify(req.auth));
+    const authObj = getAuth(req);
+console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
+req.auth = authObj;
     const user = await getOrCreateUser(
       req.auth?.userId,
       req.auth.sessionClaims?.email
@@ -168,7 +170,9 @@ app.post("/api/generate/bulk", requireAuth(), async (req, res) => {
   }
 
   try {
-    console.log("AUTH DEBUG:", JSON.stringify(req.auth));
+    const authObj = getAuth(req);
+    console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
+    req.auth = authObj;
     const user = await getOrCreateUser(
       req.auth?.userId,
       req.auth.sessionClaims?.email
@@ -295,7 +299,9 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
   }
 
   try {
-    console.log("AUTH DEBUG:", JSON.stringify(req.auth));
+    const authObj = getAuth(req);
+    console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
+    req.auth = authObj;
     const user = await getOrCreateUser(
       req.auth?.userId,
       req.auth.sessionClaims?.email
