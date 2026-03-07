@@ -71,12 +71,10 @@ app.get("/api/health", (req, res) => {
 app.get("/api/credits", requireAuth(), async (req, res) => {
   try {
     const clerkId = req.auth?.userId;
-console.log("Auth object:", JSON.stringify(req.auth));
 if (!clerkId) {
   return res.status(401).json({ error: "Unauthorized - no userId" });
 }
 const authObj = getAuth(req);
-console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
 req.auth = authObj;
     const user = await getOrCreateUser(
   clerkId,
@@ -101,7 +99,6 @@ app.post("/api/generate", requireAuth(), generateLimiter, async (req, res) => {
   try {
     // 1. Get user + check credits
     const authObj = getAuth(req);
-console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
 req.auth = authObj;
     const user = await getOrCreateUser(
       req.auth?.userId,
@@ -171,7 +168,6 @@ app.post("/api/generate/bulk", requireAuth(), async (req, res) => {
 
   try {
     const authObj = getAuth(req);
-    console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
     req.auth = authObj;
     const user = await getOrCreateUser(
       req.auth?.userId,
@@ -301,7 +297,6 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
 
   try {
     const authObj = getAuth(req);
-    console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
     req.auth = authObj;
     const user = await getOrCreateUser(
       req.auth?.userId,
