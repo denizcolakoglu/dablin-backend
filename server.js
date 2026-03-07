@@ -326,7 +326,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
         credits:   pkg.credits.toString(),
         packageId,
       },
-      customer_email: user.email,
+      ...(user.email ? { customer_email: user.email } : {}),
     });
 
     res.json({ checkoutUrl: session.url });
