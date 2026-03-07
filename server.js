@@ -28,7 +28,9 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://dablin.vercel.app",
-    "https://dablin-backend-production.up.railway.app"
+    "https://dablin-backend-production.up.railway.app",
+    "https://dablin.co",
+    "https://www.dablin.co"
   ]
 }));
 
