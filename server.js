@@ -12,7 +12,7 @@ const express      = require("express");
 const cors         = require("cors");
 const helmet       = require("helmet");
 const rateLimit    = require("express-rate-limit");
-const { requireAuth, clerkMiddleware } = require("@clerk/express");
+const { requireAuth, clerkMiddleware, getAuth } = require("@clerk/express");
 const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Pool }     = require("pg");
 
@@ -75,7 +75,9 @@ console.log("Auth object:", JSON.stringify(req.auth));
 if (!clerkId) {
   return res.status(401).json({ error: "Unauthorized - no userId" });
 }
-console.log("AUTH DEBUG:", JSON.stringify(req.auth));
+const authObj = getAuth(req);
+console.log("AUTH DEBUG getAuth:", JSON.stringify(authObj));
+req.auth = authObj;
     const user = await getOrCreateUser(
   clerkId,
   req.auth.sessionClaims?.email
