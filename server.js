@@ -381,6 +381,157 @@ app.post("/api/webhook/stripe", async (req, res) => {
   res.json({ received: true });
 });
 
+// ── POST /api/audit ──────────────────────────────────────────
+// Fetches a product page URL and checks for SEO issues
+app.post("/api/audit", requireAuth(), async (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: "url is required" });
+  }
+
+  // Basic URL validation
+  try {
+    new URL(url);
+  } catch {
+    return res.status(400).json({ error: "Invalid URL format" });
+  }
+
+  try {
+    // Fetch the page HTML
+    const fetch = (await import("node-fetch")).default;
+    const response = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; DablinSEOBot/1.0)" },
+      timeout: 10000,
+    });
+
+    if (!response.ok) {
+      return res.status(400).json({ error: `Could not fetch page: ${response.status}` });
+    }
+
+    const html = await response.text();
+    const cheerio = require("cheerio");
+    const $ = cheerio.load(html);
+
+    // ── CHECK 1: Meta description ────────────────────────────
+    const metaDesc = $('meta[name="description"]').attr("content") || "";
+    const metaOk = metaDesc.length > 10 && metaDesc.length <= 155;
+
+    // ── CHECK 2: Schema markup ───────────────────────────────
+    const schemaScripts = $('script[type="application/ld+json"]');
+    const schemaOk = schemaScripts.length > 0;
+
+    // ── CHECK 3: Image alt text ──────────────────────────────
+    const images = $("img");
+    let missingAlt = 0;
+    images.each((_, el) => {
+      const alt = $(el).attr("alt");
+      if (!alt || alt.trim() === "") missingAlt++;
+    });
+    const altOk = images.length === 0 || missingAlt === 0;
+
+    // ── CHECK 4: Heading structure ───────────────────────────
+    const h1s = $("h1");
+    const h3s = $("h3");
+    const h2s = $("h2");
+    const hasH3WithoutH2 = h3s.length > 0 && h2s.length === 0;
+    const headingsOk = h1s.length === 1 && !hasH3WithoutH2;
+
+    // ── BUILD ISSUES ─────────────────────────────────────────
+    const issues = {};
+    if (!metaOk) {
+      issues.meta = metaDesc.length === 0
+        ? "No meta description found"
+        : metaDesc.length > 155
+        ? `Meta description too long (${metaDesc.length} chars, max 155)`
+        : "Meta description too short";
+    }
+    if (!schemaOk) {
+      issues.schema = "No JSON-LD schema markup found — missing rich results eligibility";
+    }
+    if (!altOk) {
+      issues.alt = `${missingAlt} image${missingAlt > 1 ? "s" : ""} missing alt text`;
+    }
+    if (!headingsOk) {
+      issues.headings = h1s.length === 0
+        ? "No H1 tag found"
+        : h1s.length > 1
+        ? `Multiple H1 tags found (${h1s.length})`
+        : "Heading structure skips levels (H3 without H2)";
+    }
+
+    // ── SAVE AUDIT TO DB ─────────────────────────────────────
+    const authObj = getAuth(req);
+    req.auth = authObj;
+    try {
+      await pool.query(
+        `INSERT INTO audits (clerk_id, url, checks, issues, created_at)
+         VALUES ($1, $2, $3, $4, NOW())`,
+        [
+          req.auth?.userId,
+          url,
+          JSON.stringify({ meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk }),
+          JSON.stringify(issues),
+        ]
+      );
+    } catch (dbErr) {
+      // Don't fail the request if DB insert fails — table might not exist yet
+      console.warn("Audit DB insert skipped:", dbErr.message);
+    }
+
+    res.json({
+      url,
+      checks: { meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk },
+      issues,
+      meta_description: metaDesc,
+      images_total: images.length,
+      images_missing_alt: missingAlt,
+    });
+
+  } catch (err) {
+    console.error("POST /api/audit error:", err);
+    res.status(500).json({ error: "Failed to audit page. Make sure the URL is publicly accessible." });
+  }
+});
+
+
+// ── GET /api/audit-history ───────────────────────────────────
+// Returns past SEO audits for the logged-in user
+app.get("/api/audit-history", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req);
+    req.auth = authObj;
+    const page  = parseInt(req.query.page)  || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const result = await pool.query(
+      `SELECT id, url, checks, issues, created_at
+       FROM audits
+       WHERE clerk_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [req.auth?.userId, limit, offset]
+    );
+
+    const count = await pool.query(
+      "SELECT COUNT(*) FROM audits WHERE clerk_id = $1",
+      [req.auth?.userId]
+    );
+
+    res.json({
+      items: result.rows,
+      total: parseInt(count.rows[0].count),
+      page,
+      pages: Math.ceil(count.rows[0].count / limit)
+    });
+
+  } catch (err) {
+    console.error("GET /api/audit-history error:", err);
+    res.status(500).json({ error: "Failed to fetch audit history" });
+  }
+});
+
 // ── START SERVER ─────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
