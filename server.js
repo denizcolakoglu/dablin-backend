@@ -398,6 +398,22 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
   }
 
   try {
+    // 1. Get user + check credits
+    const authObj = getAuth(req);
+    req.auth = authObj;
+    const user = await getOrCreateUser(
+      req.auth?.userId,
+      req.auth.sessionClaims?.email
+    );
+
+    if (user.credits < 7) {
+      return res.status(402).json({
+        error: "Insufficient credits. SEO Audit costs 7 credits.",
+        credits: user.credits,
+        upgradeUrl: "/pricing"
+      });
+    }
+
     // Fetch the page HTML
     const fetch = (await import("node-fetch")).default;
     const response = await fetch(url, {
@@ -460,24 +476,41 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
         : "Heading structure skips levels (H3 without H2)";
     }
 
-    // ── SAVE AUDIT TO DB ─────────────────────────────────────
-    const authObj = getAuth(req);
-    req.auth = authObj;
+    // ── SAVE AUDIT TO DB + DEDUCT CREDITS ───────────────────────
+    const authObj2 = getAuth(req);
+    req.auth = authObj2;
     try {
-      await pool.query(
-        `INSERT INTO audits (clerk_id, url, checks, issues, created_at)
-         VALUES ($1, $2, $3, $4, NOW())`,
-        [
-          req.auth?.userId,
-          url,
-          JSON.stringify({ meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk }),
-          JSON.stringify(issues),
-        ]
-      );
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query(
+          "UPDATE users SET credits = credits - 7 WHERE clerk_id = $1",
+          [req.auth?.userId]
+        );
+        await client.query(
+          `INSERT INTO audits (clerk_id, url, checks, issues, created_at)
+           VALUES ($1, $2, $3, $4, NOW())`,
+          [
+            req.auth?.userId,
+            url,
+            JSON.stringify({ meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk }),
+            JSON.stringify(issues),
+          ]
+        );
+        await client.query("COMMIT");
+      } catch (dbErr) {
+        await client.query("ROLLBACK");
+        console.warn("Audit DB transaction failed:", dbErr.message);
+      } finally {
+        client.release();
+      }
     } catch (dbErr) {
-      // Don't fail the request if DB insert fails — table might not exist yet
       console.warn("Audit DB insert skipped:", dbErr.message);
     }
+
+    const updated = await pool.query(
+      "SELECT credits FROM users WHERE clerk_id = $1", [req.auth?.userId]
+    );
 
     res.json({
       url,
@@ -486,6 +519,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       meta_description: metaDesc,
       images_total: images.length,
       images_missing_alt: missingAlt,
+      creditsRemaining: updated.rows[0]?.credits ?? null,
     });
 
   } catch (err) {
@@ -494,6 +528,40 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
   }
 });
 
+
+// ── GET /api/usage/daily ─────────────────────────────────────
+// Returns generation counts per day for the last 7 days
+app.get("/api/usage/daily", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req);
+    req.auth = authObj;
+
+    const result = await pool.query(
+      `SELECT DATE(created_at) as day, COUNT(*) as count
+       FROM generations
+       WHERE clerk_id = $1
+         AND created_at >= NOW() - INTERVAL '7 days'
+       GROUP BY DATE(created_at)
+       ORDER BY day ASC`,
+      [req.auth?.userId]
+    );
+
+    // Fill in missing days with 0
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      const found = result.rows.find(r => r.day.toISOString().split("T")[0] === key);
+      days.push({ day: key, count: found ? parseInt(found.count) : 0 });
+    }
+
+    res.json({ days });
+  } catch (err) {
+    console.error("GET /api/usage/daily error:", err);
+    res.status(500).json({ error: "Failed to fetch usage" });
+  }
+});
 
 // ── GET /api/audit-history ───────────────────────────────────
 // Returns past SEO audits for the logged-in user
