@@ -17,6 +17,8 @@ const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Pool }     = require("pg");
 
 const { generateWithCategory } = require("./lib/categories");
+const Anthropic = require("@anthropic-ai/sdk");
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const app  = express();app.set('trust proxy', 1);
 app.use(clerkMiddleware());
@@ -381,6 +383,21 @@ app.post("/api/webhook/stripe", async (req, res) => {
   res.json({ received: true });
 });
 
+// ── GET /api/test-fix ─────────────────────────────────────────
+// Temporary debug endpoint — tests Claude fix generation
+app.get("/api/test-fix", async (req, res) => {
+  try {
+    const msg = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 100,
+      messages: [{ role: "user", content: "Say hello in one sentence." }],
+    });
+    res.json({ ok: true, response: msg.content[0].text.trim() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ── POST /api/audit ──────────────────────────────────────────
 // Fetches a product page URL and checks for SEO issues
 app.post("/api/audit", requireAuth(), async (req, res) => {
@@ -453,6 +470,69 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     const hasH3WithoutH2 = h3s.length > 0 && h2s.length === 0;
     const headingsOk = h1s.length === 1 && !hasH3WithoutH2;
 
+    // ── CHECK 5: Word count ──────────────────────────────────
+    const bodyText = $("body").text().replace(/\s+/g, " ").trim();
+    const wordCount = bodyText.split(" ").filter(Boolean).length;
+    const wordCountOk = wordCount >= 300;
+
+    // ── CHECK 6: Canonical tag ───────────────────────────────
+    const canonical = $('link[rel="canonical"]').attr("href") || "";
+    const canonicalOk = canonical.length > 0;
+
+    // ── CHECK 7: Robots noindex ──────────────────────────────
+    const robotsMeta = $('meta[name="robots"]').attr("content") || "";
+    const robotsOk = !robotsMeta.toLowerCase().includes("noindex");
+
+    // ── CHECK 8: Open Graph tags ─────────────────────────────
+    const ogTitle = $('meta[property="og:title"]').attr("content") || "";
+    const ogDesc = $('meta[property="og:description"]').attr("content") || "";
+    const ogImage = $('meta[property="og:image"]').attr("content") || "";
+    const ogOk = ogTitle.length > 0 && ogDesc.length > 0 && ogImage.length > 0;
+
+    // ── CHECK 9: Viewport meta tag ───────────────────────────
+    const viewport = $('meta[name="viewport"]').attr("content") || "";
+    const viewportOk = viewport.length > 0;
+
+    // ── CHECK 10: Product schema type ────────────────────────
+    let productSchemaOk = false;
+    schemaScripts.each((_, el) => {
+      try {
+        const json = JSON.parse($(el).html());
+        const types = Array.isArray(json) ? json.map(j => j["@type"]) : [json["@type"]];
+        if (types.some(t => t === "Product")) productSchemaOk = true;
+      } catch {}
+    });
+
+    // ── CHECK 11: Breadcrumb schema ──────────────────────────
+    let breadcrumbOk = false;
+    schemaScripts.each((_, el) => {
+      try {
+        const json = JSON.parse($(el).html());
+        const types = Array.isArray(json) ? json.map(j => j["@type"]) : [json["@type"]];
+        if (types.some(t => t === "BreadcrumbList")) breadcrumbOk = true;
+      } catch {}
+    });
+
+    // ── CHECK 12: Review schema ──────────────────────────────
+    let reviewSchemaOk = false;
+    schemaScripts.each((_, el) => {
+      try {
+        const json = JSON.parse($(el).html());
+        const hasReview = (obj) => obj?.review || obj?.aggregateRating;
+        const items = Array.isArray(json) ? json : [json];
+        if (items.some(hasReview)) reviewSchemaOk = true;
+      } catch {}
+    });
+
+    // ── CHECK 13: Internal links ─────────────────────────────
+    const parsedUrl = new URL(url);
+    let internalLinks = 0;
+    $("a[href]").each((_, el) => {
+      const href = $(el).attr("href") || "";
+      if (href.startsWith("/") || href.includes(parsedUrl.hostname)) internalLinks++;
+    });
+    const internalLinksOk = internalLinks > 0;
+
     // ── BUILD ISSUES ─────────────────────────────────────────
     const issues = {};
     if (!metaOk) {
@@ -462,18 +542,77 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
         ? `Meta description too long (${metaDesc.length} chars, max 155)`
         : "Meta description too short";
     }
-    if (!schemaOk) {
-      issues.schema = "No JSON-LD schema markup found — missing rich results eligibility";
-    }
-    if (!altOk) {
-      issues.alt = `${missingAlt} image${missingAlt > 1 ? "s" : ""} missing alt text`;
-    }
+    if (!schemaOk) issues.schema = "No JSON-LD schema markup found — missing rich results eligibility";
+    if (!altOk) issues.alt = `${missingAlt} image${missingAlt > 1 ? "s" : ""} missing alt text`;
     if (!headingsOk) {
-      issues.headings = h1s.length === 0
-        ? "No H1 tag found"
-        : h1s.length > 1
-        ? `Multiple H1 tags found (${h1s.length})`
+      issues.headings = h1s.length === 0 ? "No H1 tag found"
+        : h1s.length > 1 ? `Multiple H1 tags found (${h1s.length})`
         : "Heading structure skips levels (H3 without H2)";
+    }
+    if (!wordCountOk) issues.wordCount = `Only ${wordCount} words — thin content (min 300 recommended)`;
+    if (!canonicalOk) issues.canonical = "No canonical tag found — risk of duplicate content penalties";
+    if (!robotsOk) issues.robots = `Page is set to noindex — won't appear in search results`;
+    if (!ogOk) {
+      const missing = [!ogTitle && "og:title", !ogDesc && "og:description", !ogImage && "og:image"].filter(Boolean);
+      issues.og = `Missing Open Graph tags: ${missing.join(", ")}`;
+    }
+    if (!viewportOk) issues.viewport = "No viewport meta tag — page may not be mobile-friendly";
+    if (!productSchemaOk) issues.productSchema = "No Product schema found — missing Google Shopping eligibility";
+    if (!breadcrumbOk) issues.breadcrumb = "No BreadcrumbList schema — navigation context missing for Google";
+    if (!reviewSchemaOk) issues.reviewSchema = "No review/rating schema — missing star ratings in search results";
+    if (!internalLinksOk) issues.internalLinks = "No internal links found — poor crawlability";
+
+    const allChecks = {
+      meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk,
+      wordCount: wordCountOk, canonical: canonicalOk, robots: robotsOk,
+      og: ogOk, viewport: viewportOk, productSchema: productSchemaOk,
+      breadcrumb: breadcrumbOk, reviewSchema: reviewSchemaOk, internalLinks: internalLinksOk,
+    };
+
+    // ── GENERATE AI FIXES FOR FAILED CHECKS ──────────────────
+    const fixes = {};
+    const failedKeys = Object.entries(allChecks).filter(([, v]) => !v).map(([k]) => k);
+
+    if (failedKeys.length > 0) {
+      try {
+        const pageTitle = $("title").text().trim() || url;
+        const h1Text = h1s.first().text().trim() || "";
+        const pageSnippet = bodyText.substring(0, 800);
+
+        const fixPrompts = {
+          meta: `Write a meta description for this page. Return ONLY the meta description text, max 155 chars, no quotes.\nPage: ${url}\nTitle: ${pageTitle}\nContent snippet: ${pageSnippet}`,
+          og: `Write Open Graph tags for this page. Return ONLY valid HTML meta tags for og:title, og:description, og:image (use a placeholder image URL). No explanation.\nPage: ${url}\nTitle: ${pageTitle}`,
+          schema: `Write a basic JSON-LD Product schema for this page. Return ONLY the <script type="application/ld+json"> block. No explanation.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
+          productSchema: `Write a complete JSON-LD Product schema with name, description, url, and offers. Return ONLY the <script type="application/ld+json"> block.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
+          breadcrumb: `Write a JSON-LD BreadcrumbList schema for this product page. Return ONLY the <script type="application/ld+json"> block.\nPage URL: ${url}\nPage title: ${pageTitle}`,
+          reviewSchema: `Add aggregateRating to a Product schema for this page with placeholder values (ratingValue: 4.5, reviewCount: 12). Return ONLY the <script type="application/ld+json"> block.\nPage: ${url}\nTitle: ${pageTitle}`,
+          canonical: `Return ONLY this HTML tag with the correct URL filled in:\n<link rel="canonical" href="${url}" />`,
+          viewport: `Return ONLY this HTML tag:\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
+          robots: `The robots meta tag is set to noindex. Return ONLY the corrected tag:\n<meta name="robots" content="index, follow">`,
+          headings: `The page has this heading issue: ${issues.headings}. Suggest the corrected heading structure as HTML (just the h1/h2/h3 tags with placeholder text). Keep it concise.`,
+          wordCount: `The page has only ${wordCount} words. Suggest 3 content sections (with section titles) that could be added to a product page for: ${pageTitle}. Keep it brief.`,
+          alt: `${missingAlt} images are missing alt text. Explain in 2 sentences how to add alt text in Shopify, then give 2 example alt text formats for product images.`,
+          internalLinks: `Suggest 3 internal link ideas for a product page. Format as: "Link text → /suggested-url-path". Page: ${pageTitle}`,
+        };
+
+        const fixRequests = failedKeys.filter(k => fixPrompts[k]);
+        console.log("Generating fixes for:", fixRequests);
+
+        await Promise.all(fixRequests.map(async (key) => {
+          try {
+            const msg = await anthropic.messages.create({
+              model: "claude-haiku-4-5-20251001",
+              max_tokens: 400,
+              messages: [{ role: "user", content: fixPrompts[key] }],
+            });
+            fixes[key] = msg.content[0].text.trim();
+          } catch (e) {
+            console.error(`Fix generation failed for ${key}:`, e.message);
+          }
+        }));
+      } catch (e) {
+        console.error("AI fix generation skipped:", e.message, e.stack);
+      }
     }
 
     // ── SAVE AUDIT TO DB + DEDUCT CREDITS ───────────────────────
@@ -488,12 +627,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
         await client.query(
           `INSERT INTO audits (clerk_id, url, checks, issues, created_at)
            VALUES ($1, $2, $3, $4, NOW())`,
-          [
-            req.auth?.userId,
-            url,
-            JSON.stringify({ meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk }),
-            JSON.stringify(issues),
-          ]
+          [req.auth?.userId, url, JSON.stringify(allChecks), JSON.stringify(issues)]
         );
         await client.query("COMMIT");
       } catch (dbErr) {
@@ -512,11 +646,13 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
 
     res.json({
       url,
-      checks: { meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk },
+      checks: allChecks,
       issues,
+      fixes,
       meta_description: metaDesc,
       images_total: images.length,
       images_missing_alt: missingAlt,
+      word_count: wordCount,
       creditsRemaining: updated.rows[0]?.credits ?? null,
     });
 
