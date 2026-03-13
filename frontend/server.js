@@ -383,6 +383,21 @@ app.post("/api/webhook/stripe", async (req, res) => {
   res.json({ received: true });
 });
 
+// ── GET /api/test-fix ─────────────────────────────────────────
+// Temporary debug endpoint — tests Claude fix generation
+app.get("/api/test-fix", async (req, res) => {
+  try {
+    const msg = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 100,
+      messages: [{ role: "user", content: "Say hello in one sentence." }],
+    });
+    res.json({ ok: true, response: msg.content[0].text.trim() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ── POST /api/audit ──────────────────────────────────────────
 // Fetches a product page URL and checks for SEO issues
 app.post("/api/audit", requireAuth(), async (req, res) => {
