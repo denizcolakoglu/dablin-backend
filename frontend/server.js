@@ -17,6 +17,8 @@ const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Pool }     = require("pg");
 
 const { generateWithCategory } = require("./lib/categories");
+const Anthropic = require("@anthropic-ai/sdk");
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const app  = express();app.set('trust proxy', 1);
 app.use(clerkMiddleware());
@@ -558,9 +560,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
 
     if (failedKeys.length > 0) {
       try {
-        const Anthropic = require("@anthropic-ai/sdk");
-        const anthropic = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
-
         const pageTitle = $("title").text().trim() || url;
         const h1Text = h1s.first().text().trim() || "";
         const pageSnippet = bodyText.substring(0, 800);
@@ -581,8 +580,8 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
           internalLinks: `Suggest 3 internal link ideas for a product page. Format as: "Link text → /suggested-url-path". Page: ${pageTitle}`,
         };
 
-        // Only generate fixes for failed checks that have prompts
         const fixRequests = failedKeys.filter(k => fixPrompts[k]);
+        console.log("Generating fixes for:", fixRequests);
 
         await Promise.all(fixRequests.map(async (key) => {
           try {
@@ -593,11 +592,11 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
             });
             fixes[key] = msg.content[0].text.trim();
           } catch (e) {
-            console.warn(`Fix generation failed for ${key}:`, e.message);
+            console.error(`Fix generation failed for ${key}:`, e.message);
           }
         }));
       } catch (e) {
-        console.warn("AI fix generation skipped:", e.message);
+        console.error("AI fix generation skipped:", e.message, e.stack);
       }
     }
 
