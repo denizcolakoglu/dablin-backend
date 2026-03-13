@@ -581,26 +581,33 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       try {
         const pageTitle = $("title").text().trim() || url;
         const h1Text = h1s.first().text().trim() || "";
-        const pageSnippet = bodyText.substring(0, 800);
+        const rawSnippet = bodyText.substring(0, 800).trim();
+        
+        // Detect JS-rendered page (empty or just GTM/noscript content)
+        const isJsRendered = rawSnippet.length < 100;
+        const pageSnippet = isJsRendered
+          ? `This page appears to be a JavaScript-rendered app. Use the URL and title to infer context.\nURL: ${url}\nTitle: ${pageTitle}`
+          : rawSnippet;
+        const contentContext = `URL: ${url}\nTitle: ${pageTitle}${h1Text ? `\nH1: ${h1Text}` : ""}${isJsRendered ? "" : `\nContent: ${pageSnippet}`}`;
 
         const fixPrompts = {
           meta: metaDesc.length === 0
-            ? `Write a meta description for this page. Return ONLY the meta description text, max 155 chars, no quotes.\nPage: ${url}\nTitle: ${pageTitle}\nContent snippet: ${pageSnippet}`
+            ? `Write a meta description for this page. Return ONLY the meta description text, 120-155 chars, no quotes.\n${contentContext}`
             : metaDesc.length > 155
-            ? `The meta description below is too long (${metaDesc.length} chars, max 155). Shorten it to under 155 chars. Return ONLY the new meta description text, no quotes.\nCurrent: ${metaDesc}`
-            : `The meta description is too short (${metaDesc.length} chars, min 10). Expand it to 120-155 chars. Return ONLY the new meta description text, no quotes.\nCurrent: ${metaDesc}\nPage: ${url}\nContent snippet: ${pageSnippet}`,
-          og: `Write Open Graph tags for this page. Return ONLY valid HTML meta tags for og:title, og:description, og:image (use a placeholder image URL). No explanation.\nPage: ${url}\nTitle: ${pageTitle}`,
-          schema: `Write a basic JSON-LD Product schema for this page. Return ONLY the <script type="application/ld+json"> block. No explanation.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
-          productSchema: `Write a complete JSON-LD Product schema with name, description, url, and offers. Return ONLY the <script type="application/ld+json"> block.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
-          breadcrumb: `Write a JSON-LD BreadcrumbList schema for this product page. Return ONLY the <script type="application/ld+json"> block.\nPage URL: ${url}\nPage title: ${pageTitle}`,
-          reviewSchema: `Add aggregateRating to a Product schema for this page with placeholder values (ratingValue: 4.5, reviewCount: 12). Return ONLY the <script type="application/ld+json"> block.\nPage: ${url}\nTitle: ${pageTitle}`,
-          canonical: `Return ONLY this HTML tag with the correct URL filled in:\n<link rel="canonical" href="${url}" />`,
+            ? `This meta description is too long (${metaDesc.length} chars, max 155). Shorten it. Return ONLY the new text, no quotes.\nCurrent: ${metaDesc}`
+            : `This meta description is too short (${metaDesc.length} chars). Expand to 120-155 chars. Return ONLY the new text, no quotes.\nCurrent: ${metaDesc}\n${contentContext}`,
+          og: `Write Open Graph meta tags for this page. Return ONLY valid HTML meta tags for og:title, og:description, og:image (use a placeholder image URL). No explanation.\n${contentContext}`,
+          schema: `Write a basic JSON-LD schema for this page. Return ONLY the <script type="application/ld+json"> block. No explanation.\n${contentContext}`,
+          productSchema: `Write a complete JSON-LD Product schema with name, description, url, and offers. Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
+          breadcrumb: `Write a JSON-LD BreadcrumbList schema for this page. Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
+          reviewSchema: `Add aggregateRating to a Product schema (ratingValue: 4.5, reviewCount: 12). Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
+          canonical: `Return ONLY this HTML tag:\n<link rel="canonical" href="${url}" />`,
           viewport: `Return ONLY this HTML tag:\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
           robots: `The robots meta tag is set to noindex. Return ONLY the corrected tag:\n<meta name="robots" content="index, follow">`,
-          headings: `The page has this heading issue: ${issues.headings}. Suggest the corrected heading structure as HTML (just the h1/h2/h3 tags with placeholder text). Keep it concise.`,
-          wordCount: `The page has only ${wordCount} words. Suggest 3 content sections (with section titles) that could be added to a product page for: ${pageTitle}. Keep it brief.`,
-          alt: `${missingAlt} images are missing alt text. Explain in 2 sentences how to add alt text in Shopify, then give 2 example alt text formats for product images.`,
-          internalLinks: `Suggest 3 internal link ideas for a product page. Format as: "Link text → /suggested-url-path". Page: ${pageTitle}`,
+          headings: `The page has this heading issue: ${issues.headings}. Suggest the corrected heading structure as HTML (h1/h2/h3 tags with placeholder text). Keep it concise.\n${contentContext}`,
+          wordCount: `The page has only ${wordCount} words of visible content. Suggest 3 content sections (with titles) that could be added. Keep it brief.\n${contentContext}`,
+          alt: `${missingAlt} images are missing alt text. In 2 sentences explain how to add alt text in Shopify/WordPress, then give 2 example formats for product images.`,
+          internalLinks: `Suggest 3 internal link ideas for this page. Format as: "Link text → /suggested-url-path".\n${contentContext}`,
         };
 
         const fixRequests = failedKeys.filter(k => fixPrompts[k]);
