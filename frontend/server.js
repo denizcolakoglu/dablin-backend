@@ -552,6 +552,55 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       breadcrumb: breadcrumbOk, reviewSchema: reviewSchemaOk, internalLinks: internalLinksOk,
     };
 
+    // ── GENERATE AI FIXES FOR FAILED CHECKS ──────────────────
+    const fixes = {};
+    const failedKeys = Object.entries(allChecks).filter(([, v]) => !v).map(([k]) => k);
+
+    if (failedKeys.length > 0) {
+      try {
+        const Anthropic = require("@anthropic-ai/sdk");
+        const anthropic = new Anthropic.default({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+        const pageTitle = $("title").text().trim() || url;
+        const h1Text = h1s.first().text().trim() || "";
+        const pageSnippet = bodyText.substring(0, 800);
+
+        const fixPrompts = {
+          meta: `Write a meta description for this page. Return ONLY the meta description text, max 155 chars, no quotes.\nPage: ${url}\nTitle: ${pageTitle}\nContent snippet: ${pageSnippet}`,
+          og: `Write Open Graph tags for this page. Return ONLY valid HTML meta tags for og:title, og:description, og:image (use a placeholder image URL). No explanation.\nPage: ${url}\nTitle: ${pageTitle}`,
+          schema: `Write a basic JSON-LD Product schema for this page. Return ONLY the <script type="application/ld+json"> block. No explanation.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
+          productSchema: `Write a complete JSON-LD Product schema with name, description, url, and offers. Return ONLY the <script type="application/ld+json"> block.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
+          breadcrumb: `Write a JSON-LD BreadcrumbList schema for this product page. Return ONLY the <script type="application/ld+json"> block.\nPage URL: ${url}\nPage title: ${pageTitle}`,
+          reviewSchema: `Add aggregateRating to a Product schema for this page with placeholder values (ratingValue: 4.5, reviewCount: 12). Return ONLY the <script type="application/ld+json"> block.\nPage: ${url}\nTitle: ${pageTitle}`,
+          canonical: `Return ONLY this HTML tag with the correct URL filled in:\n<link rel="canonical" href="${url}" />`,
+          viewport: `Return ONLY this HTML tag:\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
+          robots: `The robots meta tag is set to noindex. Return ONLY the corrected tag:\n<meta name="robots" content="index, follow">`,
+          headings: `The page has this heading issue: ${issues.headings}. Suggest the corrected heading structure as HTML (just the h1/h2/h3 tags with placeholder text). Keep it concise.`,
+          wordCount: `The page has only ${wordCount} words. Suggest 3 content sections (with section titles) that could be added to a product page for: ${pageTitle}. Keep it brief.`,
+          alt: `${missingAlt} images are missing alt text. Explain in 2 sentences how to add alt text in Shopify, then give 2 example alt text formats for product images.`,
+          internalLinks: `Suggest 3 internal link ideas for a product page. Format as: "Link text → /suggested-url-path". Page: ${pageTitle}`,
+        };
+
+        // Only generate fixes for failed checks that have prompts
+        const fixRequests = failedKeys.filter(k => fixPrompts[k]);
+
+        await Promise.all(fixRequests.map(async (key) => {
+          try {
+            const msg = await anthropic.messages.create({
+              model: "claude-haiku-4-5-20251001",
+              max_tokens: 400,
+              messages: [{ role: "user", content: fixPrompts[key] }],
+            });
+            fixes[key] = msg.content[0].text.trim();
+          } catch (e) {
+            console.warn(`Fix generation failed for ${key}:`, e.message);
+          }
+        }));
+      } catch (e) {
+        console.warn("AI fix generation skipped:", e.message);
+      }
+    }
+
     // ── SAVE AUDIT TO DB + DEDUCT CREDITS ───────────────────────
     try {
       const client = await pool.connect();
@@ -585,6 +634,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       url,
       checks: allChecks,
       issues,
+      fixes,
       meta_description: metaDesc,
       images_total: images.length,
       images_missing_alt: missingAlt,
