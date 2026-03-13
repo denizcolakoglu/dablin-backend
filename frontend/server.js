@@ -447,8 +447,12 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     const $ = cheerio.load(html);
 
     // ── CHECK 1: Meta description ────────────────────────────
-    const metaDesc = $('meta[name="description"]').attr("content") || "";
+    const metaDesc = 
+      $('meta[name="description"]').attr("content") ||
+      $('meta[name="Description"]').attr("content") ||
+      $('meta[property="description"]').attr("content") || "";
     const metaOk = metaDesc.length > 10 && metaDesc.length <= 155;
+    console.log(`[audit] meta description: "${metaDesc.substring(0, 80)}" (${metaDesc.length} chars, ok=${metaOk})`);
 
     // ── CHECK 2: Schema markup ───────────────────────────────
     const schemaScripts = $('script[type="application/ld+json"]');
@@ -580,7 +584,11 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
         const pageSnippet = bodyText.substring(0, 800);
 
         const fixPrompts = {
-          meta: `Write a meta description for this page. Return ONLY the meta description text, max 155 chars, no quotes.\nPage: ${url}\nTitle: ${pageTitle}\nContent snippet: ${pageSnippet}`,
+          meta: metaDesc.length === 0
+            ? `Write a meta description for this page. Return ONLY the meta description text, max 155 chars, no quotes.\nPage: ${url}\nTitle: ${pageTitle}\nContent snippet: ${pageSnippet}`
+            : metaDesc.length > 155
+            ? `The meta description below is too long (${metaDesc.length} chars, max 155). Shorten it to under 155 chars. Return ONLY the new meta description text, no quotes.\nCurrent: ${metaDesc}`
+            : `The meta description is too short (${metaDesc.length} chars, min 10). Expand it to 120-155 chars. Return ONLY the new meta description text, no quotes.\nCurrent: ${metaDesc}\nPage: ${url}\nContent snippet: ${pageSnippet}`,
           og: `Write Open Graph tags for this page. Return ONLY valid HTML meta tags for og:title, og:description, og:image (use a placeholder image URL). No explanation.\nPage: ${url}\nTitle: ${pageTitle}`,
           schema: `Write a basic JSON-LD Product schema for this page. Return ONLY the <script type="application/ld+json"> block. No explanation.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
           productSchema: `Write a complete JSON-LD Product schema with name, description, url, and offers. Return ONLY the <script type="application/ld+json"> block.\nPage: ${url}\nTitle: ${pageTitle}\nContent: ${pageSnippet}`,
