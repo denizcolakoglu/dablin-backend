@@ -477,8 +477,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     }
 
     // ── SAVE AUDIT TO DB + DEDUCT CREDITS ───────────────────────
-    const authObj2 = getAuth(req);
-    req.auth = authObj2;
     try {
       const client = await pool.connect();
       try {
