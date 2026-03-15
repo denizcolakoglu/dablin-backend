@@ -609,7 +609,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
           alt: `${missingAlt} images are missing alt text. In 2 sentences explain how to add alt text in Shopify/WordPress, then give 2 example formats for product images.`,
           internalLinks: `Suggest 3 internal link ideas for this page. Format as: "Link text → /suggested-url-path".\n${contentContext}`,
         };
-        };
 
         const fixRequests = failedKeys.filter(k => fixPrompts[k]);
         console.log("Generating fixes for:", fixRequests);
