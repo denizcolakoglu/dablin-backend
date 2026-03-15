@@ -423,9 +423,9 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       req.auth.sessionClaims?.email
     );
 
-    if (user.credits < 7) {
+    if (user.credits < 5) {
       return res.status(402).json({
-        error: "Insufficient credits. SEO Audit costs 7 credits.",
+        error: "Insufficient credits. SEO Audit costs 5 credits.",
         credits: user.credits,
         upgradeUrl: "/pricing"
       });
@@ -637,7 +637,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       try {
         await client.query("BEGIN");
         await client.query(
-          "UPDATE users SET credits = credits - 7 WHERE clerk_id = $1",
+          "UPDATE users SET credits = credits - 5 WHERE clerk_id = $1",
           [req.auth?.userId]
         );
         await client.query(
