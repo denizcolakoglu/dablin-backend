@@ -716,14 +716,20 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
     // ── CHECK 1: llms.txt ────────────────────────────────────
     let llmsTxtOk = false;
     try {
-      const r = await fetch(`${origin}/llms.txt`, { method: "HEAD", headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(5000) });
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 5000);
+      const r = await fetch(`${origin}/llms.txt`, { method: "HEAD", headers: { "User-Agent": "Mozilla/5.0" }, signal: ctrl.signal });
+      clearTimeout(t);
       llmsTxtOk = r.ok;
     } catch {}
 
     // ── CHECK 2: robots.txt allows AI crawlers ───────────────
     let aiCrawlersAllowed = false;
     try {
-      const r = await fetch(`${origin}/robots.txt`, { headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(5000) });
+      const ctrl2 = new AbortController();
+      const t2 = setTimeout(() => ctrl2.abort(), 5000);
+      const r = await fetch(`${origin}/robots.txt`, { headers: { "User-Agent": "Mozilla/5.0" }, signal: ctrl2.signal });
+      clearTimeout(t2);
       if (r.ok) {
         const robotsTxt = await r.text();
         const blockedBots = ["GPTBot", "ClaudeBot", "PerplexityBot", "anthropic-ai", "ChatGPT-User"];
