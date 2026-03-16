@@ -19,6 +19,10 @@ const { Pool }     = require("pg");
 const { generateWithCategory } = require("./lib/categories");
 const Anthropic = require("@anthropic-ai/sdk");
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const OpenAI = require("openai");
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app  = express();app.set('trust proxy', 1);
 app.use(clerkMiddleware());
@@ -609,7 +613,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
           alt: `${missingAlt} images are missing alt text. In 2 sentences explain how to add alt text in Shopify/WordPress, then give 2 example formats for product images.`,
           internalLinks: `Suggest 3 internal link ideas for this page. Format as: "Link text → /suggested-url-path".\n${contentContext}`,
         };
-        };
 
         const fixRequests = failedKeys.filter(k => fixPrompts[k]);
         console.log("Generating fixes for:", fixRequests);
@@ -907,6 +910,198 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
   } catch (err) {
     console.error("POST /api/ai-audit error:", err);
     res.status(500).json({ error: "Failed to audit page. Make sure the URL is publicly accessible." });
+  }
+});
+
+// ── POST /api/visibility-check ───────────────────────────────
+// Queries Claude, GPT-4o, Gemini with 5 brand queries, returns mention table
+// Costs 7 credits
+app.post("/api/visibility-check", requireAuth(), async (req, res) => {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: "url is required" });
+  try { new URL(url); } catch { return res.status(400).json({ error: "Invalid URL format" }); }
+
+  try {
+    const authObj = getAuth(req);
+    req.auth = authObj;
+    const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
+
+    if (user.credits < 7) {
+      return res.status(402).json({ error: "Insufficient credits. AI Visibility Check costs 7 credits.", credits: user.credits });
+    }
+
+    // Step 1: Scrape page to extract brand name + topic
+    const fetch = (await import("node-fetch")).default;
+    const pageRes = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; DablinBot/1.0)" },
+      timeout: 10000,
+    });
+    if (!pageRes.ok) return res.status(400).json({ error: `Could not fetch page: ${pageRes.status}` });
+
+    const html = await pageRes.text();
+    const cheerio = require("cheerio");
+    const $ = cheerio.load(html);
+    const pageTitle = $("title").text().trim() || url;
+    const metaDesc = $('meta[name="description"]').attr("content") || $('meta[property="og:description"]').attr("content") || "";
+    const h1 = $("h1").first().text().trim() || "";
+    const bodySnippet = $("body").text().replace(/\s+/g, " ").trim().substring(0, 600);
+    const parsedUrl = new URL(url);
+    const domain = parsedUrl.hostname.replace("www.", "");
+
+    // Step 2: Use Claude to extract brand name + generate 5 queries
+    const brandMsg = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 400,
+      messages: [{
+        role: "user",
+        content: `Extract the brand name and generate 5 search queries for this website.
+URL: ${url}
+Title: ${pageTitle}
+Meta: ${metaDesc}
+H1: ${h1}
+Content: ${bodySnippet}
+
+Return ONLY valid JSON in this exact format, no explanation:
+{
+  "brand": "BrandName",
+  "queries": [
+    "query 1",
+    "query 2",
+    "query 3",
+    "query 4",
+    "query 5"
+  ]
+}
+
+Rules for queries:
+- Each query should be how a potential customer would search for this type of product/service
+- Do NOT include the brand name in the queries
+- Queries should be 4-8 words, natural language
+- Cover different angles: alternatives, best tools, how-to, category searches`
+      }]
+    });
+
+    let brand = domain;
+    let queries = [];
+    try {
+      const parsed = JSON.parse(brandMsg.content[0].text.trim());
+      brand = parsed.brand || domain;
+      queries = parsed.queries || [];
+    } catch {
+      return res.status(500).json({ error: "Failed to extract brand information from page." });
+    }
+
+    if (queries.length === 0) {
+      return res.status(500).json({ error: "Could not generate queries for this page." });
+    }
+
+    // Step 3: Query each AI with each query in parallel
+    const brandLower = brand.toLowerCase();
+
+    async function queryClause(query) {
+      try {
+        const msg = await anthropic.messages.create({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 300,
+          messages: [{ role: "user", content: `${query}\n\nList the top tools, products, or services you would recommend. Be specific with brand names.` }]
+        });
+        const text = msg.content[0].text;
+        const mentioned = text.toLowerCase().includes(brandLower);
+        const competitors = extractBrands(text, brand);
+        return { mentioned, competitors, snippet: text.substring(0, 200) };
+      } catch { return { mentioned: false, competitors: [], snippet: "" }; }
+    }
+
+    async function queryGPT(query) {
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          max_tokens: 300,
+          messages: [{ role: "user", content: `${query}\n\nList the top tools, products, or services you would recommend. Be specific with brand names.` }]
+        });
+        const text = completion.choices[0].message.content;
+        const mentioned = text.toLowerCase().includes(brandLower);
+        const competitors = extractBrands(text, brand);
+        return { mentioned, competitors, snippet: text.substring(0, 200) };
+      } catch { return { mentioned: false, competitors: [], snippet: "" }; }
+    }
+
+    async function queryGemini(query) {
+      try {
+        const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(`${query}\n\nList the top tools, products, or services you would recommend. Be specific with brand names.`);
+        const text = result.response.text();
+        const mentioned = text.toLowerCase().includes(brandLower);
+        const competitors = extractBrands(text, brand);
+        return { mentioned, competitors, snippet: text.substring(0, 200) };
+      } catch { return { mentioned: false, competitors: [], snippet: "" }; }
+    }
+
+    function extractBrands(text, ownBrand) {
+      // Extract capitalized words/phrases that look like brand names, excluding own brand
+      const words = text.match(/\b[A-Z][a-zA-Z]{2,}(?:\s[A-Z][a-zA-Z]{2,})?\b/g) || [];
+      const stopWords = new Set(["The", "This", "That", "Here", "There", "These", "Those", "They", "Your", "Some", "Many", "Most", "Best", "Top", "List", "Also", "With", "For", "And", "But", "You", "Can", "Are", "Its", "Has", "Have"]);
+      return [...new Set(words.filter(w => !stopWords.has(w) && w.toLowerCase() !== ownBrand.toLowerCase()))].slice(0, 5);
+    }
+
+    // Run all 15 queries in parallel (5 queries × 3 AIs)
+    const results = await Promise.all(queries.map(async (query) => {
+      const [claude, gpt, gem] = await Promise.all([
+        queryClause(query),
+        queryGPT(query),
+        queryGemini(query),
+      ]);
+      return { query, claude, gpt, gemini: gem };
+    }));
+
+    // Aggregate competitor mentions
+    const competitorCounts = {};
+    results.forEach(r => {
+      [...r.claude.competitors, ...r.gpt.competitors, ...r.gemini.competitors].forEach(c => {
+        competitorCounts[c] = (competitorCounts[c] || 0) + 1;
+      });
+    });
+    const topCompetitors = Object.entries(competitorCounts)
+      .sort(([,a],[,b]) => b - a)
+      .slice(0, 8)
+      .map(([name, count]) => ({ name, count }));
+
+    const mentionSummary = {
+      claude: results.filter(r => r.claude.mentioned).length,
+      gpt: results.filter(r => r.gpt.mentioned).length,
+      gemini: results.filter(r => r.gemini.mentioned).length,
+      total: results.filter(r => r.claude.mentioned || r.gpt.mentioned || r.gemini.mentioned).length,
+    };
+
+    // Deduct credits
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query("UPDATE users SET credits = credits - 7 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("COMMIT");
+      } catch (dbErr) {
+        await client.query("ROLLBACK");
+      } finally {
+        client.release();
+      }
+    } catch {}
+
+    const updated = await pool.query("SELECT credits FROM users WHERE clerk_id = $1", [req.auth?.userId]);
+
+    res.json({
+      url,
+      brand,
+      queries,
+      results,
+      mentionSummary,
+      topCompetitors,
+      creditsRemaining: updated.rows[0]?.credits ?? null,
+    });
+
+  } catch (err) {
+    console.error("POST /api/visibility-check error:", err);
+    res.status(500).json({ error: "Visibility check failed. Please try again." });
   }
 });
 
