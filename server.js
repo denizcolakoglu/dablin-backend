@@ -984,10 +984,14 @@ Rules for queries:
     let brand = domain;
     let queries = [];
     try {
-      const parsed = JSON.parse(brandMsg.content[0].text.trim());
+      const raw = brandMsg.content[0].text.trim();
+      console.log("[visibility-check] brand extraction raw:", raw.substring(0, 200));
+      const clean = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const parsed = JSON.parse(clean);
       brand = parsed.brand || domain;
       queries = parsed.queries || [];
-    } catch {
+    } catch (e) {
+      console.error("[visibility-check] brand parse error:", e.message, brandMsg.content[0].text.substring(0, 200));
       return res.status(500).json({ error: "Failed to extract brand information from page." });
     }
 
