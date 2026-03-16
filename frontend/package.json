@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",
+    "@google/generative-ai": "^0.24.1",
+    "openai": "^6.29.0",
     "posthog-js": "^1.360.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
