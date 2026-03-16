@@ -59,7 +59,7 @@ async function getOrCreateUser(clerkId, email) {
   if (existing.rows[0]) return existing.rows[0];
 
   const created = await pool.query(
-    "INSERT INTO users (clerk_id, email, credits) VALUES ($1, $2, 3) RETURNING *",
+    "INSERT INTO users (clerk_id, email, credits) VALUES ($1, $2, 7) RETURNING *",
     [clerkId, email]
   );
   return created.rows[0]; // New users get 3 free credits
