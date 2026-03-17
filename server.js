@@ -1228,10 +1228,15 @@ app.get("/api/dashboard", requireAuth(), async (req, res) => {
       [req.auth?.userId]
     );
 
-    // Group by URL
+    // Normalize URL (remove trailing slash for grouping)
+    function normalizeUrl(url) {
+      return url.replace(/\/$/, '');
+    }
+
+    // Group by normalized URL
     const grouped = {};
     for (const row of audits.rows) {
-      const url = row.url;
+      const url = normalizeUrl(row.url);
       if (!grouped[url]) grouped[url] = [];
       const checks = row.checks || {};
       const issues = row.issues || {};
@@ -1242,7 +1247,8 @@ app.get("/api/dashboard", requireAuth(), async (req, res) => {
 
       // Detect type from check keys
       const isAi = keys.includes('llmsTxt') || keys.includes('aiCrawlers') || keys.includes('orgSchema');
-      const type = isAi ? 'ai' : 'seo';
+      const isVisibilityCheck = keys.includes('mentionSummary');
+      const type = isVisibilityCheck ? 'visibility' : isAi ? 'ai' : 'seo';
 
       grouped[url].push({
         id: row.id,
@@ -1256,21 +1262,25 @@ app.get("/api/dashboard", requireAuth(), async (req, res) => {
       });
     }
 
-    // Build timeline per URL — calculate fixes between consecutive runs
+    // Build timeline per URL — newest first, calculate fixes between runs
     const urls = Object.entries(grouped).map(([url, runs]) => {
-      const timeline = runs.map((run, i) => {
+      // runs are oldest first (from ORDER BY ASC), calculate fixes forward
+      const timelineAsc = runs.map((run, i) => {
         let fixed = [];
         if (i > 0) {
           const prev = runs[i - 1];
-          // Find checks that were failing before but pass now
           fixed = Object.keys(run.checks).filter(
             k => run.checks[k] === true && prev.checks[k] === false
           );
         }
         return { ...run, fixed };
       });
-      const latest = timeline[timeline.length - 1];
-      const first = timeline[0];
+
+      // Reverse to show newest first
+      const timeline = [...timelineAsc].reverse();
+
+      const latest = timelineAsc[timelineAsc.length - 1];
+      const first = timelineAsc[0];
       return {
         url,
         type: latest.type,
@@ -1281,6 +1291,9 @@ app.get("/api/dashboard", requireAuth(), async (req, res) => {
         timeline,
       };
     });
+
+    // Sort URLs by latest audit date descending
+    urls.sort((a, b) => new Date(b.timeline[0].date) - new Date(a.timeline[0].date));
 
     res.json({
       urls,
