@@ -1206,6 +1206,94 @@ app.get("/api/audit-history", requireAuth(), async (req, res) => {
   }
 });
 
+// ── GET /api/dashboard ───────────────────────────────────────
+// Returns grouped audit history per URL with scores over time
+app.get("/api/dashboard", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req);
+    req.auth = authObj;
+
+    // Get all audits ordered by URL and date
+    const audits = await pool.query(
+      `SELECT id, url, checks, issues, created_at
+       FROM audits
+       WHERE clerk_id = $1
+       ORDER BY url ASC, created_at ASC`,
+      [req.auth?.userId]
+    );
+
+    // Get description count
+    const gens = await pool.query(
+      `SELECT COUNT(*) as count FROM generations WHERE clerk_id = $1`,
+      [req.auth?.userId]
+    );
+
+    // Group by URL
+    const grouped = {};
+    for (const row of audits.rows) {
+      const url = row.url;
+      if (!grouped[url]) grouped[url] = [];
+      const checks = row.checks || {};
+      const issues = row.issues || {};
+      const keys = Object.keys(checks);
+      const passed = keys.filter(k => checks[k]).length;
+      const total = keys.length || 1;
+      const score = Math.round((passed / total) * 100);
+
+      // Detect type from check keys
+      const isAi = keys.includes('llmsTxt') || keys.includes('aiCrawlers') || keys.includes('orgSchema');
+      const type = isAi ? 'ai' : 'seo';
+
+      grouped[url].push({
+        id: row.id,
+        date: row.created_at,
+        score,
+        passed,
+        total,
+        type,
+        issues: Object.entries(issues).map(([key, msg]) => ({ key, msg })),
+        checks,
+      });
+    }
+
+    // Build timeline per URL — calculate fixes between consecutive runs
+    const urls = Object.entries(grouped).map(([url, runs]) => {
+      const timeline = runs.map((run, i) => {
+        let fixed = [];
+        if (i > 0) {
+          const prev = runs[i - 1];
+          // Find checks that were failing before but pass now
+          fixed = Object.keys(run.checks).filter(
+            k => run.checks[k] === true && prev.checks[k] === false
+          );
+        }
+        return { ...run, fixed };
+      });
+      const latest = timeline[timeline.length - 1];
+      const first = timeline[0];
+      return {
+        url,
+        type: latest.type,
+        latestScore: latest.score,
+        firstScore: first.score,
+        improvement: latest.score - first.score,
+        runs: timeline.length,
+        timeline,
+      };
+    });
+
+    res.json({
+      urls,
+      totalAudits: audits.rows.length,
+      totalDescriptions: parseInt(gens.rows[0].count),
+    });
+
+  } catch (err) {
+    console.error("GET /api/dashboard error:", err);
+    res.status(500).json({ error: "Failed to load dashboard" });
+  }
+});
+
 // ── START SERVER ─────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
