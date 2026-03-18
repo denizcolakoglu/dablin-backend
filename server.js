@@ -1343,6 +1343,59 @@ app.get("/api/visibility-check-history", requireAuth(), async (req, res) => {
   }
 });
 
+// ── POST /api/share ──────────────────────────────────────────
+// Save a result snapshot with a public token (expires 30 days)
+app.post("/api/share", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const { type, data } = req.body; // type: 'visibility-check' | 'ai-audit' | 'seo-audit'
+    if (!type || !data) return res.status(400).json({ error: "type and data required" });
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS shared_results (
+      id SERIAL PRIMARY KEY,
+      token TEXT UNIQUE NOT NULL,
+      clerk_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      data JSONB NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '30 days'
+    )`);
+
+    const token = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+    await pool.query(
+      `INSERT INTO shared_results (token, clerk_id, type, data) VALUES ($1, $2, $3, $4)`,
+      [token, req.auth?.userId, type, JSON.stringify(data)]
+    );
+    res.json({ token, url: `https://dablin.co/results/${token}` });
+  } catch (err) {
+    console.error("POST /api/share error:", err);
+    res.status(500).json({ error: "Failed to create share link" });
+  }
+});
+
+// ── GET /api/share/:token ─────────────────────────────────────
+// Public endpoint — no auth required
+app.get("/api/share/:token", async (req, res) => {
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS shared_results (
+      id SERIAL PRIMARY KEY, token TEXT UNIQUE NOT NULL, clerk_id TEXT NOT NULL,
+      type TEXT NOT NULL, data JSONB NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '30 days'
+    )`);
+    const result = await pool.query(
+      `SELECT token, type, data, created_at, expires_at FROM shared_results
+       WHERE token = $1 AND expires_at > NOW()`,
+      [req.params.token]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Result not found or expired" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("GET /api/share/:token error:", err);
+    res.status(500).json({ error: "Failed to fetch shared result" });
+  }
+});
+
 // ── GET /api/dashboard ───────────────────────────────────────
 // Returns grouped audit history per URL with scores over time
 app.get("/api/dashboard", requireAuth(), async (req, res) => {
