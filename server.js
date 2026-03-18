@@ -969,15 +969,19 @@ Return ONLY valid JSON in this exact format, no explanation:
     "query 2",
     "query 3",
     "query 4",
-    "query 5"
+    "query 5",
+    "query 6",
+    "query 7"
   ]
 }
 
 Rules for queries:
-- Each query should be how a potential customer would search for this type of product/service
-- Do NOT include the brand name in the queries
-- Queries should be 4-8 words, natural language
-- Cover different angles: alternatives, best tools, how-to, category searches`
+- Generate exactly 7 queries total
+- Queries 1-4: how a potential customer searches for this type of product (natural language, 4-8 words, no brand name)
+- Query 5: "best [product category] tools" or "top [product category] software"
+- Query 6: "[product category] reviews" or "best [product category] reviewed"  
+- Query 7: "[product category] alternatives" or "[product category] compared"
+- Cover different angles: category search, alternatives, comparisons, reviews`
       }]
     });
 
@@ -1006,13 +1010,13 @@ Rules for queries:
       try {
         const msg = await anthropic.messages.create({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 400,
-          messages: [{ role: "user", content: `${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options with brief descriptions.` }]
+          max_tokens: 500,
+          messages: [{ role: "user", content: `${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options. Also mention any relevant review sites, directories, or platforms (like G2, Capterra, Product Hunt, Trustpilot, Reddit etc.) where these tools can be found or compared.` }]
         });
         const text = msg.content[0].text;
         const mentioned = text.toLowerCase().includes(brandLower);
         const competitors = extractBrands(text, brand);
-        return { mentioned, competitors, snippet: text.substring(0, 250) };
+        return { mentioned, competitors, snippet: text.substring(0, 300) };
       } catch { return { mentioned: false, competitors: [], snippet: "" }; }
     }
 
@@ -1020,24 +1024,24 @@ Rules for queries:
       try {
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",
-          max_tokens: 400,
-          messages: [{ role: "user", content: `${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options with brief descriptions.` }]
+          max_tokens: 500,
+          messages: [{ role: "user", content: `${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options. Also mention any relevant review sites, directories, or platforms (like G2, Capterra, Product Hunt, Trustpilot, Reddit etc.) where these tools can be found or compared.` }]
         });
         const text = completion.choices[0].message.content;
         const mentioned = text.toLowerCase().includes(brandLower);
         const competitors = extractBrands(text, brand);
-        return { mentioned, competitors, snippet: text.substring(0, 250) };
+        return { mentioned, competitors, snippet: text.substring(0, 300) };
       } catch { return { mentioned: false, competitors: [], snippet: "" }; }
     }
 
     async function queryGemini(query) {
       try {
         const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(`${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options with brief descriptions.`);
+        const result = await model.generateContent(`${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options. Also mention any relevant review sites, directories, or platforms (like G2, Capterra, Product Hunt, Trustpilot, Reddit etc.) where these tools can be found or compared.`);
         const text = result.response.text();
         const mentioned = text.toLowerCase().includes(brandLower);
         const competitors = extractBrands(text, brand);
-        return { mentioned, competitors, snippet: text.substring(0, 250) };
+        return { mentioned, competitors, snippet: text.substring(0, 300) };
       } catch { return { mentioned: false, competitors: [], snippet: "" }; }
     }
 
