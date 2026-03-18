@@ -256,6 +256,23 @@ async function getOrCreateUser(clerkId, email) {
 
 // ── ROUTES ───────────────────────────────────────────────────
 
+// ── POST /api/sync-email ─────────────────────────────────────
+// Called by frontend on login to store user email
+app.post("/api/sync-email", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const { email } = req.body;
+    if (!email || !req.auth?.userId) return res.json({ ok: false });
+    await pool.query(
+      `UPDATE users SET email = $1 WHERE clerk_id = $2 AND (email IS NULL OR email = '')`,
+      [email, req.auth.userId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    res.json({ ok: false });
+  }
+});
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
