@@ -1042,36 +1042,57 @@ Rules for queries:
     }
 
     function extractBrands(text, ownBrand) {
-      // Look for patterns that indicate brand mentions: "X is", "X offers", "X provides", "try X", "use X", "like X"
-      // Also extract words following common brand indicators
-      const brandPatterns = [
-        /\b([A-Z][a-zA-Z]{2,}(?:\.(?:com|io|co|app))?)\b/g,
+      const textLower = text.toLowerCase();
+      const found = [];
+
+      // Known directories, review platforms to detect explicitly
+      const knownPlatforms = [
+        'G2', 'Capterra', 'Gartner', 'GetApp', 'Software Advice',
+        'Trustpilot', 'TrustRadius', 'Trust Radius', 'AlternativeTo',
+        'SaasHub', 'SaasWorthy', 'Saas Worthy',
+        'Product Hunt', 'BetaList', 'Beta List',
+        'Hacker News', 'Reddit', 'Quora', 'Indie Hackers',
+        'TechCrunch', 'The Verge', 'Verge',
+        'GitHub', 'Medium', 'Substack', 'LinkedIn',
+        'Shopify App Store', 'AppSumo', 'Clutch', 'Crunchbase',
       ];
+      for (const platform of knownPlatforms) {
+        if (textLower.includes(platform.toLowerCase()) && platform.toLowerCase() !== ownBrand.toLowerCase()) {
+          found.push(platform);
+        }
+      }
+
+      // Extract capitalized brand-like words
       const stopWords = new Set([
         "The","This","That","Here","There","These","Those","They","Your","Some","Many",
         "Most","Best","Top","List","Also","With","For","And","But","You","Can","Are",
         "Its","Has","Have","Each","From","Into","When","Where","Which","While","Their",
         "Than","More","Other","Such","Both","Very","Just","Only","Even","Well","Been",
         "Being","Having","Does","Did","Was","Were","Will","Would","Could","Should",
-        "Here","There","About","After","Before","Below","Above","Under","Over","Through",
-        "During","Between","Including","However","Therefore","Additionally","Furthermore",
+        "About","After","Before","Below","Above","Under","Over","Through","During",
+        "Including","However","Therefore","Additionally","Furthermore",
         "Digital","Loyalty","Card","Program","Platform","Tool","App","Software","Service",
         "Solution","System","Business","Customer","Product","Feature","Option","Plan",
         "Free","Paid","Monthly","Annual","Credits","Points","Stamps","Rewards","Mobile",
         "Apple","Google","Wallet","Email","SMS","QR","Code","Dashboard","Analytics",
         "Setup","Easy","Simple","Quick","Fast","Small","Large","Medium","New","Old",
+        "Here","There","Check","Review","Rating","Store","Shop","Online","Website",
       ]);
 
-      const words = [];
-      let match;
       const regex = /\b([A-Z][a-zA-Z]{2,}(?:[A-Z][a-zA-Z]+)?)\b/g;
+      let match;
       while ((match = regex.exec(text)) !== null) {
         const word = match[1];
-        if (!stopWords.has(word) && word.toLowerCase() !== ownBrand.toLowerCase() && word.length >= 3 && word.length <= 20) {
-          words.push(word);
+        if (
+          !stopWords.has(word) &&
+          word.toLowerCase() !== ownBrand.toLowerCase() &&
+          word.length >= 3 && word.length <= 25 &&
+          !found.includes(word)
+        ) {
+          found.push(word);
         }
       }
-      return [...new Set(words)].slice(0, 6);
+      return [...new Set(found)].slice(0, 8);
     }
 
     // Run all 15 queries in parallel (5 queries × 3 AIs)
