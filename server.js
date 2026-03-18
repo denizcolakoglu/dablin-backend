@@ -24,6 +24,191 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// ── BREVO EMAIL ───────────────────────────────────────────────
+const SibApiV3Sdk = require("@getbrevo/brevo");
+const brevoClient = SibApiV3Sdk.ApiClient.instance;
+brevoClient.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
+const transactionalEmailsApi = new SibApiV3Sdk.TransactionalEmailsApi();
+
+const FROM_EMAIL = { email: "hello@dablin.co", name: "Dablin" };
+
+async function sendWelcomeEmail(toEmail) {
+  if (!process.env.BREVO_API_KEY || !toEmail) return;
+  try {
+    const email = new SibApiV3Sdk.SendSmtpEmail();
+    email.sender = FROM_EMAIL;
+    email.to = [{ email: toEmail }];
+    email.subject = "Welcome to Dablin — your AI visibility toolkit is ready";
+    email.htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f7fbf7;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7fbf7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:white;border-radius:16px;overflow:hidden;border:1px solid #d4e8d6;max-width:600px;width:100%;">
+        <tr><td style="background:#0f1a10;padding:28px 40px;text-align:center;">
+          <img src="https://dablin.co/logo.svg" alt="Dablin" height="40" style="display:block;margin:0 auto;" />
+        </td></tr>
+        <tr><td style="padding:40px 40px 32px;">
+          <h1 style="font-size:24px;font-weight:800;color:#0f1a10;margin:0 0 12px;letter-spacing:-0.5px;">Welcome to Dablin 👋</h1>
+          <p style="font-size:15px;color:#5a7a5e;line-height:1.7;margin:0 0 28px;">Your account is ready. Here's what you can do with Dablin right now:</p>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+            <tr><td style="padding:16px;background:#f7fbf7;border:1px solid #d4e8d6;border-radius:10px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="32" style="font-size:20px;vertical-align:top;padding-top:2px;">◎</td>
+                  <td>
+                    <strong style="font-size:14px;color:#0f1a10;display:block;margin-bottom:4px;">AI Visibility Check</strong>
+                    <span style="font-size:13px;color:#5a7a5e;line-height:1.5;">See if ChatGPT, Gemini, and Claude mention your brand when buyers search for your product category.</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+            <tr><td style="height:8px;"></td></tr>
+            <tr><td style="padding:16px;background:#f7fbf7;border:1px solid #d4e8d6;border-radius:10px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="32" style="font-size:20px;vertical-align:top;padding-top:2px;">⌕</td>
+                  <td>
+                    <strong style="font-size:14px;color:#0f1a10;display:block;margin-bottom:4px;">AI Visibility Audit</strong>
+                    <span style="font-size:13px;color:#5a7a5e;line-height:1.5;">12 technical checks to find why AI engines can't find or understand your pages — with ready-to-copy fixes.</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+            <tr><td style="height:8px;"></td></tr>
+            <tr><td style="padding:16px;background:#f7fbf7;border:1px solid #d4e8d6;border-radius:10px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="32" style="font-size:20px;vertical-align:top;padding-top:2px;">✓</td>
+                  <td>
+                    <strong style="font-size:14px;color:#0f1a10;display:block;margin-bottom:4px;">SEO Audit</strong>
+                    <span style="font-size:13px;color:#5a7a5e;line-height:1.5;">13-point SEO check on any product page URL with AI-generated fixes for every issue.</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+            <tr><td style="height:8px;"></td></tr>
+            <tr><td style="padding:16px;background:#f7fbf7;border:1px solid #d4e8d6;border-radius:10px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="32" style="font-size:20px;vertical-align:top;padding-top:2px;">✦</td>
+                  <td>
+                    <strong style="font-size:14px;color:#0f1a10;display:block;margin-bottom:4px;">Generate Product Description</strong>
+                    <span style="font-size:13px;color:#5a7a5e;line-height:1.5;">SEO-ready title, meta description, feature bullets and full HTML in 30 seconds.</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td align="center">
+              <a href="https://dablin.co" style="display:inline-block;background:#2d7a3a;color:white;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:-0.2px;">Get started →</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="background:#f7fbf7;border-top:1px solid #d4e8d6;padding:20px 40px;text-align:center;">
+          <p style="font-size:12px;color:#9ab09c;margin:0;">© 2026 Dablin · <a href="https://dablin.co" style="color:#9ab09c;">dablin.co</a> · Pay per use, no subscription</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+    await transactionalEmailsApi.sendTransacEmail(email);
+    console.log("[email] Welcome email sent to", toEmail);
+  } catch (err) {
+    console.warn("[email] Welcome email failed:", err.message);
+  }
+}
+
+async function sendReengagementEmail(toEmail) {
+  if (!process.env.BREVO_API_KEY || !toEmail) return;
+  try {
+    const email = new SibApiV3Sdk.SendSmtpEmail();
+    email.sender = FROM_EMAIL;
+    email.to = [{ email: toEmail }];
+    email.subject = "Does ChatGPT mention your store? Check in 20 seconds";
+    email.htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f7fbf7;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7fbf7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:white;border-radius:16px;overflow:hidden;border:1px solid #d4e8d6;max-width:600px;width:100%;">
+        <tr><td style="background:#0f1a10;padding:28px 40px;text-align:center;">
+          <img src="https://dablin.co/logo.svg" alt="Dablin" height="40" style="display:block;margin:0 auto;" />
+        </td></tr>
+        <tr><td style="padding:40px 40px 32px;">
+          <h1 style="font-size:24px;font-weight:800;color:#0f1a10;margin:0 0 12px;letter-spacing:-0.5px;">Your credits are still waiting</h1>
+          <p style="font-size:15px;color:#5a7a5e;line-height:1.7;margin:0 0 28px;">You signed up for Dablin but haven't run your first check yet. Here's what's available:</p>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+            <!-- AI Visibility Check -->
+            <tr><td style="padding:16px;background:#e8f5ea;border:1px solid #c8e6cb;border-radius:10px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="32" style="font-size:20px;vertical-align:top;padding-top:2px;">◎</td>
+                  <td>
+                    <strong style="font-size:14px;color:#0f1a10;display:block;margin-bottom:4px;">AI Visibility Check</strong>
+                    <span style="font-size:13px;color:#5a7a5e;line-height:1.5;">Find out if ChatGPT, Gemini, and Claude mention your brand — and which competitors they recommend instead. Takes about 20 seconds.</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+            <tr><td style="height:8px;"></td></tr>
+            <!-- AI Visibility Audit -->
+            <tr><td style="padding:16px;background:#f7fbf7;border:1px solid #d4e8d6;border-radius:10px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="32" style="font-size:20px;vertical-align:top;padding-top:2px;">⌕</td>
+                  <td>
+                    <strong style="font-size:14px;color:#0f1a10;display:block;margin-bottom:4px;">AI Visibility Audit</strong>
+                    <span style="font-size:13px;color:#5a7a5e;line-height:1.5;">12 technical checks to find why AI engines can't find your pages. Every failed check comes with a ready-to-copy fix.</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+            <tr><td style="height:8px;"></td></tr>
+            <!-- SEO Audit -->
+            <tr><td style="padding:16px;background:#f7fbf7;border:1px solid #d4e8d6;border-radius:10px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="32" style="font-size:20px;vertical-align:top;padding-top:2px;">✓</td>
+                  <td>
+                    <strong style="font-size:14px;color:#0f1a10;display:block;margin-bottom:4px;">SEO Audit</strong>
+                    <span style="font-size:13px;color:#5a7a5e;line-height:1.5;">13-point SEO check on any product page URL. AI-generated fixes for every issue.</span>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td align="center">
+              <a href="https://dablin.co" style="display:inline-block;background:#2d7a3a;color:white;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:-0.2px;">Start your first check →</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="background:#f7fbf7;border-top:1px solid #d4e8d6;padding:20px 40px;text-align:center;">
+          <p style="font-size:12px;color:#9ab09c;margin:0;">© 2026 Dablin · <a href="https://dablin.co" style="color:#9ab09c;">dablin.co</a> · You're receiving this because you signed up at dablin.co</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+    await transactionalEmailsApi.sendTransacEmail(email);
+    console.log("[email] Re-engagement email sent to", toEmail);
+  } catch (err) {
+    console.warn("[email] Re-engagement email failed:", err.message);
+  }
+}
+
 const app  = express();app.set('trust proxy', 1);
 app.use(clerkMiddleware());
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -62,7 +247,9 @@ async function getOrCreateUser(clerkId, email) {
     "INSERT INTO users (clerk_id, email, credits) VALUES ($1, $2, 7) RETURNING *",
     [clerkId, email]
   );
-  return created.rows[0]; // New users get 3 free credits
+  // Send welcome email to new users
+  if (email) sendWelcomeEmail(email).catch(() => {});
+  return created.rows[0];
 }
 
 // ── ROUTES ───────────────────────────────────────────────────
@@ -1496,6 +1683,47 @@ app.get("/api/dashboard", requireAuth(), async (req, res) => {
     res.status(500).json({ error: "Failed to load dashboard" });
   }
 });
+
+// ── DAILY CRON: Re-engagement emails ─────────────────────────
+// Runs every day at 10:00 UTC
+// Sends re-engagement email to users who signed up 3 days ago with zero activity
+async function runReengagementCron() {
+  console.log("[cron] Running re-engagement check...");
+  try {
+    // Find users who signed up 3 days ago (between 72h and 96h ago)
+    const users = await pool.query(`
+      SELECT u.clerk_id, u.email, u.created_at
+      FROM users u
+      WHERE u.created_at BETWEEN NOW() - INTERVAL '96 hours' AND NOW() - INTERVAL '72 hours'
+      AND u.email IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM generations g WHERE g.clerk_id = u.clerk_id)
+      AND NOT EXISTS (SELECT 1 FROM audits a WHERE a.clerk_id = u.clerk_id)
+      AND NOT EXISTS (SELECT 1 FROM visibility_checks v WHERE v.clerk_id = u.clerk_id)
+    `);
+    console.log(`[cron] Found ${users.rows.length} inactive users to re-engage`);
+    for (const user of users.rows) {
+      await sendReengagementEmail(user.email);
+      await new Promise(r => setTimeout(r, 200)); // Rate limit: 5/sec
+    }
+  } catch (err) {
+    console.error("[cron] Re-engagement cron error:", err.message);
+  }
+}
+
+// Schedule daily at 10:00 UTC
+function scheduleCron() {
+  const now = new Date();
+  const next = new Date();
+  next.setUTCHours(10, 0, 0, 0);
+  if (next <= now) next.setUTCDate(next.getUTCDate() + 1);
+  const msUntilNext = next - now;
+  setTimeout(() => {
+    runReengagementCron();
+    setInterval(runReengagementCron, 24 * 60 * 60 * 1000);
+  }, msUntilNext);
+  console.log(`[cron] Re-engagement cron scheduled, next run in ${Math.round(msUntilNext / 60000)} minutes`);
+}
+scheduleCron();
 
 // ── START SERVER ─────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
