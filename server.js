@@ -273,6 +273,17 @@ app.post("/api/sync-email", requireAuth(), async (req, res) => {
   }
 });
 
+// ── GET /api/test-email (temp) ───────────────────────────────
+app.get("/api/test-email", requireAuth(), async (req, res) => {
+  const authObj = getAuth(req); req.auth = authObj;
+  const user = await pool.query("SELECT email FROM users WHERE clerk_id = $1", [req.auth?.userId]);
+  const email = user.rows[0]?.email;
+  if (!email) return res.json({ error: "No email found" });
+  await sendReengagementEmail(email);
+  await sendWelcomeEmail(email);
+  res.json({ ok: true, sentTo: email });
+});
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
