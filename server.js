@@ -25,21 +25,39 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ── BREVO EMAIL ───────────────────────────────────────────────
-const SibApiV3Sdk = require("@getbrevo/brevo");
-const brevoClient = SibApiV3Sdk.ApiClient.instance;
-brevoClient.authentications["api-key"].apiKey = process.env.BREVO_API_KEY;
-const transactionalEmailsApi = new SibApiV3Sdk.TransactionalEmailsApi();
-
 const FROM_EMAIL = { email: "hello@dablin.co", name: "Dablin" };
 
-async function sendWelcomeEmail(toEmail) {
+async function sendEmail(toEmail, subject, htmlContent) {
   if (!process.env.BREVO_API_KEY || !toEmail) return;
   try {
-    const email = new SibApiV3Sdk.SendSmtpEmail();
-    email.sender = FROM_EMAIL;
-    email.to = [{ email: toEmail }];
-    email.subject = "Welcome to Dablin — your AI visibility toolkit is ready";
-    email.htmlContent = `
+    const fetch = (await import("node-fetch")).default;
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: FROM_EMAIL,
+        to: [{ email: toEmail }],
+        subject,
+        htmlContent,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn("[email] Brevo error:", err);
+    } else {
+      console.log("[email] Sent to", toEmail, "-", subject);
+    }
+  } catch (err) {
+    console.warn("[email] Send failed:", err.message);
+  }
+}
+
+async function sendWelcomeEmail(toEmail) {
+  await sendEmail(toEmail, "Welcome to Dablin — your AI visibility toolkit is ready", `
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -117,22 +135,11 @@ async function sendWelcomeEmail(toEmail) {
     </td></tr>
   </table>
 </body>
-</html>`;
-    await transactionalEmailsApi.sendTransacEmail(email);
-    console.log("[email] Welcome email sent to", toEmail);
-  } catch (err) {
-    console.warn("[email] Welcome email failed:", err.message);
-  }
+</html>`);
 }
 
 async function sendReengagementEmail(toEmail) {
-  if (!process.env.BREVO_API_KEY || !toEmail) return;
-  try {
-    const email = new SibApiV3Sdk.SendSmtpEmail();
-    email.sender = FROM_EMAIL;
-    email.to = [{ email: toEmail }];
-    email.subject = "Does ChatGPT mention your store? Check in 20 seconds";
-    email.htmlContent = `
+  await sendEmail(toEmail, "Does ChatGPT mention your store? Check in 20 seconds", `
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -201,12 +208,7 @@ async function sendReengagementEmail(toEmail) {
     </td></tr>
   </table>
 </body>
-</html>`;
-    await transactionalEmailsApi.sendTransacEmail(email);
-    console.log("[email] Re-engagement email sent to", toEmail);
-  } catch (err) {
-    console.warn("[email] Re-engagement email failed:", err.message);
-  }
+</html>`);
 }
 
 const app  = express();app.set('trust proxy', 1);
