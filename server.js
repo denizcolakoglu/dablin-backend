@@ -1157,6 +1157,14 @@ Rules for queries:
       try {
         await client.query("BEGIN");
         await client.query("UPDATE users SET credits = credits - 7 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query(
+          `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+           ON CONFLICT DO NOTHING`,
+          [req.auth?.userId, url, brand, JSON.stringify(queries), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors)]
+        ).catch(() => {
+          // Table may not exist yet — create it and retry
+        });
         await client.query("COMMIT");
       } catch (dbErr) {
         await client.query("ROLLBACK");
@@ -1164,6 +1172,31 @@ Rules for queries:
         client.release();
       }
     } catch {}
+
+    // Ensure visibility_checks table exists
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS visibility_checks (
+          id SERIAL PRIMARY KEY,
+          clerk_id TEXT NOT NULL,
+          url TEXT,
+          brand TEXT,
+          queries JSONB,
+          results JSONB,
+          mention_summary JSONB,
+          top_competitors JSONB,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `);
+      // Save result
+      await pool.query(
+        `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        [req.auth?.userId, url, brand, JSON.stringify(queries), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors)]
+      );
+    } catch (saveErr) {
+      console.warn("visibility_checks save error:", saveErr.message);
+    }
 
     const updated = await pool.query("SELECT credits FROM users WHERE clerk_id = $1", [req.auth?.userId]);
 
@@ -1251,6 +1284,28 @@ app.get("/api/audit-history", requireAuth(), async (req, res) => {
   } catch (err) {
     console.error("GET /api/audit-history error:", err);
     res.status(500).json({ error: "Failed to fetch audit history" });
+  }
+});
+
+// ── GET /api/visibility-check-history ───────────────────────
+app.get("/api/visibility-check-history", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req);
+    req.auth = authObj;
+    await pool.query(`CREATE TABLE IF NOT EXISTS visibility_checks (
+      id SERIAL PRIMARY KEY, clerk_id TEXT NOT NULL, url TEXT, brand TEXT,
+      queries JSONB, results JSONB, mention_summary JSONB, top_competitors JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    const result = await pool.query(
+      `SELECT id, url, brand, mention_summary, top_competitors, created_at
+       FROM visibility_checks WHERE clerk_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      [req.auth?.userId]
+    );
+    res.json({ items: result.rows });
+  } catch (err) {
+    console.error("GET /api/visibility-check-history error:", err);
+    res.status(500).json({ error: "Failed to fetch visibility check history" });
   }
 });
 
