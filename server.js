@@ -913,11 +913,63 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
   }
 });
 
+// ── GET /api/saved-queries ───────────────────────────────────
+app.get("/api/saved-queries", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    await pool.query(`CREATE TABLE IF NOT EXISTS saved_queries (
+      id SERIAL PRIMARY KEY, clerk_id TEXT NOT NULL, query TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    const result = await pool.query(
+      `SELECT id, query, created_at FROM saved_queries WHERE clerk_id = $1 ORDER BY created_at DESC`,
+      [req.auth?.userId]
+    );
+    res.json({ items: result.rows });
+  } catch (err) { res.status(500).json({ error: "Failed to fetch saved queries" }); }
+});
+
+// ── POST /api/saved-queries ──────────────────────────────────
+app.post("/api/saved-queries", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const { query } = req.body;
+    if (!query?.trim()) return res.status(400).json({ error: "query is required" });
+    await pool.query(`CREATE TABLE IF NOT EXISTS saved_queries (
+      id SERIAL PRIMARY KEY, clerk_id TEXT NOT NULL, query TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+    // Check not duplicate
+    const exists = await pool.query(
+      `SELECT id FROM saved_queries WHERE clerk_id = $1 AND query = $2`,
+      [req.auth?.userId, query.trim()]
+    );
+    if (exists.rows.length > 0) return res.json({ id: exists.rows[0].id, query: query.trim(), duplicate: true });
+    const result = await pool.query(
+      `INSERT INTO saved_queries (clerk_id, query, created_at) VALUES ($1, $2, NOW()) RETURNING id, query, created_at`,
+      [req.auth?.userId, query.trim()]
+    );
+    res.json(result.rows[0]);
+  } catch (err) { res.status(500).json({ error: "Failed to save query" }); }
+});
+
+// ── DELETE /api/saved-queries/:id ───────────────────────────
+app.delete("/api/saved-queries/:id", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    await pool.query(
+      `DELETE FROM saved_queries WHERE id = $1 AND clerk_id = $2`,
+      [req.params.id, req.auth?.userId]
+    );
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Failed to delete query" }); }
+});
+
 // ── POST /api/visibility-check ───────────────────────────────
-// Queries Claude, GPT-4o, Gemini with 5 brand queries, returns mention table
+// Queries Claude, GPT-4o, Gemini with brand queries, returns mention table
 // Costs 7 credits
 app.post("/api/visibility-check", requireAuth(), async (req, res) => {
-  const { url } = req.body;
+  const { url, savedQueries } = req.body;
   if (!url) return res.status(400).json({ error: "url is required" });
   try { new URL(url); } catch { return res.status(400).json({ error: "Invalid URL format" }); }
 
@@ -1002,6 +1054,9 @@ Rules for queries:
     if (queries.length === 0) {
       return res.status(500).json({ error: "Could not generate queries for this page." });
     }
+
+    // If user has saved queries, use those instead of generated ones
+    const queriesToRun = (savedQueries && savedQueries.length > 0) ? savedQueries : queries;
 
     // Step 3: Query each AI with each query in parallel
     const brandLower = brand.toLowerCase();
@@ -1124,7 +1179,7 @@ Rules for queries:
     }
 
     // Run all 15 queries in parallel (5 queries × 3 AIs)
-    const results = await Promise.all(queries.map(async (query) => {
+    const results = await Promise.all(queriesToRun.map(async (query) => {
       const [claude, gpt, gem] = await Promise.all([
         queryClause(query),
         queryGPT(query),
@@ -1180,7 +1235,9 @@ Rules for queries:
     res.json({
       url,
       brand,
-      queries,
+      queries: queriesToRun,
+      generatedQueries: queries,
+      usedSavedQueries: savedQueries && savedQueries.length > 0,
       results,
       mentionSummary,
       topCompetitors,
