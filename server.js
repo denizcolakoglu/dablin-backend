@@ -1006,43 +1006,67 @@ Rules for queries:
     // Step 3: Query each AI with each query in parallel
     const brandLower = brand.toLowerCase();
 
+    const queryPrompt = (query) =>
+      `${query}\n\nRespond ONLY with a valid JSON object, no explanation, no markdown:\n{"response": "your answer here listing 5+ specific named tools or services", "brands": ["BrandName1", "BrandName2"], "platforms": ["G2", "Reddit"]}\n\nRules:\n- "brands": only real product/company brand names that are direct competitors or alternatives (NOT generic words, NOT the user's brand "${brand}")\n- "platforms": only known review sites, directories, or communities where these tools can be found (G2, Capterra, Gartner, GetApp, Software Advice, Trustpilot, TrustRadius, AlternativeTo, SaasHub, Product Hunt, BetaList, Hacker News, Reddit, Quora, Indie Hackers, TechCrunch, GitHub, Medium, Substack, LinkedIn, AppSumo, Clutch, Crunchbase)\n- Both arrays should only contain names explicitly mentioned in your response`;
+
     async function queryClause(query) {
       try {
         const msg = await anthropic.messages.create({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 500,
-          messages: [{ role: "user", content: `${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options. Also mention any relevant review sites, directories, or platforms (like G2, Capterra, Product Hunt, Trustpilot, Reddit etc.) where these tools can be found or compared.` }]
+          max_tokens: 600,
+          messages: [{ role: "user", content: queryPrompt(query) }]
         });
         const text = msg.content[0].text;
-        const mentioned = text.toLowerCase().includes(brandLower);
-        const competitors = extractBrands(text, brand);
-        return { mentioned, competitors, snippet: text.substring(0, 300) };
-      } catch { return { mentioned: false, competitors: [], snippet: "" }; }
+        let brands = [], platforms = [], snippet = "";
+        try {
+          const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          const parsed = JSON.parse(clean);
+          snippet = (parsed.response || "").substring(0, 300);
+          brands = (parsed.brands || []).filter(b => b.toLowerCase() !== brandLower);
+          platforms = parsed.platforms || [];
+        } catch { snippet = text.substring(0, 300); }
+        const mentioned = (snippet + text).toLowerCase().includes(brandLower);
+        return { mentioned, brands, platforms, competitors: [...brands, ...platforms], snippet };
+      } catch { return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" }; }
     }
 
     async function queryGPT(query) {
       try {
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",
-          max_tokens: 500,
-          messages: [{ role: "user", content: `${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options. Also mention any relevant review sites, directories, or platforms (like G2, Capterra, Product Hunt, Trustpilot, Reddit etc.) where these tools can be found or compared.` }]
+          max_tokens: 600,
+          messages: [{ role: "user", content: queryPrompt(query) }]
         });
         const text = completion.choices[0].message.content;
-        const mentioned = text.toLowerCase().includes(brandLower);
-        const competitors = extractBrands(text, brand);
-        return { mentioned, competitors, snippet: text.substring(0, 300) };
-      } catch { return { mentioned: false, competitors: [], snippet: "" }; }
+        let brands = [], platforms = [], snippet = "";
+        try {
+          const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          const parsed = JSON.parse(clean);
+          snippet = (parsed.response || "").substring(0, 300);
+          brands = (parsed.brands || []).filter(b => b.toLowerCase() !== brandLower);
+          platforms = parsed.platforms || [];
+        } catch { snippet = text.substring(0, 300); }
+        const mentioned = (snippet + text).toLowerCase().includes(brandLower);
+        return { mentioned, brands, platforms, competitors: [...brands, ...platforms], snippet };
+      } catch { return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" }; }
     }
 
     async function queryGemini(query) {
       try {
         const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(`${query}\n\nProvide a list of specific products, tools, or services with their brand names. Include at least 5 named options. Also mention any relevant review sites, directories, or platforms (like G2, Capterra, Product Hunt, Trustpilot, Reddit etc.) where these tools can be found or compared.`);
+        const result = await model.generateContent(queryPrompt(query));
         const text = result.response.text();
-        const mentioned = text.toLowerCase().includes(brandLower);
-        const competitors = extractBrands(text, brand);
-        return { mentioned, competitors, snippet: text.substring(0, 300) };
-      } catch { return { mentioned: false, competitors: [], snippet: "" }; }
+        let brands = [], platforms = [], snippet = "";
+        try {
+          const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          const parsed = JSON.parse(clean);
+          snippet = (parsed.response || "").substring(0, 300);
+          brands = (parsed.brands || []).filter(b => b.toLowerCase() !== brandLower);
+          platforms = parsed.platforms || [];
+        } catch { snippet = text.substring(0, 300); }
+        const mentioned = (snippet + text).toLowerCase().includes(brandLower);
+        return { mentioned, brands, platforms, competitors: [...brands, ...platforms], snippet };
+      } catch { return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" }; }
     }
 
     function extractBrands(text, ownBrand) {
@@ -1109,16 +1133,15 @@ Rules for queries:
       return { query, claude, gpt, gemini: gem };
     }));
 
-    // Aggregate competitor mentions
+    // Aggregate competitor brands (separate from platforms)
     const competitorCounts = {};
     results.forEach(r => {
-      [...r.claude.competitors, ...r.gpt.competitors, ...r.gemini.competitors].forEach(c => {
+      [...(r.claude.brands||[]), ...(r.gpt.brands||[]), ...(r.gemini.brands||[])].forEach(c => {
         competitorCounts[c] = (competitorCounts[c] || 0) + 1;
       });
     });
     const topCompetitors = Object.entries(competitorCounts)
       .sort(([,a],[,b]) => b - a)
-      .slice(0, 8)
       .map(([name, count]) => ({ name, count }));
 
     const mentionSummary = {
