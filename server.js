@@ -1270,13 +1270,20 @@ Rules for queries:
     const queryPrompt = (query) =>
       `${query}\n\nRespond ONLY with a valid JSON object, no explanation, no markdown:\n{"response": "your answer here listing 5+ specific named tools or services", "brands": ["BrandName1", "BrandName2"], "platforms": ["G2", "Reddit"]}\n\nRules:\n- "brands": only real product/company brand names that are direct competitors or alternatives (NOT generic words, NOT the user's brand "${brand}")\n- "platforms": only known review sites, directories, or communities where these tools can be found (G2, Capterra, Gartner, GetApp, Software Advice, Trustpilot, TrustRadius, AlternativeTo, SaasHub, Product Hunt, BetaList, Hacker News, Reddit, Quora, Indie Hackers, TechCrunch, GitHub, Medium, Substack, LinkedIn, AppSumo, Clutch, Crunchbase)\n- Both arrays should only contain names explicitly mentioned in your response`;
 
+    function withTimeout(promise, ms = 20000) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))
+      ]);
+    }
+
     async function queryClause(query) {
       try {
-        const msg = await anthropic.messages.create({
+        const msg = await withTimeout(anthropic.messages.create({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 600,
           messages: [{ role: "user", content: queryPrompt(query) }]
-        });
+        }));
         const text = msg.content[0].text;
         let brands = [], platforms = [], snippet = "";
         try {
@@ -1288,16 +1295,19 @@ Rules for queries:
         } catch { snippet = text.substring(0, 300); }
         const mentioned = (snippet + text).toLowerCase().includes(brandLower);
         return { mentioned, brands, platforms, competitors: [...brands, ...platforms], snippet };
-      } catch { return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" }; }
+      } catch(e) {
+        console.warn("[visibility] Claude query failed:", e.message);
+        return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" };
+      }
     }
 
     async function queryGPT(query) {
       try {
-        const completion = await openai.chat.completions.create({
+        const completion = await withTimeout(openai.chat.completions.create({
           model: "gpt-4o-mini",
           max_tokens: 600,
           messages: [{ role: "user", content: queryPrompt(query) }]
-        });
+        }));
         const text = completion.choices[0].message.content;
         let brands = [], platforms = [], snippet = "";
         try {
@@ -1309,13 +1319,16 @@ Rules for queries:
         } catch { snippet = text.substring(0, 300); }
         const mentioned = (snippet + text).toLowerCase().includes(brandLower);
         return { mentioned, brands, platforms, competitors: [...brands, ...platforms], snippet };
-      } catch { return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" }; }
+      } catch(e) {
+        console.warn("[visibility] GPT query failed:", e.message);
+        return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" };
+      }
     }
 
     async function queryGemini(query) {
       try {
         const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const result = await model.generateContent(queryPrompt(query));
+        const result = await withTimeout(model.generateContent(queryPrompt(query)));
         const text = result.response.text();
         let brands = [], platforms = [], snippet = "";
         try {
@@ -1327,7 +1340,10 @@ Rules for queries:
         } catch { snippet = text.substring(0, 300); }
         const mentioned = (snippet + text).toLowerCase().includes(brandLower);
         return { mentioned, brands, platforms, competitors: [...brands, ...platforms], snippet };
-      } catch { return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" }; }
+      } catch(e) {
+        console.warn("[visibility] Gemini query failed:", e.message);
+        return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" };
+      }
     }
 
     function extractBrands(text, ownBrand) {
@@ -1384,8 +1400,8 @@ Rules for queries:
       return [...new Set(found)].slice(0, 8);
     }
 
-    // Run all 15 queries in parallel (5 queries × 3 AIs)
-    const results = await Promise.all(queriesToRun.map(async (query) => {
+    // Run all queries in parallel (up to 7 queries × 3 AIs = 21 calls, each with 20s timeout)
+    const results = await Promise.all(queriesToRun.slice(0, 7).map(async (query) => {
       const [claude, gpt, gem] = await Promise.all([
         queryClause(query),
         queryGPT(query),
