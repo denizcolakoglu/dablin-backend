@@ -273,15 +273,6 @@ app.post("/api/sync-email", requireAuth(), async (req, res) => {
   }
 });
 
-// ── GET /api/test-email (temp) ───────────────────────────────
-app.get("/api/test-email/:email", async (req, res) => {
-  const email = req.params.email;
-  if (!email) return res.json({ error: "No email provided" });
-  await sendWelcomeEmail(email);
-  await sendReengagementEmail(email);
-  res.json({ ok: true, sentTo: email });
-});
-
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
