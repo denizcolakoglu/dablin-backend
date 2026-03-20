@@ -1327,9 +1327,23 @@ Rules for queries:
 
     async function queryGemini(query) {
       try {
-        const model = gemini.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await withTimeout(model.generateContent(queryPrompt(query)));
-        const text = result.response.text();
+        const fetch = (await import("node-fetch")).default;
+        const geminiRes = await withTimeout(fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: queryPrompt(query) }] }]
+            })
+          }
+        ));
+        const json = await geminiRes.json();
+        if (!geminiRes.ok) {
+          console.warn("[visibility] Gemini REST error:", json?.error?.message);
+          return { mentioned: false, brands: [], platforms: [], competitors: [], snippet: "" };
+        }
+        const text = json.candidates?.[0]?.content?.parts?.[0]?.text || "";
         let brands = [], platforms = [], snippet = "";
         try {
           const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
