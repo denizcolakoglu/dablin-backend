@@ -1327,7 +1327,7 @@ Rules for queries:
 
     async function queryGemini(query) {
       try {
-        const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = gemini.getGenerativeModel({ model: "gemini-2.0-flash" });
         const result = await withTimeout(model.generateContent(queryPrompt(query)));
         const text = result.response.text();
         let brands = [], platforms = [], snippet = "";
