@@ -263,12 +263,22 @@ app.post("/api/sync-email", requireAuth(), async (req, res) => {
     const authObj = getAuth(req); req.auth = authObj;
     const { email } = req.body;
     if (!email || !req.auth?.userId) return res.json({ ok: false });
-    await pool.query(
-      `UPDATE users SET email = $1 WHERE clerk_id = $2 AND (email IS NULL OR email = '')`,
+    // Update email regardless of current value — always keep it fresh
+    const result = await pool.query(
+      `UPDATE users SET email = $1 WHERE clerk_id = $2`,
       [email, req.auth.userId]
     );
+    // If no rows updated, user doesn't exist yet — create them
+    if (result.rowCount === 0) {
+      await pool.query(
+        `INSERT INTO users (clerk_id, email, credits) VALUES ($1, $2, 7) ON CONFLICT (clerk_id) DO UPDATE SET email = $2`,
+        [req.auth.userId, email]
+      );
+    }
+    console.log("[sync-email] updated email for", req.auth.userId, email);
     res.json({ ok: true });
   } catch (err) {
+    console.error("[sync-email] error:", err.message);
     res.json({ ok: false });
   }
 });
