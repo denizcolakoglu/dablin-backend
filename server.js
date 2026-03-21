@@ -1171,6 +1171,20 @@ app.delete("/api/saved-queries/:id", requireAuth(), async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Failed to delete query" }); }
 });
 
+// ── PATCH /api/saved-queries/:id ────────────────────────────
+app.patch("/api/saved-queries/:id", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "query is required" });
+    await pool.query(
+      `UPDATE saved_queries SET query = $1 WHERE id = $2 AND clerk_id = $3`,
+      [query, req.params.id, req.auth?.userId]
+    );
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: "Failed to update query" }); }
+});
+
 // ── POST /api/generate-queries ───────────────────────────────
 // Scrapes URL, extracts brand + generates 7 queries. No credits charged.
 app.post("/api/generate-queries", requireAuth(), async (req, res) => {
