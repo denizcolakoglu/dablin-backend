@@ -1505,23 +1505,43 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
 });
 
 // ── GET /api/usage/daily ─────────────────────────────────────
-// Returns generation counts per day for the last 7 days
+// Returns usage counts per day for the last 7 days
+// ?type=generate|seo_audit|ai_audit|visibility_check
 app.get("/api/usage/daily", requireAuth(), async (req, res) => {
   try {
     const authObj = getAuth(req);
     req.auth = authObj;
+    const type = req.query.type || 'generate';
 
-    const result = await pool.query(
-      `SELECT DATE(created_at) as day, COUNT(*) as count
-       FROM generations
-       WHERE clerk_id = $1
-         AND created_at >= NOW() - INTERVAL '7 days'
-       GROUP BY DATE(created_at)
-       ORDER BY day ASC`,
-      [req.auth?.userId]
-    );
+    let query;
+    if (type === 'generate') {
+      query = `SELECT DATE(created_at) as day, COUNT(*) as count
+               FROM generations WHERE clerk_id = $1
+               AND created_at >= NOW() - INTERVAL '7 days'
+               GROUP BY DATE(created_at) ORDER BY day ASC`;
+    } else if (type === 'seo_audit') {
+      query = `SELECT DATE(created_at) as day, COUNT(*) as count
+               FROM audits WHERE clerk_id = $1
+               AND checks::text NOT LIKE '%llmsTxt%'
+               AND created_at >= NOW() - INTERVAL '7 days'
+               GROUP BY DATE(created_at) ORDER BY day ASC`;
+    } else if (type === 'ai_audit') {
+      query = `SELECT DATE(created_at) as day, COUNT(*) as count
+               FROM audits WHERE clerk_id = $1
+               AND checks::text LIKE '%llmsTxt%'
+               AND created_at >= NOW() - INTERVAL '7 days'
+               GROUP BY DATE(created_at) ORDER BY day ASC`;
+    } else if (type === 'visibility_check') {
+      query = `SELECT DATE(created_at) as day, COUNT(*) as count
+               FROM visibility_checks WHERE clerk_id = $1
+               AND created_at >= NOW() - INTERVAL '7 days'
+               GROUP BY DATE(created_at) ORDER BY day ASC`;
+    } else {
+      return res.status(400).json({ error: "Invalid type" });
+    }
 
-    // Fill in missing days with 0
+    const result = await pool.query(query, [req.auth?.userId]);
+
     const days = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
