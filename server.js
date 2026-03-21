@@ -659,7 +659,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     });
 
     if (!response.ok) {
-      return res.status(400).json({ error: `Could not fetch page: ${response.status}` });
+      return res.status(400).json({ error: response.status === 403 ? "This website blocks automated access. Try a different URL or a specific product page instead." : response.status === 404 ? "Page not found. Check the URL and try again." : `Unable to reach this page (error ${response.status}). Make sure the URL is public and try again.` });
     }
 
     const html = await response.text();
@@ -926,7 +926,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
     });
     const responseTime = Date.now() - startTime;
 
-    if (!response.ok) return res.status(400).json({ error: `Could not fetch page: ${response.status}` });
+    if (!response.ok) return res.status(400).json({ error: response.status === 403 ? "This website blocks automated access. Try a different URL or a specific product page instead." : response.status === 404 ? "Page not found. Check the URL and try again." : `Unable to reach this page (error ${response.status}). Make sure the URL is public and try again.` });
 
     const html = await response.text();
     const cheerio = require("cheerio");
@@ -1208,7 +1208,7 @@ app.post("/api/generate-queries", requireAuth(), async (req, res) => {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; DablinBot/1.0)" },
       timeout: 10000,
     });
-    if (!pageRes.ok) return res.status(400).json({ error: `Could not fetch page: ${pageRes.status}` });
+    if (!pageRes.ok) return res.status(400).json({ error: pageRes.status === 403 ? "This website blocks automated access. Try a different URL or a specific product page instead." : pageRes.status === 404 ? "Page not found. Check the URL and try again." : `Unable to reach this page (error ${pageRes.status}). Make sure the URL is public and try again.` });
     const html = await pageRes.text();
     const cheerio = require("cheerio");
     const $ = cheerio.load(html);
