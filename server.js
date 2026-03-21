@@ -1447,7 +1447,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
         await client.query(
           `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-          [req.auth?.userId, url, brand, JSON.stringify(queries), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors)]
+          [req.auth?.userId, url, brand, JSON.stringify(queriesToRun), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors)]
         );
         await client.query("COMMIT");
         console.log("[visibility-check] saved for", req.auth?.userId, url);
@@ -1467,7 +1467,6 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       url,
       brand,
       queries: queriesToRun,
-      generatedQueries: queries,
       usedSavedQueries: savedQueries && savedQueries.length > 0,
       results,
       mentionSummary,
