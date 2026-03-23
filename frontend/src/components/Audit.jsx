@@ -219,7 +219,7 @@ export default function Audit({ setPage }) {
       `}</style>
 
       <p className="audit-sub">
-        Paste a product page URL and Dablin will run 13 SEO checks — including schema, Open Graph, and technical SEO. <strong>€0.10 per audit.</strong>
+        Paste a product page URL and Dablin will run 13 SEO checks — including schema, Open Graph, and technical SEO. <strong>€0.50 per audit.</strong>
       </p>
 
       <div className="audit-input-row">
@@ -240,7 +240,7 @@ export default function Audit({ setPage }) {
         <div className="no-credits-banner">
           <div className="no-credits-text">
             <h4>Not enough balance</h4>
-            <p>SEO Audit costs €0.10. Top up your balance to continue.</p>
+            <p>SEO Audit costs €0.50. Top up your balance to continue.</p>
           </div>
           <button className="no-credits-btn" onClick={() => setPage("pricing")}>Buy Credits</button>
         </div>

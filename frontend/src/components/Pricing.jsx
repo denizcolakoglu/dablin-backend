@@ -5,9 +5,9 @@ import { trackEvent } from "../analytics";
 const BASE = "https://dablin-backend-production.up.railway.app";
 
 const FEATURE_PRICES = {
-  visibility_check: 0.35,
-  ai_audit:         0.20,
-  seo_audit:        0.10,
+  visibility_check: 1.00,
+  ai_audit:         0.80,
+  seo_audit:        0.50,
   generate:         0.05,
 };
 

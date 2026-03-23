@@ -524,9 +524,9 @@ app.get("/api/history", requireAuth(), async (req, res) => {
 // ── PRICING CONFIG ────────────────────────────────────────────
 // Cost in USD per feature (API cost × 25)
 const FEATURE_PRICES = {
-  visibility_check: 0.35,  // AI Visibility Check
-  ai_audit:         0.20,  // AI Visibility Audit
-  seo_audit:        0.10,  // SEO Audit
+  visibility_check: 1.00,  // AI Visibility Check
+  ai_audit:         0.80,  // AI Visibility Audit
+  seo_audit:        0.50,  // SEO Audit
   generate:         0.05,  // Generate Description
 };
 
@@ -895,7 +895,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       try {
         await client.query("BEGIN");
         await client.query(
-          "UPDATE users SET balance = balance - 0.10 WHERE clerk_id = $1",
+          "UPDATE users SET balance = balance - 0.50 WHERE clerk_id = $1",
           [req.auth?.userId]
         );
         await client.query(
@@ -1135,7 +1135,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET balance = balance - 0.10 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 0.50 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO audits (clerk_id, url, checks, issues, created_at) VALUES ($1, $2, $3, $4, NOW())`,
           [req.auth?.userId, url, JSON.stringify(allChecks), JSON.stringify(issues)]
@@ -1506,7 +1506,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET balance = balance - 0.35 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 1.00 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,

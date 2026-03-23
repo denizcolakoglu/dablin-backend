@@ -185,6 +185,7 @@ export default function VisibilityChecker({ setPage }) {
 
       {/* Tabs */}
       <div style={{ marginBottom:'24px' }}>
+        <p style={{ fontSize:'13px', color:'#5a7a5e', margin:'0 0 16px' }}>Enter your website URL and Dablin will query ChatGPT, Gemini, and Claude with real customer search terms to check if your brand appears. <strong>€1.00 per check.</strong></p>
         <div style={{ borderBottom:'2px solid #d4e8d6', display:'flex' }}>
           <button className={`vc-tab ${activeTab==='check'?'active':''}`} onClick={() => setActiveTab('check')}>Check</button>
           <button className={`vc-tab ${activeTab==='queries'?'active':''}`} onClick={() => setActiveTab('queries')}>
@@ -252,7 +253,7 @@ export default function VisibilityChecker({ setPage }) {
           {(hasSavedQueries || queries.length > 0) && (
             <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'20px', marginBottom:'20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div style={{ fontSize:'12px', color:'#5a7a5e' }}>
-                Queries Claude, GPT-4o, and Gemini · <strong style={{ color:'#1c2e1e' }}>€0.35</strong>
+                Queries Claude, GPT-4o, and Gemini · <strong style={{ color:'#1c2e1e' }}>€1.00</strong>
               </div>
               <button className="vc-btn-primary" onClick={runCheck} disabled={running || !url.trim()} style={{ padding:'12px 32px', fontSize:'15px' }}>
                 {running ? (
