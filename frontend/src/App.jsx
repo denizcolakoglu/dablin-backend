@@ -92,7 +92,9 @@ function AppShell() {
     <div className="app-shell">
       <nav className="navbar">
         <div className="nav-brand">
-          <img src="/logo.svg" alt="Dablin" height="48" />
+          <a href="/" style={{ textDecoration: 'none', display: 'flex' }}>
+            <img src="/logo.svg" alt="Dablin" height="48" />
+          </a>
         </div>
         <div className="nav-links">
           <button className={`nav-link ${page === "dashboard"  ? "active" : ""}`} onClick={() => setPage("dashboard")}>Dashboard</button>
