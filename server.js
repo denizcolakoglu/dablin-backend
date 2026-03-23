@@ -240,13 +240,15 @@ const generateLimiter = rateLimit({
 
 // ── DB HELPERS ────────────────────────────────────────────────
 async function getOrCreateUser(clerkId, email) {
+  // Ensure balance column exists
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS balance DECIMAL(10,4) DEFAULT 0`);
   const existing = await pool.query(
     "SELECT * FROM users WHERE clerk_id = $1", [clerkId]
   );
   if (existing.rows[0]) return existing.rows[0];
 
   const created = await pool.query(
-    "INSERT INTO users (clerk_id, email, credits) VALUES ($1, $2, 7) RETURNING *",
+    "INSERT INTO users (clerk_id, email, credits, balance) VALUES ($1, $2, 0, 0.50) RETURNING *",
     [clerkId, email]
   );
   // Send welcome email to new users
@@ -345,7 +347,7 @@ req.auth = authObj;
       req.auth.sessionClaims?.email
     );
 
-    if (user.credits < 1) {
+    if (parseFloat(user.balance || 0) < 0.05) {
       return res.status(402).json({
         error: "Insufficient credits",
         credits: 0,
@@ -364,7 +366,7 @@ req.auth = authObj;
     try {
       await client.query("BEGIN");
       await client.query(
-        "UPDATE users SET credits = credits - 1 WHERE clerk_id = $1",
+        "UPDATE users SET balance = balance - 0.05 WHERE clerk_id = $1",
         [req.auth.userId]
       );
       await client.query(
@@ -519,53 +521,72 @@ app.get("/api/history", requireAuth(), async (req, res) => {
   }
 });
 
-// ── POST /api/checkout ───────────────────────────────────────
-// Creates a Stripe Checkout session for a credit package
-const CREDIT_PACKAGES = {
-  starter: { credits: 20,  priceUsd: 300,  label: "Starter — 20 credits" },
-  pro:     { credits: 100, priceUsd: 1200, label: "Pro — 100 credits"    },
-  studio:  { credits: 500, priceUsd: 4900, label: "Studio — 500 credits" },
+// ── PRICING CONFIG ────────────────────────────────────────────
+// Cost in USD per feature (API cost × 25)
+const FEATURE_PRICES = {
+  visibility_check: 0.35,  // AI Visibility Check
+  ai_audit:         0.20,  // AI Visibility Audit
+  seo_audit:        0.10,  // SEO Audit
+  generate:         0.05,  // Generate Description
 };
 
-app.post("/api/checkout", requireAuth(), async (req, res) => {
-  const { packageId } = req.body;
-  const pkg = CREDIT_PACKAGES[packageId];
+// ── GET /api/balance ─────────────────────────────────────────
+app.get("/api/balance", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
+    // Ensure balance column exists
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS balance DECIMAL(10,4) DEFAULT 0`);
+    const result = await pool.query(`SELECT balance FROM users WHERE clerk_id = $1`, [req.auth?.userId]);
+    res.json({ balance: parseFloat(result.rows[0]?.balance || 0).toFixed(4) });
+  } catch (err) {
+    console.error("GET /api/balance error:", err);
+    res.status(500).json({ error: "Failed to fetch balance" });
+  }
+});
 
-  if (!pkg) {
-    return res.status(400).json({ error: "Invalid package. Choose: starter, pro, or studio" });
+// ── GET /api/prices ──────────────────────────────────────────
+app.get("/api/prices", (req, res) => {
+  res.json(FEATURE_PRICES);
+});
+
+// ── POST /api/checkout ───────────────────────────────────────
+// Creates a Stripe Checkout session for a balance top-up ($3-$50)
+app.post("/api/checkout", requireAuth(), async (req, res) => {
+  const { amount } = req.body; // amount in USD
+  const amountNum = parseFloat(amount);
+
+  if (!amountNum || amountNum < 3 || amountNum > 50) {
+    return res.status(400).json({ error: "Amount must be between $3 and $50" });
   }
 
+  const amountCents = Math.round(amountNum * 100);
+
   try {
-    const authObj = getAuth(req);
-    req.auth = authObj;
-    const user = await getOrCreateUser(
-      req.auth?.userId,
-      req.auth.sessionClaims?.email
-    );
+    const authObj = getAuth(req); req.auth = authObj;
+    const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [{
         price_data: {
           currency: "usd",
-          product_data: { name: pkg.label },
-          unit_amount: pkg.priceUsd,
+          product_data: { name: `Dablin Balance — $${amountNum.toFixed(2)}` },
+          unit_amount: amountCents,
         },
         quantity: 1,
       }],
       mode: "payment",
-      success_url: `${process.env.FRONTEND_URL}/?payment=success&credits=${pkg.credits}`,
-      cancel_url:  `${process.env.FRONTEND_URL}/`,
+      success_url: `${process.env.FRONTEND_URL}/dashboard/credits?payment=success&amount=${amountNum}`,
+      cancel_url:  `${process.env.FRONTEND_URL}/dashboard/credits`,
       metadata: {
-        clerk_id:  req.auth?.userId,
-        credits:   pkg.credits.toString(),
-        packageId,
+        clerk_id: req.auth?.userId,
+        amount_usd: amountNum.toString(),
       },
       ...(user.email ? { customer_email: user.email } : {}),
     });
 
     res.json({ checkoutUrl: session.url });
-
   } catch (err) {
     console.error("POST /api/checkout error:", err);
     res.status(500).json({ error: "Failed to create checkout session" });
@@ -573,7 +594,6 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
 });
 
 // ── POST /api/webhook/stripe ─────────────────────────────────
-// Listens for Stripe payment confirmation → adds credits
 app.post("/api/webhook/stripe", async (req, res) => {
   const sig    = req.headers["stripe-signature"];
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -587,25 +607,26 @@ app.post("/api/webhook/stripe", async (req, res) => {
   }
 
   if (event.type === "checkout.session.completed") {
-    const session  = event.data.object;
-    const clerkId  = session.metadata.clerk_id;
-    const credits  = parseInt(session.metadata.credits);
+    const session   = event.data.object;
+    const clerkId   = session.metadata.clerk_id;
+    const amountUsd = parseFloat(session.metadata.amount_usd || 0);
 
     try {
+      await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS balance DECIMAL(10,4) DEFAULT 0`);
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
         await client.query(
-          "UPDATE users SET credits = credits + $1 WHERE clerk_id = $2",
-          [credits, clerkId]
+          "UPDATE users SET balance = balance + $1 WHERE clerk_id = $2",
+          [amountUsd, clerkId]
         );
         await client.query(
           `INSERT INTO purchases (clerk_id, credits_added, amount_cents, stripe_session)
            VALUES ($1, $2, $3, $4)`,
-          [clerkId, credits, session.amount_total, session.id]
+          [clerkId, 0, session.amount_total, session.id]
         );
         await client.query("COMMIT");
-        console.log(`Added ${credits} credits to user ${clerkId}`);
+        console.log(`Added $${amountUsd} balance to user ${clerkId}`);
       } catch (err) {
         await client.query("ROLLBACK");
         throw err;
@@ -614,7 +635,7 @@ app.post("/api/webhook/stripe", async (req, res) => {
       }
     } catch (err) {
       console.error("Webhook DB error:", err);
-      return res.status(500).json({ error: "Failed to add credits" });
+      return res.status(500).json({ error: "Failed to add balance" });
     }
   }
 
@@ -661,7 +682,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       req.auth.sessionClaims?.email
     );
 
-    if (user.credits < 5) {
+    if (parseFloat(user.balance || 0) < 0.10) {
       return res.status(402).json({
         error: "Insufficient credits. SEO Audit costs 5 credits.",
         credits: user.credits,
@@ -874,7 +895,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       try {
         await client.query("BEGIN");
         await client.query(
-          "UPDATE users SET credits = credits - 5 WHERE clerk_id = $1",
+          "UPDATE users SET balance = balance - 0.10 WHERE clerk_id = $1",
           [req.auth?.userId]
         );
         await client.query(
@@ -928,8 +949,8 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
     req.auth = authObj;
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
-    if (user.credits < 5) {
-      return res.status(402).json({ error: "Insufficient credits. AEO Audit costs 5 credits.", credits: user.credits });
+    if (parseFloat(user.balance || 0) < 0.10) {
+      return res.status(402).json({ error: "Insufficient balance. AI Visibility Audit costs $0.20.", balance: user.balance });
     }
 
     const fetch = (await import("node-fetch")).default;
@@ -1114,7 +1135,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET credits = credits - 5 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 0.10 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO audits (clerk_id, url, checks, issues, created_at) VALUES ($1, $2, $3, $4, NOW())`,
           [req.auth?.userId, url, JSON.stringify(allChecks), JSON.stringify(issues)]
@@ -1292,8 +1313,8 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
     req.auth = authObj;
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
-    if (user.credits < 7) {
-      return res.status(402).json({ error: "Insufficient credits. AI Visibility Check costs 7 credits.", credits: user.credits });
+    if (parseFloat(user.balance || 0) < 0.35) {
+      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs $0.35.", balance: user.balance });
     }
 
     // Use brand from client or fallback to domain
@@ -1485,7 +1506,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET credits = credits - 7 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 0.35 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
