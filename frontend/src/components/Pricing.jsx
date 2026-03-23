@@ -223,8 +223,10 @@ export default function Pricing({ setPage }) {
             </div>
           )}
 
-          <div style={{ marginTop:'20px', fontSize:'12px', color:'#9ab09c', textAlign:'center' }}>
-            Balance never expires · Payments secured by Stripe
+          <div style={{ marginTop:'20px', fontSize:'13px', color:'#5a7a5e', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:'16px', fontWeight:'500' }}>
+            <span>✓ Balance never expires</span>
+            <span style={{ color:'#d4e8d6' }}>·</span>
+            <span>🔒 Payments secured by Stripe</span>
           </div>
         </div>
       )}
