@@ -1,5 +1,5 @@
 import { SignInButton, SignUpButton } from "@clerk/clerk-react";
-import { trackEvent } from "../analytics";
+import { trackEvent } from "../../analytics";
 
 export default function PageLayout({ children }) {
   return (
