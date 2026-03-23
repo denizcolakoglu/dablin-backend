@@ -90,24 +90,39 @@ function AppShell() {
 
   return (
     <div className="app-shell">
-      <nav className="navbar">
-        <div className="nav-brand">
-          <a href="/" style={{ textDecoration: 'none', display: 'flex' }}>
-            <img src="/logo.svg" alt="Dablin" height="48" />
+      {/* LEFT SIDEBAR */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <a href="/" style={{ textDecoration:'none', display:'flex' }}>
+            <img src="/logo.svg" alt="Dablin" height="40" />
           </a>
         </div>
-        <div className="nav-links">
-          <button className={`nav-link ${page === "dashboard"  ? "active" : ""}`} onClick={() => setPage("dashboard")}>Dashboard</button>
-          <button className={`nav-link ${page === "visibility" ? "active" : ""}`} onClick={() => setPage("visibility")}>AI Visibility Check</button>
-          <button className={`nav-link ${page === "ai"         ? "active" : ""}`} onClick={() => setPage("ai")}>AI Visibility Audit</button>
-          <button className={`nav-link ${page === "audit"      ? "active" : ""}`} onClick={() => setPage("audit")}>SEO Audit</button>
-          <button className={`nav-link ${page === "generate"   ? "active" : ""}`} onClick={() => setPage("generate")}>Generate</button>
-          <button className={`nav-link ${page === "history"    ? "active" : ""}`} onClick={() => setPage("history")}>History</button>
-          <button className={`nav-link ${page === "pricing"    ? "active" : ""}`} onClick={() => setPage("pricing")}>Credits</button>
-                  <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="nav-link">Blog</a>
+        <nav className="sidebar-nav">
+          {[
+            { key:'dashboard',  label:'Dashboard',            icon:'◎' },
+            { key:'visibility', label:'AI Visibility Check',  icon:'◉' },
+            { key:'ai',         label:'AI Visibility Audit',  icon:'◈' },
+            { key:'audit',      label:'SEO Audit',            icon:'◇' },
+            { key:'generate',   label:'Generate',             icon:'◆' },
+            { key:'history',    label:'History',              icon:'○' },
+            { key:'pricing',    label:'Balance',              icon:'◐' },
+          ].map(item => (
+            <button
+              key={item.key}
+              className={`sidebar-link ${page === item.key ? 'active' : ''}`}
+              onClick={() => setPage(item.key)}
+            >
+              <span className="sidebar-icon">{item.icon}</span>
+              <span className="sidebar-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-bottom">
+          <UserButton afterSignOutUrl="/" />
         </div>
-        <UserButton afterSignOutUrl="/" />
-      </nav>
+      </aside>
+
+      {/* MAIN CONTENT */}
       <main className="main-content">
         {page === "visibility" && <VisibilityChecker setPage={setPage} />}
         {page === "ai"         && <AiAudit setPage={setPage} />}

@@ -392,3 +392,123 @@ body {
   font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s;
 }
 .pricing-note { font-size: 13px; color: var(--muted); text-align: center; }
+/* ── SIDEBAR LAYOUT ─────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f7fbf7;
+}
+
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #0f1a10;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  color: #7a9e7a;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Roboto', sans-serif;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.sidebar-link:hover {
+  background: rgba(255,255,255,0.07);
+  color: #c8e6c8;
+}
+
+.sidebar-link.active {
+  background: rgba(45,122,58,0.25);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.sidebar-label {
+  line-height: 1.2;
+}
+
+.sidebar-bottom {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* Hide old navbar */
+.navbar { display: none !important; }
+
+/* ── MOBILE ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-shell { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    z-index: 200;
+  }
+  .sidebar-logo { display: none; }
+  .sidebar-nav {
+    flex-direction: row;
+    padding: 6px 8px;
+    gap: 2px;
+    overflow-x: auto;
+    flex: 1;
+  }
+  .sidebar-link {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    font-size: 10px;
+    align-items: center;
+    min-width: 56px;
+  }
+  .sidebar-label { font-size: 10px; }
+  .sidebar-bottom { display: none; }
+  .main-content { padding-bottom: 72px; }
+}
