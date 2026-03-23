@@ -183,10 +183,8 @@ export default function VisibilityChecker({ setPage }) {
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
       `}</style>
 
-      {/* Header + Tabs */}
+      {/* Tabs */}
       <div style={{ marginBottom:'24px' }}>
-        <h2 style={{ fontFamily:"'Roboto Condensed',sans-serif", fontSize:'22px', fontWeight:'800', color:'#0f1a10', margin:'0 0 4px' }}>AI Visibility Check</h2>
-        <p style={{ fontSize:'13px', color:'#5a7a5e', margin:'0 0 20px' }}>Check if ChatGPT, Gemini, and Claude mention your brand · 7 credits</p>
         <div style={{ borderBottom:'2px solid #d4e8d6', display:'flex' }}>
           <button className={`vc-tab ${activeTab==='check'?'active':''}`} onClick={() => setActiveTab('check')}>Check</button>
           <button className={`vc-tab ${activeTab==='queries'?'active':''}`} onClick={() => setActiveTab('queries')}>
@@ -254,7 +252,7 @@ export default function VisibilityChecker({ setPage }) {
           {(hasSavedQueries || queries.length > 0) && (
             <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'20px', marginBottom:'20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div style={{ fontSize:'12px', color:'#5a7a5e' }}>
-                Queries Claude, GPT-4o, and Gemini · <strong style={{ color:'#1c2e1e' }}>7 credits</strong>
+                Queries Claude, GPT-4o, and Gemini · <strong style={{ color:'#1c2e1e' }}>€0.35</strong>
               </div>
               <button className="vc-btn-primary" onClick={runCheck} disabled={running || !url.trim()} style={{ padding:'12px 32px', fontSize:'15px' }}>
                 {running ? (
@@ -270,8 +268,8 @@ export default function VisibilityChecker({ setPage }) {
           {runError && <div style={{ fontSize:'12px', color:'#c0392b', marginBottom:'12px', textAlign:'right' }}>{runError}</div>}
           {noCredits && (
             <div style={{ background:'#fef2f2', border:'1px solid #fca5a5', borderRadius:'8px', padding:'12px 16px', marginBottom:'12px', fontSize:'13px', color:'#c0392b', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              Not enough credits.
-              <button onClick={() => setPage('pricing')} style={{ background:'none', border:'none', color:'#2d7a3a', fontWeight:'700', cursor:'pointer', fontFamily:"'Roboto',sans-serif", fontSize:'13px' }}>Get more credits →</button>
+              Not enough balance.
+              <button onClick={() => setPage('pricing')} style={{ background:'none', border:'none', color:'#2d7a3a', fontWeight:'700', cursor:'pointer', fontFamily:"'Roboto',sans-serif", fontSize:'13px' }}>Add balance →</button>
             </div>
           )}
 

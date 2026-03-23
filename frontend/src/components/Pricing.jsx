@@ -2,88 +2,78 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { trackEvent } from "../analytics";
 
-const PACKAGES = [
-  {
-    id: "starter",
-    name: "Starter",
-    credits: 20,
-    price: "$3",
-    perCredit: "$0.15",
-    desc: "Perfect for trying it out",
-    highlight: false,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    credits: 100,
-    price: "$12",
-    perCredit: "$0.12",
-    desc: "Best for regular sellers",
-    highlight: true,
-  },
-  {
-    id: "studio",
-    name: "Studio",
-    credits: 500,
-    price: "$49",
-    perCredit: "$0.098",
-    desc: "Best for large catalogs",
-    highlight: false,
-  },
-];
+const BASE = "https://dablin-backend-production.up.railway.app";
+
+const FEATURE_PRICES = {
+  visibility_check: 0.35,
+  ai_audit:         0.20,
+  seo_audit:        0.10,
+  generate:         0.05,
+};
+
+const FEATURE_LABELS = {
+  visibility_check: 'AI Visibility Check',
+  ai_audit:         'AI Visibility Audit',
+  seo_audit:        'SEO Audit',
+  generate:         'Generate Description',
+};
 
 export default function Pricing({ setPage }) {
   const { getToken } = useAuth();
-  const [activeTab, setActiveTab] = useState("usage");
-  const [loading, setLoading] = useState(null);
-  const [credits, setCredits] = useState(null);
+  const [activeTab, setActiveTab] = useState("balance");
+  const [balance, setBalance] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [amountError, setAmountError] = useState(null);
   const [usage, setUsage] = useState([]);
-  const [showDaily, setShowDaily] = useState(true);
   const [usageType, setUsageType] = useState('visibility_check');
 
   useEffect(() => {
     trackEvent('pricing_viewed');
-    fetchCredits();
+    fetchBalance();
+    fetchUsage('visibility_check');
   }, []);
 
-  useEffect(() => {
-    fetchUsage(usageType);
-  }, [usageType]);
-
-  async function fetchCredits() {
+  async function fetchBalance() {
     try {
       const token = await getToken();
-      const res = await fetch("https://dablin-backend-production.up.railway.app/api/credits", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${BASE}/api/balance`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
-      setCredits(data.credits);
+      setBalance(parseFloat(data.balance || 0));
     } catch(e) {}
   }
 
   async function fetchUsage(type) {
     try {
       const token = await getToken();
-      const res = await fetch(`https://dablin-backend-production.up.railway.app/api/usage/daily?type=${type}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${BASE}/api/usage/daily?type=${type}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       setUsage(data.days || []);
     } catch(e) {}
   }
 
-  async function handleBuy(packageId, price) {
-    trackEvent('purchase_click', { package: packageId, price });
-    setLoading(packageId);
+  async function handleTopUp() {
+    const amt = parseFloat(amount);
+    if (!amt || amt < 3 || amt > 50) {
+      setAmountError('Enter an amount between €3 and €50');
+      return;
+    }
+    setAmountError(null);
+    trackEvent('purchase_click', { amount: amt });
+    setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch("https://dablin-backend-production.up.railway.app/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ packageId }),
+      const res = await fetch(`${BASE}/api/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount: amt }),
       });
       const data = await res.json();
       if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-    } catch (e) {
-      console.error("Checkout failed", e);
+    } catch(e) {
+      console.error('Checkout failed', e);
     } finally {
-      setLoading(null);
+      setLoading(false);
     }
   }
 
@@ -91,233 +81,154 @@ export default function Pricing({ setPage }) {
   const maxUsage = Math.max(...usage.map(d => d.count), 1);
 
   return (
-    <div className="pricing-page">
+    <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px', fontFamily: "'Roboto', sans-serif" }}>
       <style>{`
-        .credits-tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 2px solid #d4e8d6; }
-        .credits-tab {
-          padding: 10px 24px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #5a7a5e;
-          background: none;
-          border: none;
-          cursor: pointer;
-          border-bottom: 2px solid transparent;
-          margin-bottom: -2px;
-          transition: all 0.2s;
-        }
-        .credits-tab.active { color: #2d7a3a; border-bottom-color: #2d7a3a; }
-        .credits-tab:hover { color: #2d7a3a; }
-
-        .usage-card {
-          background: #f7fbf7;
-          border: 1px solid #d4e8d6;
-          border-radius: 14px;
-          padding: 24px 28px;
-          margin-bottom: 16px;
-        }
-        .usage-card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .usage-card-left { display: flex; align-items: center; gap: 20px; }
-        .credits-big { font-size: 48px; font-weight: 800; color: #2d7a3a; line-height: 1; }
-        .credits-big-label { font-size: 13px; color: #5a7a5e; margin-top: 4px; }
-        .credits-low-warning { font-size: 12px; color: #e08a00; font-weight: 600; margin-top: 6px; }
-        .buy-more-btn {
-          background: #2d7a3a;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-        .buy-more-btn:hover { background: #3d9e4e; }
-
-        .monthly-summary {
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: 1px solid #d4e8d6;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .monthly-summary-left { font-size: 14px; color: #1c2e1e; }
-        .monthly-summary-left strong { color: #2d7a3a; }
-        .toggle-daily-btn {
-          background: none;
-          border: 1px solid #d4e8d6;
-          border-radius: 6px;
-          padding: 6px 14px;
-          font-size: 12px;
-          font-weight: 600;
-          color: #5a7a5e;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .toggle-daily-btn:hover { border-color: #2d7a3a; color: #2d7a3a; }
-
-        .daily-chart {
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: 1px solid #d4e8d6;
-        }
-        .daily-chart-title { font-size: 12px; font-weight: 600; color: #5a7a5e; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; }
-        .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 70px; }
-        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
-        .bar { width: 100%; background: #2d7a3a; border-radius: 4px 4px 0 0; min-height: 3px; transition: height 0.3s ease; }
-        .bar-day { font-size: 10px; color: #5a7a5e; white-space: nowrap; }
-        .bar-count { font-size: 10px; font-weight: 700; color: #2d7a3a; }
-
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .pricing-card {
-          background: white;
-          border: 1.5px solid #d4e8d6;
-          border-radius: 14px;
-          padding: 24px 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          position: relative;
-        }
-        .pricing-card.highlighted { border-color: #2d7a3a; box-shadow: 0 0 0 3px #e8f5ea; }
-        .popular-badge {
-          position: absolute;
-          top: -12px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #2d7a3a;
-          color: white;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 3px 12px;
-          border-radius: 20px;
-          white-space: nowrap;
-        }
-        .pkg-name { font-size: 16px; font-weight: 700; color: #0f1a10; }
-        .pkg-price { font-size: 32px; font-weight: 800; color: #2d7a3a; line-height: 1; }
-        .pkg-credits { font-size: 13px; color: #5a7a5e; }
-        .pkg-per { font-size: 12px; color: #5a7a5e; }
-        .pkg-desc { font-size: 13px; color: #1c2e1e; margin-top: 4px; flex: 1; }
-        .btn-buy {
-          margin-top: 8px;
-          padding: 10px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-          text-align: center;
-        }
-        .btn-buy.btn-primary { background: #2d7a3a; color: white; }
-        .btn-buy.btn-primary:hover { background: #3d9e4e; }
-        .btn-buy.btn-outline { background: white; color: #2d7a3a; border: 1.5px solid #2d7a3a; }
-        .btn-buy.btn-outline:hover { background: #f7fbf7; }
-        .btn-buy:disabled { opacity: 0.6; cursor: not-allowed; }
-        .pricing-note { font-size: 12px; color: #5a7a5e; text-align: center; margin-top: 8px; }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Condensed:wght@700;800&display=swap');
+        .pr-tab { padding:10px 24px; font-size:14px; font-weight:600; color:#5a7a5e; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s; font-family:'Roboto',sans-serif; }
+        .pr-tab.active { color:#2d7a3a; border-bottom-color:#2d7a3a; }
+        .pr-tab:hover { color:#2d7a3a; }
+        .pr-input:focus { border-color:#2d7a3a !important; outline:none; }
+        .pr-topup-btn { background:#2d7a3a; color:white; border:none; padding:11px 28px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'Roboto',sans-serif; transition:background 0.2s; white-space:nowrap; }
+        .pr-topup-btn:hover:not(:disabled) { background:#3d9e4e; }
+        .pr-topup-btn:disabled { opacity:0.6; cursor:not-allowed; }
+        .pr-preset:hover { border-color:#2d7a3a !important; color:#2d7a3a !important; }
+        .pr-usage-radio:hover { border-color:#2d7a3a !important; }
+        .bar { background:#2d7a3a; border-radius:4px 4px 0 0; min-height:3px; transition:height 0.3s; }
       `}</style>
 
-      <div className="credits-tabs">
-        <button className={`credits-tab ${activeTab === "usage" ? "active" : ""}`} onClick={() => setActiveTab("usage")}>
-          My Credits
-        </button>
-        <button className={`credits-tab ${activeTab === "buy" ? "active" : ""}`} onClick={() => setActiveTab("buy")}>
-          Buy Credits
-        </button>
+      {/* Tabs */}
+      <div style={{ borderBottom:'2px solid #d4e8d6', display:'flex', marginBottom:'28px' }}>
+        <button className={`pr-tab ${activeTab==='balance'?'active':''}`} onClick={() => setActiveTab('balance')}>My Balance</button>
+        <button className={`pr-tab ${activeTab==='topup'?'active':''}`} onClick={() => setActiveTab('topup')}>Top Up</button>
       </div>
 
-      {activeTab === "usage" && (
-        <div className="usage-card">
-          <div className="usage-card-header">
-            <div className="usage-card-left">
+      {/* BALANCE TAB */}
+      {activeTab === 'balance' && (
+        <>
+          {/* Balance card */}
+          <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'28px', marginBottom:'20px' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px' }}>
               <div>
-                <div className="credits-big">{credits === null ? "—" : credits}</div>
-                <div className="credits-big-label">credits remaining</div>
-                {credits !== null && credits <= 5 && (
-                  <div className="credits-low-warning">⚠ Running low</div>
+                <div style={{ fontSize:'13px', color:'#5a7a5e', marginBottom:'6px' }}>Available balance</div>
+                <div style={{ fontFamily:"'Roboto Condensed',sans-serif", fontSize:'48px', fontWeight:'800', color:'#2d7a3a', lineHeight:1 }}>
+                  €{balance === null ? '—' : balance.toFixed(2)}
+                </div>
+                {balance !== null && balance < 0.35 && (
+                  <div style={{ fontSize:'12px', color:'#e08a00', fontWeight:'600', marginTop:'6px' }}>⚠ Low balance — top up to continue</div>
                 )}
               </div>
+              <button className="pr-topup-btn" onClick={() => setActiveTab('topup')}>Add balance</button>
             </div>
-            <button className="buy-more-btn" onClick={() => setActiveTab("buy")}>Buy more</button>
-          </div>
 
-          <div className="monthly-summary">
-            <div className="monthly-summary-left">
-              Last 7 days: <strong>{totalUsed} {
-                usageType === 'visibility_check' ? 'visibility checks' :
-                usageType === 'ai_audit' ? 'AI audits' :
-                usageType === 'seo_audit' ? 'SEO audits' : 'descriptions'
-              }</strong>
+            {/* What you can run */}
+            <div style={{ borderTop:'1px solid #e8f5ea', paddingTop:'20px' }}>
+              <div style={{ fontSize:'12px', fontWeight:'700', color:'#5a7a5e', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'14px' }}>What you can run with this balance</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'10px' }}>
+                {Object.entries(FEATURE_PRICES).map(([key, price]) => {
+                  const runs = balance !== null ? Math.floor(balance / price) : 0;
+                  return (
+                    <div key={key} style={{ background:'#f7fbf7', border:'1px solid #d4e8d6', borderRadius:'10px', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <span style={{ fontSize:'13px', color:'#1c2e1e', fontWeight:'500' }}>{FEATURE_LABELS[key]}</span>
+                      <span style={{ fontSize:'13px', fontWeight:'700', color: runs > 0 ? '#2d7a3a' : '#dc2626' }}>{runs}×</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Tool radio buttons */}
-          <div style={{ marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {[
-              { value: 'visibility_check', label: 'AI Visibility Check' },
-              { value: 'ai_audit',         label: 'AI Visibility Audit' },
-              { value: 'seo_audit',        label: 'SEO Audit' },
-              { value: 'generate',         label: 'Generate' },
-            ].map(opt => (
-              <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '7px 14px', border: `1px solid ${usageType === opt.value ? '#2d7a3a' : '#d4e8d6'}`, borderRadius: '100px', background: usageType === opt.value ? '#e8f5ea' : 'white', transition: 'all 0.2s' }}>
-                <input type="radio" name="usageType" value={opt.value} checked={usageType === opt.value}
-                  onChange={() => setUsageType(opt.value)} style={{ display: 'none' }} />
-                <span style={{ fontSize: '12px', fontWeight: '600', color: usageType === opt.value ? '#2d7a3a' : '#5a7a5e' }}>{opt.label}</span>
-              </label>
-            ))}
-          </div>
-
-          <div className="daily-chart">
-            <div className="daily-chart-title">Daily usage — last 7 days</div>
-            <div className="bar-chart">
+          {/* Usage chart */}
+          <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'24px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
+              <div style={{ fontSize:'13px', fontWeight:'700', color:'#0f1a10' }}>
+                Last 7 days: <span style={{ color:'#2d7a3a' }}>{totalUsed} {FEATURE_LABELS[usageType]?.toLowerCase()}</span>
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', marginBottom:'20px' }}>
+              {Object.entries(FEATURE_LABELS).map(([key, label]) => (
+                <label key={key} style={{ display:'flex', alignItems:'center', gap:'6px', cursor:'pointer', padding:'6px 14px', border:`1px solid ${usageType===key?'#2d7a3a':'#d4e8d6'}`, borderRadius:'100px', background:usageType===key?'#e8f5ea':'white', transition:'all 0.2s' }}>
+                  <input type="radio" name="usageType" value={key} checked={usageType===key} onChange={() => { setUsageType(key); fetchUsage(key); }} style={{ display:'none' }} />
+                  <span style={{ fontSize:'12px', fontWeight:'600', color:usageType===key?'#2d7a3a':'#5a7a5e' }}>{label}</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ display:'flex', alignItems:'flex-end', gap:'8px', height:'70px' }}>
               {usage.map((d, i) => {
                 const heightPct = (d.count / maxUsage) * 100;
-                const label = new Date(d.day + "T12:00:00").toLocaleDateString("en", { weekday: "short" });
+                const label = new Date(d.day + 'T12:00:00').toLocaleDateString('en', { weekday:'short' });
                 return (
-                  <div className="bar-col" key={i}>
-                    {d.count > 0 && <div className="bar-count">{d.count}</div>}
-                    <div className="bar" style={{ height: `${Math.max(heightPct, 4)}%`, opacity: d.count === 0 ? 0.15 : 1 }} />
-                    <div className="bar-day">{label}</div>
+                  <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', height:'100%', justifyContent:'flex-end' }}>
+                    {d.count > 0 && <div style={{ fontSize:'10px', fontWeight:'700', color:'#2d7a3a' }}>{d.count}</div>}
+                    <div className="bar" style={{ width:'100%', height:`${Math.max(heightPct, 4)}%`, opacity:d.count===0?0.15:1 }} />
+                    <div style={{ fontSize:'10px', color:'#5a7a5e', whiteSpace:'nowrap' }}>{label}</div>
                   </div>
                 );
               })}
             </div>
           </div>
+        </>
+      )}
+
+      {/* TOP UP TAB */}
+      {activeTab === 'topup' && (
+        <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'28px' }}>
+          <div style={{ fontSize:'14px', fontWeight:'700', color:'#0f1a10', marginBottom:'6px' }}>Add balance to your account</div>
+          <div style={{ fontSize:'13px', color:'#5a7a5e', marginBottom:'24px' }}>Minimum €3 · Maximum €50 · Secure payment via Stripe</div>
+
+          {/* Preset amounts */}
+          <div style={{ display:'flex', gap:'10px', marginBottom:'20px', flexWrap:'wrap' }}>
+            {['5', '10', '20', '50'].map(preset => (
+              <button key={preset} className="pr-preset"
+                onClick={() => setAmount(preset)}
+                style={{ padding:'10px 20px', border:`1px solid ${amount===preset?'#2d7a3a':'#d4e8d6'}`, borderRadius:'8px', background:amount===preset?'#e8f5ea':'white', color:amount===preset?'#2d7a3a':'#1c2e1e', fontSize:'14px', fontWeight:'600', cursor:'pointer', transition:'all 0.2s', fontFamily:"'Roboto',sans-serif" }}>
+                €{preset}
+              </button>
+            ))}
+          </div>
+
+          {/* Custom amount */}
+          <div style={{ marginBottom:'20px' }}>
+            <label style={{ fontSize:'13px', fontWeight:'600', color:'#1c2e1e', display:'block', marginBottom:'8px' }}>Or enter a custom amount</label>
+            <div style={{ display:'flex', gap:'10px' }}>
+              <div style={{ position:'relative', flex:1 }}>
+                <span style={{ position:'absolute', left:'14px', top:'50%', transform:'translateY(-50%)', fontSize:'14px', color:'#5a7a5e', fontWeight:'600' }}>€</span>
+                <input
+                  className="pr-input"
+                  type="number" min="3" max="50" step="1"
+                  placeholder="3 — 50"
+                  value={amount}
+                  onChange={e => { setAmount(e.target.value); setAmountError(null); }}
+                  style={{ width:'100%', padding:'11px 14px 11px 28px', border:'1px solid #d4e8d6', borderRadius:'8px', fontSize:'14px', fontFamily:"'Roboto',sans-serif", color:'#1c2e1e', boxSizing:'border-box' }}
+                />
+              </div>
+              <button className="pr-topup-btn" onClick={handleTopUp} disabled={loading}>
+                {loading ? 'Redirecting…' : 'Pay with Stripe'}
+              </button>
+            </div>
+            {amountError && <div style={{ fontSize:'12px', color:'#c0392b', marginTop:'8px' }}>{amountError}</div>}
+          </div>
+
+          {/* What you get */}
+          {amount && parseFloat(amount) >= 3 && (
+            <div style={{ background:'#f7fbf7', border:'1px solid #d4e8d6', borderRadius:'10px', padding:'16px', marginTop:'20px' }}>
+              <div style={{ fontSize:'12px', fontWeight:'700', color:'#5a7a5e', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'12px' }}>With €{parseFloat(amount).toFixed(0)} you can run</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+                {Object.entries(FEATURE_PRICES).map(([key, price]) => (
+                  <div key={key} style={{ display:'flex', justifyContent:'space-between', fontSize:'13px' }}>
+                    <span style={{ color:'#5a7a5e' }}>{FEATURE_LABELS[key]}</span>
+                    <span style={{ fontWeight:'700', color:'#2d7a3a' }}>{Math.floor(parseFloat(amount) / price)}× <span style={{ color:'#9ab09c', fontWeight:'400'}}>@ €{price}/run</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ marginTop:'20px', fontSize:'12px', color:'#9ab09c', textAlign:'center' }}>
+            Balance never expires · Payments secured by Stripe
+          </div>
         </div>
       )}
 
-      {activeTab === "buy" && (
-        <>
-          <p className="page-sub">Credits never expire. Pay only for what you use.</p>
-          <div className="pricing-grid">
-            {PACKAGES.map(pkg => (
-              <div className={`pricing-card ${pkg.highlight ? "highlighted" : ""}`} key={pkg.id}>
-                {pkg.highlight && <div className="popular-badge">Most popular</div>}
-                <div className="pkg-name">{pkg.name}</div>
-                <div className="pkg-price">{pkg.price}</div>
-                <div className="pkg-credits">{pkg.credits} credits</div>
-                <div className="pkg-per">{pkg.perCredit} per description</div>
-                <div className="pkg-desc">{pkg.desc}</div>
-                <button
-                  className={`btn-buy ${pkg.highlight ? "btn-primary" : "btn-outline"}`}
-                  onClick={() => handleBuy(pkg.id, pkg.price)}
-                  disabled={loading === pkg.id}
-                >
-                  {loading === pkg.id ? "Redirecting..." : `Buy ${pkg.name}`}
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="pricing-note">
-            Payments are processed securely by Stripe. Credits are added instantly after payment.
-          </div>
-        </>
-      )}
     </div>
   );
 }

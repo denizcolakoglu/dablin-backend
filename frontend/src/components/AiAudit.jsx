@@ -186,7 +186,7 @@ export default function AiAudit({ setPage }) {
       `}</style>
 
       <p className="audit-sub">
-        Check how visible your page is to AI engines like ChatGPT, Perplexity and Gemini. 12 checks with AI-generated fixes. <strong>5 credits per audit.</strong>
+        Check how visible your page is to AI engines like ChatGPT, Perplexity and Gemini. 12 checks with AI-generated fixes. <strong>€0.20 per audit.</strong>
       </p>
 
       <div className="audit-input-row">
@@ -206,8 +206,8 @@ export default function AiAudit({ setPage }) {
       {noCredits && (
         <div className="no-credits-banner">
           <div className="no-credits-text">
-            <h4>Not enough credits</h4>
-            <p>AI Visibility Audit costs 5 credits. Top up your balance to continue.</p>
+            <h4>Not enough balance</h4>
+            <p>AI Visibility Audit costs €0.20. Top up your balance to continue.</p>
           </div>
           <button className="no-credits-btn" onClick={() => setPage("pricing")}>Buy Credits</button>
         </div>

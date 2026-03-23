@@ -557,7 +557,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
   const amountNum = parseFloat(amount);
 
   if (!amountNum || amountNum < 3 || amountNum > 50) {
-    return res.status(400).json({ error: "Amount must be between $3 and $50" });
+    return res.status(400).json({ error: "Amount must be between €3 and €50" });
   }
 
   const amountCents = Math.round(amountNum * 100);
@@ -570,7 +570,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
       payment_method_types: ["card"],
       line_items: [{
         price_data: {
-          currency: "usd",
+          currency: "eur",
           product_data: { name: `Dablin Balance — $${amountNum.toFixed(2)}` },
           unit_amount: amountCents,
         },
@@ -950,7 +950,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
     if (parseFloat(user.balance || 0) < 0.10) {
-      return res.status(402).json({ error: "Insufficient balance. AI Visibility Audit costs $0.20.", balance: user.balance });
+      return res.status(402).json({ error: "Insufficient balance. AI Visibility Audit costs €0.20.", balance: user.balance });
     }
 
     const fetch = (await import("node-fetch")).default;
@@ -1314,7 +1314,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
     if (parseFloat(user.balance || 0) < 0.35) {
-      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs $0.35.", balance: user.balance });
+      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs €0.35.", balance: user.balance });
     }
 
     // Use brand from client or fallback to domain
