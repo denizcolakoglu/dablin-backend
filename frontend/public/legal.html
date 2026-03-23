@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legal — Dablin</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto', sans-serif; color: #1c2e1e; background: #f7fbf7; line-height: 1.7; }
+    header { background: white; border-bottom: 1px solid #d4e8d6; padding: 20px 48px; }
+    header a { font-size: 20px; font-weight: 700; color: #2d7a3a; text-decoration: none; }
+    nav { background: white; border-bottom: 1px solid #d4e8d6; padding: 0 48px; display: flex; }
+    nav a { display: inline-block; padding: 14px 24px; font-size: 14px; font-weight: 500; color: #5a7a5e; text-decoration: none; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    nav a:hover, nav a.active { color: #2d7a3a; border-bottom-color: #2d7a3a; }
+    .container { max-width: 780px; margin: 48px auto; padding: 0 24px 80px; }
+    .doc { display: none; }
+    .doc.active { display: block; }
+    h1 { font-size: 32px; font-weight: 700; color: #0f1a10; margin-bottom: 8px; }
+    .last-updated { font-size: 13px; color: #5a7a5e; margin-bottom: 40px; }
+    h2 { font-size: 18px; font-weight: 700; color: #0f1a10; margin: 36px 0 12px; }
+    p { font-size: 15px; color: #1c2e1e; margin-bottom: 14px; }
+    ul { padding-left: 20px; margin-bottom: 14px; }
+    ul li { font-size: 15px; color: #1c2e1e; margin-bottom: 6px; }
+    a.email { color: #2d7a3a; text-decoration: none; }
+    footer { text-align: center; padding: 24px; font-size: 13px; color: #5a7a5e; border-top: 1px solid #d4e8d6; background: white; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="https://dablin.co">🍀 Dablin</a>
+</header>
+
+<nav>
+  <a href="#" class="active" onclick="show('privacy', this); return false;">Privacy Policy</a>
+  <a href="#" onclick="show('terms', this); return false;">Terms of Use</a>
+</nav>
+
+<div class="container">
+
+  <!-- PRIVACY POLICY -->
+  <div class="doc active" id="privacy">
+    <h1>Privacy Policy</h1>
+    <p class="last-updated">Last updated: March 7, 2026</p>
+
+    <p>Dablin is a product of Beneflic. Beneflic ("we", "us", or "our") operates dablin.co. This Privacy Policy explains how we collect, use, and protect your personal information when you use our service.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>We collect the following types of information:</p>
+    <ul>
+      <li><strong>Account information:</strong> When you sign in via Google (through Clerk), we receive your name and email address.</li>
+      <li><strong>Usage data:</strong> The product descriptions you generate, including the inputs you provide (product name, category, features) and the outputs generated.</li>
+      <li><strong>Payment information:</strong> When you purchase credits, payments are processed by Stripe. We do not store your card details — Stripe handles all payment data securely.</li>
+      <li><strong>Technical data:</strong> IP address, browser type, and usage patterns collected via Google Analytics.</li>
+    </ul>
+
+    <h2>2. How We Use Your Information</h2>
+    <ul>
+      <li>To provide and improve the Dablin service</li>
+      <li>To manage your account and credit balance</li>
+      <li>To process payments via Stripe</li>
+      <li>To save your generation history so you can review past outputs</li>
+      <li>To communicate with you about your account or service updates</li>
+      <li>To analyze usage patterns and improve the product</li>
+    </ul>
+
+    <h2>3. Data Sharing</h2>
+    <p>We do not sell your personal data. We share data only with the following third-party services necessary to operate Dablin:</p>
+    <ul>
+      <li><strong>Clerk</strong> — authentication and user management</li>
+      <li><strong>Stripe</strong> — payment processing</li>
+      <li><strong>Anthropic</strong> — AI content generation (your product inputs are sent to Anthropic's API to generate descriptions)</li>
+      <li><strong>Google Analytics</strong> — anonymous usage analytics</li>
+      <li><strong>Railway</strong> — cloud infrastructure and database hosting</li>
+    </ul>
+
+    <h2>4. Data Retention</h2>
+    <p>We retain your account data and generation history for as long as your account is active. You may request deletion of your account and associated data at any time by contacting us at <a class="email" href="mailto:hello@dablin.co">hello@dablin.co</a>.</p>
+
+    <h2>5. Cookies</h2>
+    <p>We use cookies and similar technologies for authentication (Clerk) and analytics (Google Analytics). You can disable cookies in your browser settings, though this may affect functionality.</p>
+
+    <h2>6. Your Rights</h2>
+    <p>Depending on your location, you may have the following rights regarding your personal data:</p>
+    <ul>
+      <li>Right to access the data we hold about you</li>
+      <li>Right to correct inaccurate data</li>
+      <li>Right to request deletion of your data</li>
+      <li>Right to data portability</li>
+      <li>Right to object to processing</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a class="email" href="mailto:hello@dablin.co">hello@dablin.co</a>.</p>
+
+    <h2>7. Data Security</h2>
+    <p>We implement appropriate technical and organizational measures to protect your data. All data is transmitted over HTTPS. Passwords are not stored — authentication is handled entirely by Clerk.</p>
+
+    <h2>8. Children's Privacy</h2>
+    <p>Dablin is not intended for users under the age of 16. We do not knowingly collect data from children.</p>
+
+    <h2>9. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by updating the date at the top of this page. Continued use of Dablin after changes constitutes acceptance of the updated policy.</p>
+
+    <h2>10. Contact</h2>
+    <p>For any privacy-related questions, contact Beneflic at <a class="email" href="mailto:hello@dablin.co">hello@dablin.co</a>.</p>
+  </div>
+
+  <!-- TERMS OF USE -->
+  <div class="doc" id="terms">
+    <h1>Terms of Use</h1>
+    <p class="last-updated">Last updated: March 7, 2026</p>
+
+    <p>These Terms of Use govern your access to and use of Dablin ("Service"), a product of Beneflic ("we", "us"). By using Dablin, you agree to these terms.</p>
+
+    <h2>1. The Service</h2>
+    <p>Dablin is an AI-powered product description generator for e-commerce sellers, developed and operated by Beneflic. It allows users to generate SEO-optimized product titles, meta descriptions, feature bullets, and HTML content using a credit-based system.</p>
+
+    <h2>2. Account Registration</h2>
+    <p>To use Dablin, you must create an account via Google Sign-In. You are responsible for maintaining the security of your account and for all activity that occurs under it.</p>
+
+    <h2>3. Credits and Payments</h2>
+    <ul>
+      <li>New accounts receive 3 free credits upon registration.</li>
+      <li>Additional credits can be purchased in one-time packs (no subscription).</li>
+      <li>Credits are non-refundable once used.</li>
+      <li>Unused credits do not expire.</li>
+      <li>All payments are processed securely by Stripe.</li>
+      <li>Prices are listed in EUR and may be subject to applicable taxes.</li>
+    </ul>
+
+    <h2>4. Acceptable Use</h2>
+    <p>You agree not to use Dablin to:</p>
+    <ul>
+      <li>Generate content that is illegal, harmful, defamatory, or fraudulent</li>
+      <li>Attempt to reverse-engineer, scrape, or abuse the API</li>
+      <li>Resell or redistribute the service without authorization</li>
+      <li>Circumvent credit limits or access controls</li>
+      <li>Use automated tools to generate descriptions beyond your credit balance</li>
+    </ul>
+
+    <h2>5. Generated Content</h2>
+    <p>You own the content generated using Dablin. Beneflic grants you a perpetual, non-exclusive license to use, modify, and publish descriptions generated through the service for any lawful commercial purpose.</p>
+    <p>You are responsible for reviewing generated content before publishing. Beneflic does not guarantee that generated descriptions are accurate, complete, or suitable for your specific products.</p>
+
+    <h2>6. Intellectual Property</h2>
+    <p>Dablin's interface, branding, and underlying technology remain the property of Beneflic. You may not copy, reproduce, or create derivative works of our platform without permission.</p>
+
+    <h2>7. Disclaimer of Warranties</h2>
+    <p>Dablin is provided "as is" without warranties of any kind. Beneflic does not guarantee that the service will be uninterrupted, error-free, or that AI-generated content will meet your specific requirements or achieve particular SEO results.</p>
+
+    <h2>8. Limitation of Liability</h2>
+    <p>To the maximum extent permitted by law, Beneflic shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of Dablin, including but not limited to loss of revenue, data, or business opportunities.</p>
+
+    <h2>9. Refund Policy</h2>
+    <p>Credit purchases are generally non-refundable. If you experience a technical issue that prevents you from using credits you purchased, contact us at <a class="email" href="mailto:hello@dablin.co">hello@dablin.co</a> within 14 days and we will review your case.</p>
+
+    <h2>10. Termination</h2>
+    <p>Beneflic reserves the right to suspend or terminate accounts that violate these terms. You may delete your account at any time by contacting us.</p>
+
+    <h2>11. Changes to Terms</h2>
+    <p>We may update these Terms from time to time. Continued use of Dablin after changes constitutes acceptance of the updated terms.</p>
+
+    <h2>12. Governing Law</h2>
+    <p>These Terms are governed by the laws of Italy. Any disputes shall be resolved in the courts of Italy.</p>
+
+    <h2>13. Contact</h2>
+    <p>For any questions about these Terms, contact Beneflic at <a class="email" href="mailto:hello@dablin.co">hello@dablin.co</a>.</p>
+  </div>
+
+</div>
+
+<footer>
+  © 2026 Beneflic · Dablin is a product of Beneflic · <a class="email" href="https://dablin.co">dablin.co</a>
+</footer>
+
+<script>
+  function show(id, el) {
+    document.querySelectorAll('.doc').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
