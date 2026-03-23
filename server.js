@@ -263,18 +263,36 @@ app.post("/api/sync-email", requireAuth(), async (req, res) => {
     const authObj = getAuth(req); req.auth = authObj;
     const { email } = req.body;
     if (!email || !req.auth?.userId) return res.json({ ok: false });
-    // Update email regardless of current value — always keep it fresh
+
+    // Check if user already has an email
+    const existing = await pool.query(
+      `SELECT email, created_at FROM users WHERE clerk_id = $1`,
+      [req.auth.userId]
+    );
+
+    const hadEmail = existing.rows[0]?.email;
+    const createdAt = existing.rows[0]?.created_at;
+    const isNewUser = createdAt && (Date.now() - new Date(createdAt).getTime()) < 5 * 60 * 1000; // within 5 min
+
+    // Update email
     const result = await pool.query(
       `UPDATE users SET email = $1 WHERE clerk_id = $2`,
       [email, req.auth.userId]
     );
+
     // If no rows updated, user doesn't exist yet — create them
     if (result.rowCount === 0) {
       await pool.query(
         `INSERT INTO users (clerk_id, email, credits) VALUES ($1, $2, 7) ON CONFLICT (clerk_id) DO UPDATE SET email = $2`,
         [req.auth.userId, email]
       );
+      // New user — send welcome email
+      sendWelcomeEmail(email).catch(() => {});
+    } else if (!hadEmail && isNewUser) {
+      // Existing user just got email for first time within 5 min of signup
+      sendWelcomeEmail(email).catch(() => {});
     }
+
     console.log("[sync-email] updated email for", req.auth.userId, email);
     res.json({ ok: true });
   } catch (err) {
