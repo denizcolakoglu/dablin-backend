@@ -99,20 +99,19 @@ function AppShell() {
         </div>
         <nav className="sidebar-nav">
           {[
-            { key:'dashboard',  label:'Dashboard',            icon:'◎' },
-            { key:'visibility', label:'AI Visibility Check',  icon:'◉' },
-            { key:'ai',         label:'AI Visibility Audit',  icon:'◈' },
-            { key:'audit',      label:'SEO Audit',            icon:'◇' },
-            { key:'generate',   label:'Generate',             icon:'◆' },
-            { key:'history',    label:'History',              icon:'○' },
-            { key:'pricing',    label:'Balance',              icon:'◐' },
+            { key:'dashboard',  label:'Dashboard'           },
+            { key:'visibility', label:'AI Visibility Check' },
+            { key:'ai',         label:'AI Visibility Audit' },
+            { key:'audit',      label:'SEO Audit'           },
+            { key:'generate',   label:'Generate'            },
+            { key:'history',    label:'History'             },
+            { key:'pricing',    label:'Balance'             },
           ].map(item => (
             <button
               key={item.key}
               className={`sidebar-link ${page === item.key ? 'active' : ''}`}
               onClick={() => setPage(item.key)}
             >
-              <span className="sidebar-icon">{item.icon}</span>
               <span className="sidebar-label">{item.label}</span>
             </button>
           ))}
