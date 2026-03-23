@@ -1,5 +1,5 @@
 import { SignInButton, SignUpButton } from "@clerk/clerk-react";
-import { trackEvent } from "../../analytics";
+import { trackEvent } from "../analytics";
 
 export default function PageLayout({ children }) {
   return (
@@ -147,6 +147,7 @@ export default function PageLayout({ children }) {
               </a>
             );
           })}
+          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="pl-nav-link">Blog</a>
         </div>
         <div className="pl-nav-actions">
           <SignInButton mode="modal">

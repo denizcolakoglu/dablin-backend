@@ -673,6 +673,7 @@ function NavBar() {
           <a href="/seo-audit" className="nav-direct-link">SEO Audit</a>
           <a href="/generate-product-description" className="nav-direct-link">Generate</a>
           <a href="/pricing" className="nav-direct-link">Pricing</a>
+          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="nav-direct-link">Blog</a>
         </div>
 
         {/* Right: Sign in + Sign up */}
@@ -708,6 +709,13 @@ function NavBar() {
           <div>
             <div className="mobile-menu-label">Pricing</div>
             <div className="mobile-menu-desc">Pay per use, credits never expire</div>
+          </div>
+        </a>
+        <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="mobile-menu-item" onClick={() => setMenuOpen(false)}>
+          <span className="mobile-menu-icon">✍</span>
+          <div>
+            <div className="mobile-menu-label">Blog</div>
+            <div className="mobile-menu-desc">AI visibility, GEO and SEO guides</div>
           </div>
         </a>
         <div className="mobile-menu-cta">
