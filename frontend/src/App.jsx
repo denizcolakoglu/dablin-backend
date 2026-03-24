@@ -92,33 +92,68 @@ function AppShell() {
     <div className="app-shell">
       {/* LEFT SIDEBAR */}
       <aside className="sidebar">
+
+        {/* Logo */}
         <div className="sidebar-logo">
-          <a href="/" style={{ textDecoration:'none', display:'flex' }}>
-            <img src="/logo.svg" alt="Dablin" height="40" />
+          <a href="/" style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:'10px' }}>
+            <img src="/logo.svg" alt="Dablin" height="32" />
+            <span style={{ color:'white', fontWeight:'700', fontSize:'16px', letterSpacing:'-0.3px' }}>dablin</span>
           </a>
         </div>
+
+        {/* Nav groups */}
         <nav className="sidebar-nav">
-          {[
-            { key:'dashboard',  label:'Dashboard'           },
-            { key:'visibility', label:'AI Visibility Check' },
-            { key:'ai',         label:'AI Visibility Audit' },
-            { key:'audit',      label:'SEO Audit'           },
-            { key:'generate',   label:'Generate'            },
-            { key:'history',    label:'History'             },
-            { key:'pricing',    label:'Balance'             },
-          ].map(item => (
-            <button
-              key={item.key}
-              className={`sidebar-link ${page === item.key ? 'active' : ''}`}
-              onClick={() => setPage(item.key)}
-            >
-              <span className="sidebar-label">{item.label}</span>
+
+          <div className="sidebar-group">
+            <div className="sidebar-group-label">Overview</div>
+            <button className={`sidebar-link ${page==='dashboard'?'active':''}`} onClick={() => setPage('dashboard')}>
+              <span className="sidebar-link-icon">⊞</span>Dashboard
             </button>
-          ))}
+            <button className={`sidebar-link ${page==='history'?'active':''}`} onClick={() => setPage('history')}>
+              <span className="sidebar-link-icon">☰</span>History
+            </button>
+          </div>
+
+          <div className="sidebar-group">
+            <div className="sidebar-group-label">AI Tools</div>
+            <button className={`sidebar-link ${page==='visibility'?'active':''}`} onClick={() => setPage('visibility')}>
+              <span className="sidebar-link-icon">✳</span>AI Visibility Check
+            </button>
+            <button className={`sidebar-link ${page==='ai'?'active':''}`} onClick={() => setPage('ai')}>
+              <span className="sidebar-link-icon">↗</span>AI Visibility Audit
+            </button>
+          </div>
+
+          <div className="sidebar-group">
+            <div className="sidebar-group-label">SEO Tools</div>
+            <button className={`sidebar-link ${page==='audit'?'active':''}`} onClick={() => setPage('audit')}>
+              <span className="sidebar-link-icon">⊕</span>SEO Audit
+            </button>
+          </div>
+
+          <div className="sidebar-group">
+            <div className="sidebar-group-label">E-commerce</div>
+            <button className={`sidebar-link ${page==='generate'?'active':''}`} onClick={() => setPage('generate')}>
+              <span className="sidebar-link-icon">⊟</span>Description Generator
+            </button>
+          </div>
+
         </nav>
+
+        {/* Bottom: Balance + Account */}
         <div className="sidebar-bottom">
-          <UserButton afterSignOutUrl="/" />
+          <button className={`sidebar-balance-btn ${page==='pricing'?'active':''}`} onClick={() => setPage('pricing')}>
+            <span style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+              <span style={{ fontSize:'13px' }}>◑</span>
+              <span>Balance</span>
+            </span>
+            <span className="sidebar-balance-amount">€—</span>
+          </button>
+          <div className="sidebar-account">
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </div>
+
       </aside>
 
       {/* MAIN CONTENT */}
