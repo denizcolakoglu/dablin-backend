@@ -1590,11 +1590,11 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET balance = balance - 0.35 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 1.00 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
-          `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-          [req.auth?.userId, url || '', brand, JSON.stringify(queriesToRun), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors)]
+          `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, from_prompt, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+          [req.auth?.userId, url || '', brand, JSON.stringify(queriesToRun), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors), !url || url === '']
         );
         await client.query("COMMIT");
         console.log("[visibility-check] saved for", req.auth?.userId, url);
@@ -1726,10 +1726,11 @@ app.get("/api/visibility-check-history", requireAuth(), async (req, res) => {
     await pool.query(`CREATE TABLE IF NOT EXISTS visibility_checks (
       id SERIAL PRIMARY KEY, clerk_id TEXT NOT NULL, url TEXT, brand TEXT,
       queries JSONB, results JSONB, mention_summary JSONB, top_competitors JSONB,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      from_prompt BOOLEAN DEFAULT FALSE, created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
+    await pool.query(`ALTER TABLE visibility_checks ADD COLUMN IF NOT EXISTS from_prompt BOOLEAN DEFAULT FALSE`);
     const result = await pool.query(
-      `SELECT id, url, brand, mention_summary, top_competitors, created_at
+      `SELECT id, url, brand, queries, mention_summary, top_competitors, from_prompt, created_at
        FROM visibility_checks WHERE clerk_id = $1 ORDER BY created_at DESC LIMIT 50`,
       [req.auth?.userId]
     );
