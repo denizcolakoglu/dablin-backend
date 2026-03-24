@@ -1351,8 +1351,10 @@ Rules:
 // Queries Claude, GPT-4o, Gemini with brand queries, returns mention table
 app.post("/api/visibility-check", requireAuth(), async (req, res) => {
   const { url, savedQueries, brand: brandFromClient } = req.body;
-  if (!url) return res.status(400).json({ error: "url is required" });
-  try { new URL(url); } catch { return res.status(400).json({ error: "Invalid URL format" }); }
+  if (!url && (!savedQueries || savedQueries.length === 0)) {
+    return res.status(400).json({ error: "Either url or savedQueries is required" });
+  }
+  if (url) { try { new URL(url); } catch { return res.status(400).json({ error: "Invalid URL format" }); } }
 
   try {
     const authObj = getAuth(req);
@@ -1363,12 +1365,13 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs €1.00.", balance: user.balance });
     }
 
-    const domain = new URL(url).hostname.replace("www.", "");
+    const domain = url ? new URL(url).hostname.replace("www.", "") : (brandFromClient || "brand");
     let brand = brandFromClient || domain;
     let queriesToRun = [];
 
     // If no queries provided, auto-generate from URL
     if (!savedQueries || savedQueries.length === 0) {
+      if (!url) return res.status(400).json({ error: "url is required when no queries provided" });
       const fetch = (await import("node-fetch")).default;
       try {
         const pageRes = await fetch(url, {
@@ -1591,7 +1594,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
         await client.query(
           `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-          [req.auth?.userId, url, brand, JSON.stringify(queriesToRun), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors)]
+          [req.auth?.userId, url || '', brand, JSON.stringify(queriesToRun), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors)]
         );
         await client.query("COMMIT");
         console.log("[visibility-check] saved for", req.auth?.userId, url);
