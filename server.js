@@ -1349,11 +1349,9 @@ Rules:
 
 // ── POST /api/visibility-check ───────────────────────────────
 // Queries Claude, GPT-4o, Gemini with brand queries, returns mention table
-// Costs 7 credits
 app.post("/api/visibility-check", requireAuth(), async (req, res) => {
   const { url, savedQueries, brand: brandFromClient } = req.body;
   if (!url) return res.status(400).json({ error: "url is required" });
-  if (!savedQueries || savedQueries.length === 0) return res.status(400).json({ error: "queries are required" });
   try { new URL(url); } catch { return res.status(400).json({ error: "Invalid URL format" }); }
 
   try {
@@ -1361,14 +1359,49 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
     req.auth = authObj;
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
-    if (parseFloat(user.balance || 0) < 0.35) {
-      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs $0.35.", balance: user.balance });
+    if (parseFloat(user.balance || 0) < 1.00) {
+      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs €1.00.", balance: user.balance });
     }
 
-    // Use brand from client or fallback to domain
     const domain = new URL(url).hostname.replace("www.", "");
-    const brand = brandFromClient || domain;
-    const queriesToRun = savedQueries.slice(0, 7);
+    let brand = brandFromClient || domain;
+    let queriesToRun = [];
+
+    // If no queries provided, auto-generate from URL
+    if (!savedQueries || savedQueries.length === 0) {
+      const fetch = (await import("node-fetch")).default;
+      try {
+        const pageRes = await fetch(url, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; DablinBot/1.0)" },
+          timeout: 10000,
+        });
+        if (pageRes.ok) {
+          const html = await pageRes.text();
+          const cheerio = require("cheerio");
+          const $ = cheerio.load(html);
+          const pageTitle = $("title").text().trim() || url;
+          const metaDesc = $('meta[name="description"]').attr("content") || $('meta[property="og:description"]').attr("content") || "";
+          const h1 = $("h1").first().text().trim() || "";
+          const bodySnippet = $("body").text().replace(/\s+/g, " ").trim().substring(0, 600);
+
+          const brandMsg = await anthropic.messages.create({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 400,
+            messages: [{ role: "user", content: `Extract the brand name and generate 7 search queries for this website.\nURL: ${url}\nTitle: ${pageTitle}\nMeta: ${metaDesc}\nH1: ${h1}\nContent: ${bodySnippet}\n\nReturn ONLY valid JSON:\n{"brand":"BrandName","queries":["query 1","query 2","query 3","query 4","query 5","query 6","query 7"]}` }]
+          });
+          const clean = brandMsg.content[0].text.trim().replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          const parsed = JSON.parse(clean);
+          brand = parsed.brand || domain;
+          queriesToRun = parsed.queries || [];
+        }
+      } catch(e) {
+        console.error("Auto-generate queries failed:", e.message);
+      }
+      if (queriesToRun.length === 0) return res.status(400).json({ error: "Could not generate queries for this URL. Try adding them manually." });
+    } else {
+      queriesToRun = savedQueries.slice(0, 7);
+      brand = brandFromClient || domain;
+    }
 
     // Query each AI with each query in parallel
     const brandLower = brand.toLowerCase();
