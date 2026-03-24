@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { trackEvent } from "../analytics";
+import ShareButton from "./ShareButton";
 
 const BASE = "https://dablin-backend-production.up.railway.app";
 
@@ -125,8 +126,11 @@ export default function VisibilityChecker({ setPage }) {
 
       {result && (
         <>
-          <div style={{ display:'inline-block', background:'#e8f5ea', color:'#2d7a3a', border:'1px solid #c8e6cb', borderRadius:'100px', padding:'4px 14px', fontSize:'12px', fontWeight:'700', marginBottom:'20px' }}>
-            Brand: {result.brand}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px' }}>
+            <div style={{ display:'inline-block', background:'#e8f5ea', color:'#2d7a3a', border:'1px solid #c8e6cb', borderRadius:'100px', padding:'4px 14px', fontSize:'12px', fontWeight:'700' }}>
+              Brand: {result.brand}
+            </div>
+            <ShareButton type="visibility-check" data={result} />
           </div>
 
           {/* Summary */}

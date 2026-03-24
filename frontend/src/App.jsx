@@ -28,18 +28,20 @@ function AppShell() {
   // Derive active page from URL
   const path = location.pathname.replace('/dashboard', '') || '/';
   const page = path === '/' || path === '' ? 'dashboard'
-    : path === '/visibility'  ? 'visibility'
-    : path === '/ai-audit'    ? 'ai'
-    : path === '/seo-audit'   ? 'audit'
-    : path === '/generate'    ? 'generate'
-    : path === '/history'     ? 'history'
-    : path === '/credits'     ? 'pricing'
+    : path === '/visibility'   ? 'visibility'
+    : path === '/query-check'  ? 'querycheck'
+    : path === '/ai-audit'     ? 'ai'
+    : path === '/seo-audit'    ? 'audit'
+    : path === '/generate'     ? 'generate'
+    : path === '/history'      ? 'history'
+    : path === '/credits'      ? 'pricing'
     : 'dashboard';
 
   function setPage(p) {
     const routes = {
       dashboard:  '/dashboard',
       visibility: '/dashboard/visibility',
+      querycheck: '/dashboard/query-check',
       ai:         '/dashboard/ai-audit',
       audit:      '/dashboard/seo-audit',
       generate:   '/dashboard/generate',
