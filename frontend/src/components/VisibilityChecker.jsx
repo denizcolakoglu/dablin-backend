@@ -185,7 +185,7 @@ export default function VisibilityChecker({ setPage }) {
 
       {/* Tabs */}
       <div style={{ marginBottom:'24px' }}>
-        <p style={{ fontSize:'15px', color:'#5a7a5e', margin:'0 0 16px' }}>Enter your website URL and Dablin will query ChatGPT, Gemini, and Claude with real customer search terms to check if your brand appears. <strong>€1.00 per check.</strong></p>
+        <p style={{ fontSize:'15px', color:'#5a7a5e', margin:'0 0 16px' }}>Enter your website URL and Dablin will query ChatGPT, Gemini, and Claude with real customer search terms to check if your brand appears.</p>
         <div style={{ borderBottom:'2px solid #d4e8d6', display:'flex' }}>
           <button className={`vc-tab ${activeTab==='check'?'active':''}`} onClick={() => setActiveTab('check')}>Check</button>
           <button className={`vc-tab ${activeTab==='queries'?'active':''}`} onClick={() => setActiveTab('queries')}>

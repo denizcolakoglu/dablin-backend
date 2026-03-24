@@ -219,7 +219,7 @@ export default function Audit({ setPage }) {
       `}</style>
 
       <p className="audit-sub">
-        Paste a product page URL and Dablin will run 13 SEO checks — including schema, Open Graph, and technical SEO. <strong>€0.50 per audit.</strong>
+        Paste a product page URL and Dablin will run 13 SEO checks — including schema, Open Graph, and technical SEO.
       </p>
 
       <div className="audit-input-row">
