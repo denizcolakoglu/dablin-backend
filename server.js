@@ -524,9 +524,9 @@ app.get("/api/history", requireAuth(), async (req, res) => {
 // ── PRICING CONFIG ────────────────────────────────────────────
 // Cost in USD per feature (API cost × 25)
 const FEATURE_PRICES = {
-  visibility_check: 1.00,  // AI Visibility Check
-  ai_audit:         0.80,  // AI Visibility Audit
-  seo_audit:        0.50,  // SEO Audit
+  visibility_check: 0.35,  // AI Visibility Check
+  ai_audit:         0.20,  // AI Visibility Audit
+  seo_audit:        0.10,  // SEO Audit
   generate:         0.05,  // Generate Description
 };
 
@@ -557,7 +557,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
   const amountNum = parseFloat(amount);
 
   if (!amountNum || amountNum < 3 || amountNum > 50) {
-    return res.status(400).json({ error: "Amount must be between €3 and €50" });
+    return res.status(400).json({ error: "Amount must be between $3 and $50" });
   }
 
   const amountCents = Math.round(amountNum * 100);
@@ -570,7 +570,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
       payment_method_types: ["card"],
       line_items: [{
         price_data: {
-          currency: "eur",
+          currency: "usd",
           product_data: { name: `Dablin Balance — $${amountNum.toFixed(2)}` },
           unit_amount: amountCents,
         },
@@ -895,7 +895,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       try {
         await client.query("BEGIN");
         await client.query(
-          "UPDATE users SET balance = balance - 0.50 WHERE clerk_id = $1",
+          "UPDATE users SET balance = balance - 0.10 WHERE clerk_id = $1",
           [req.auth?.userId]
         );
         await client.query(
@@ -950,7 +950,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
     if (parseFloat(user.balance || 0) < 0.10) {
-      return res.status(402).json({ error: "Insufficient balance. AI Visibility Audit costs €0.20.", balance: user.balance });
+      return res.status(402).json({ error: "Insufficient balance. AI Visibility Audit costs $0.20.", balance: user.balance });
     }
 
     const fetch = (await import("node-fetch")).default;
@@ -1135,7 +1135,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET balance = balance - 0.50 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 0.10 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO audits (clerk_id, url, checks, issues, created_at) VALUES ($1, $2, $3, $4, NOW())`,
           [req.auth?.userId, url, JSON.stringify(allChecks), JSON.stringify(issues)]
@@ -1234,6 +1234,54 @@ app.patch("/api/saved-queries/:id", requireAuth(), async (req, res) => {
   } catch (err) { res.status(500).json({ error: "Failed to update query" }); }
 });
 
+// ── POST /api/generate-queries-from-prompt ───────────────────
+// Generates 7 queries from a user's text prompt. Free, no balance charged.
+app.post("/api/generate-queries-from-prompt", requireAuth(), async (req, res) => {
+  const { prompt, brand: brandHint } = req.body;
+  if (!prompt) return res.status(400).json({ error: "prompt is required" });
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const msg = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 400,
+      messages: [{
+        role: "user",
+        content: `Based on this description, generate 7 search queries that a potential customer would type into ChatGPT, Gemini, or Claude when looking for this product or service.
+
+Description: ${prompt}
+${brandHint ? `Brand name: ${brandHint}` : ''}
+
+Return ONLY valid JSON, no explanation:
+{
+  "brand": "BrandName",
+  "queries": ["query 1","query 2","query 3","query 4","query 5","query 6","query 7"]
+}
+
+Rules:
+- Queries 1-4: natural customer search terms (no brand name)
+- Query 5: "best [category] tools/software/products"
+- Query 6: "[category] reviews" or "[category] alternatives"
+- Query 7: a comparison query like "[category] vs [competitor type]"
+- Brand: extract from description or use provided brand name`
+      }]
+    });
+
+    let brand = brandHint || "your brand", queries = [];
+    try {
+      const clean = msg.content[0].text.trim().replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const parsed = JSON.parse(clean);
+      brand = parsed.brand || brand;
+      queries = parsed.queries || [];
+    } catch(e) {
+      return res.status(500).json({ error: "Failed to generate queries." });
+    }
+    res.json({ brand, queries });
+  } catch(err) {
+    console.error("POST /api/generate-queries-from-prompt error:", err);
+    res.status(500).json({ error: "Failed to generate queries." });
+  }
+});
+
 // ── POST /api/generate-queries ───────────────────────────────
 // Scrapes URL, extracts brand + generates 7 queries. No credits charged.
 app.post("/api/generate-queries", requireAuth(), async (req, res) => {
@@ -1314,7 +1362,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
     if (parseFloat(user.balance || 0) < 0.35) {
-      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs €0.35.", balance: user.balance });
+      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs $0.35.", balance: user.balance });
     }
 
     // Use brand from client or fallback to domain
@@ -1506,7 +1554,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET balance = balance - 1.00 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 0.35 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,

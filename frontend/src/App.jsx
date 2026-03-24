@@ -8,6 +8,7 @@ import Landing from "./components/Landing";
 import Audit from "./components/Audit";
 import AiAudit from "./components/AiAudit";
 import VisibilityChecker from "./components/VisibilityChecker";
+import QueryCheck from "./components/QueryCheck";
 import Dashboard from "./components/Dashboard";
 import PageGenerate from "./components/pages/PageGenerate";
 import PageSeoAudit from "./components/pages/PageSeoAudit";
@@ -119,8 +120,11 @@ function AppShell() {
             <button className={`sidebar-link ${page==='visibility'?'active':''}`} onClick={() => setPage('visibility')}>
               <span className="sidebar-link-icon">✳</span>AI Visibility Check
             </button>
+            <button className={`sidebar-link ${page==='querycheck'?'active':''}`} onClick={() => setPage('querycheck')}>
+              <span className="sidebar-link-icon">↗</span>AI Query Check
+            </button>
             <button className={`sidebar-link ${page==='ai'?'active':''}`} onClick={() => setPage('ai')}>
-              <span className="sidebar-link-icon">↗</span>AI Visibility Audit
+              <span className="sidebar-link-icon">◈</span>AI Visibility Audit
             </button>
           </div>
 
@@ -159,6 +163,7 @@ function AppShell() {
       {/* MAIN CONTENT */}
       <main className="main-content">
         {page === "visibility" && <VisibilityChecker setPage={setPage} />}
+        {page === "querycheck" && <QueryCheck setPage={setPage} />}
         {page === "ai"         && <AiAudit setPage={setPage} />}
         {page === "audit"      && <Audit setPage={setPage} />}
         {page === "generate"   && <Generator key={creditKey} />}
