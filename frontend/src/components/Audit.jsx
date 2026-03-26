@@ -40,6 +40,22 @@ const CHECK_GROUPS = [
       { key: "internalLinks", label: "Internal links", desc: "At least one link to another page on the site" },
     ],
   },
+  {
+    key: "google2026",
+    label: "Google March 2026",
+    checks: [
+      {
+        key: "informationGain",
+        label: "Information gain",
+        desc: "600+ words with original signals: author, date, data points, or structured lists",
+      },
+      {
+        key: "aiOverview",
+        label: "AI Overview eligibility",
+        desc: "FAQPage / HowTo schema or question-structured H2s for Google SGE citations",
+      },
+    ],
+  },
 ];
 
 const ALL_CHECKS = CHECK_GROUPS.flatMap(g => g.checks);
@@ -52,7 +68,7 @@ export default function Audit({ setPage }) {
   const [error, setError] = useState(null);
   const [noCredits, setNoCredits] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({
-    content: true, technical: true, schema: true, links: true, aeo: true,
+    content: true, technical: true, schema: true, links: true, aeo: true, google2026: true,
   });
   const [copied, setCopied] = useState(null);
 
@@ -88,7 +104,7 @@ export default function Audit({ setPage }) {
       setResult(data);
       window.dataLayer = window.dataLayer || [];
       const passed = Object.values(data.checks || {}).filter(Boolean).length;
-      const total = Object.keys(data.checks || {}).length || 13;
+      const total = Object.keys(data.checks || {}).length || 15;
       window.dataLayer.push({ event: 'seo_audit_completed', url, score: Math.round(passed / total * 100), passed, total });    } catch (e) {
       setError(e.message);
     } finally {
@@ -219,7 +235,7 @@ export default function Audit({ setPage }) {
       `}</style>
 
       <p className="audit-sub">
-        Paste a product page URL and Dablin will run 13 SEO checks — including schema, Open Graph, and technical SEO.
+      Paste a product page URL and Dablin will run 15 SEO checks — including schema, Open Graph, technical SEO, and Google March 2026 signals.
       </p>
 
       <div className="audit-input-row">
