@@ -796,6 +796,35 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     });
     const internalLinksOk = internalLinks > 0;
 
+    // ── CHECK 14: Information Gain (Google March 2026) ────────
+    // Detects thin/rehashed content penalised by Gemini Semantic Filter
+    const hasAuthor =
+      $('[rel="author"], [itemprop="author"], .author, .byline').length > 0 ||
+      /"author"\s*:/.test(html);
+    const hasDate =
+      $('time, [itemprop="datePublished"], [itemprop="dateModified"], meta[property="article:published_time"]').length > 0;
+    const hasStats = /\d+\s*[\%\+x]|\$\d+|€\d+|\d+\s*times\b/i.test(bodyText);
+    const hasStructuredList = $("ul li, ol li").length >= 3;
+    const uniqueSignals =
+      (hasAuthor ? 1 : 0) + (hasDate ? 1 : 0) + (hasStats ? 1 : 0) + (hasStructuredList ? 1 : 0);
+    const informationGainOk = wordCount >= 600 && uniqueSignals >= 2;
+
+    // ── CHECK 15: AI Overview eligibility (Google March 2026) ─
+    // FAQ/HowTo schema or question-structured headings increase SGE citation chances
+    let faqSchemaOk = false;
+    schemaScripts.each((_, el) => {
+      try {
+        const json = JSON.parse($(el).html());
+        const types = Array.isArray(json) ? json.map(j => j["@type"]) : [json["@type"]];
+        if (types.some(t => t === "FAQPage" || t === "HowTo" || t === "QAPage")) faqSchemaOk = true;
+      } catch {}
+    });
+    const questionH2Count = $("h2, h3").toArray().filter(el => {
+      const text = $(el).text().trim().toLowerCase();
+      return text.endsWith("?") || /^(what|how|why|when|is |are |can |does |do )/.test(text);
+    }).length;
+    const aiOverviewOk = faqSchemaOk || questionH2Count >= 2;
+
     // ── BUILD ISSUES ─────────────────────────────────────────
     const issues = {};
     if (!metaOk) {
@@ -824,12 +853,21 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     if (!breadcrumbOk) issues.breadcrumb = "No BreadcrumbList schema — navigation context missing for Google";
     if (!reviewSchemaOk) issues.reviewSchema = "No review/rating schema — missing star ratings in search results";
     if (!internalLinksOk) issues.internalLinks = "No internal links found — poor crawlability";
+    if (!informationGainOk) {
+      issues.informationGain = wordCount < 600
+        ? `Only ${wordCount} words — Google's March 2026 update penalises thin pages. Aim for 600+ words with original data or unique insights.`
+        : `Page lacks information gain signals (author, date, stats, structured lists). Add unique perspective to avoid being filtered as low-value content.`;
+    }
+    if (!aiOverviewOk) {
+      issues.aiOverview = "No FAQ schema or question-structured headings — low eligibility for Google AI Overviews (SGE). Add FAQPage schema or H2/H3s phrased as questions.";
+    }
 
     const allChecks = {
       meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk,
       wordCount: wordCountOk, canonical: canonicalOk, robots: robotsOk,
       og: ogOk, viewport: viewportOk, productSchema: productSchemaOk,
       breadcrumb: breadcrumbOk, reviewSchema: reviewSchemaOk, internalLinks: internalLinksOk,
+      informationGain: informationGainOk, aiOverview: aiOverviewOk,
     };
 
     // ── GENERATE AI FIXES FOR FAILED CHECKS ──────────────────
@@ -867,6 +905,8 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
           wordCount: `The page has only ${wordCount} words of visible content. Suggest 3 content sections (with titles) that could be added. Keep it brief.\n${contentContext}`,
           alt: `${missingAlt} images are missing alt text. In 2 sentences explain how to add alt text in Shopify/WordPress, then give 2 example formats for product images.`,
           internalLinks: `Suggest 3 internal link ideas for this page. Format as: "Link text → /suggested-url-path".\n${contentContext}`,
+          informationGain: `This page may lack information gain signals. Suggest 3 specific improvements: one data point or stat to add, one structural element (e.g. comparison table, numbered list), and one way to show author expertise. Keep it brief and actionable.\n${contentContext}`,
+          aiOverview: `Write 3 FAQ entries relevant to this page (question + 2-sentence answer each). Then return a complete JSON-LD FAQPage schema block containing those 3 questions. Return the FAQ text first, then the schema.\n${contentContext}`,
         };
 
         const fixRequests = failedKeys.filter(k => fixPrompts[k]);
