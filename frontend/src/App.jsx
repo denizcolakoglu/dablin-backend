@@ -162,12 +162,7 @@ function AppShell() {
   }
 
   useEffect(() => {
-    const redirect = sessionStorage.getItem("postLoginRedirect");
-    if (redirect) {
-      sessionStorage.removeItem("postLoginRedirect");
-      navigate(redirect.replace("/dashboard", "") || "/");
-    }
-  }, []);
+    if (user) {
       if (!prevUserId && user.id) {
         const isNewUser = (Date.now() - new Date(user.createdAt).getTime()) < 60000;
         if (isNewUser) {
