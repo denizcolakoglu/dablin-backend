@@ -34,6 +34,7 @@ function GoogleUpdatePopup() {
 
   function handleCTA() {
     sessionStorage.setItem("g2026popup", "1");
+    sessionStorage.setItem("postLoginRedirect", "/dashboard/seo-audit");
     window.location.href = "/dashboard/seo-audit";
   }
 
@@ -274,8 +275,12 @@ export default function App() {
 
       <Route path="/dashboard/*" element={
         <>
-          <SignedOut><Navigate to="/" replace /></SignedOut>
-          <SignedIn><AppShell /></SignedIn>
+          <SignedOut>
+            <Navigate to="/?redirectTo=seo-audit" replace />
+          </SignedOut>
+          <SignedIn>
+            <AppShell />
+          </SignedIn>
         </>
       } />
 
@@ -286,7 +291,10 @@ export default function App() {
             <GoogleUpdatePopup />
           </SignedOut>
           <SignedIn>
-            <Navigate to="/dashboard" replace />
+            {new URLSearchParams(window.location.search).get("redirectTo") === "seo-audit"
+              ? <Navigate to="/dashboard/seo-audit" replace />
+              : <Navigate to="/dashboard" replace />
+            }
           </SignedIn>
         </>
       } />
