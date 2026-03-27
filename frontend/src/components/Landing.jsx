@@ -733,6 +733,38 @@ function NavBar() {
   );
 }
 
+function HeroUrlForm() {
+  const [url, setUrl] = useState('');
+
+  function handleAnalyze() {
+    if (!url.trim()) return;
+    sessionStorage.setItem("postLoginRedirect", "/dashboard/seo-audit");
+    sessionStorage.setItem("heroUrl", url.trim());
+    window.location.href = "/dashboard/seo-audit";
+  }
+
+  return (
+    <div className="hero-url-form">
+      <input
+        className="hero-url-input"
+        type="url"
+        placeholder="Enter your website URL"
+        value={url}
+        onChange={e => setUrl(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && handleAnalyze()}
+      />
+      <SignUpButton mode="modal" fallbackRedirectUrl="/dashboard/seo-audit">
+        <button className="hero-url-btn" onClick={() => {
+          sessionStorage.setItem("heroUrl", url.trim());
+          trackEvent('hero_url_analyze_clicked', { url });
+        }}>
+          Analyze →
+        </button>
+      </SignUpButton>
+    </div>
+  );
+}
+
 export default function Landing() {
   return (
     <div className="landing">
@@ -744,52 +776,58 @@ export default function Landing() {
           --green-mid: #c8e6cb; --dark: #0f1a10; --dark-mid: #1a2e1c;
           --text: #1c2e1e; --muted: #5a7a5e; --border: #d4e8d6;
           --white: #ffffff; --off-white: #f7fbf7;
+          --forest: #0d2116; --forest-mid: #122a1a;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; }
 
         /* NAV */
-        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 48px; position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
+        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: sticky; top: 0; background: var(--forest); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); z-index: 100; }
         .nav-brand img { display: block; }
-        .landing-nav-links { display: flex; align-items: center; gap: 24px; }
-        .nav-text-link { font-size: 14px; font-weight: 500; color: var(--text); text-decoration: none; transition: color 0.2s; }
-        .nav-text-link:hover { color: var(--green); }
-        .nav-direct-link { font-size: 13px; font-weight: 500; color: var(--text); text-decoration: none; transition: color 0.2s; white-space: nowrap; }
-        .nav-direct-link:hover { color: var(--green); }
+        .landing-nav-links { display: flex; align-items: center; gap: 32px; }
+        .nav-text-link { font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.75); text-decoration: none; transition: color 0.2s; }
+        .nav-text-link:hover { color: white; }
+        .nav-direct-link { font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.75); text-decoration: none; transition: color 0.2s; white-space: nowrap; }
+        .nav-direct-link:hover { color: white; }
         .landing-nav-actions { display: flex; gap: 12px; align-items: center; }
+        .btn-ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .btn-ghost:hover { background: rgba(255,255,255,0.14); color: white; }
+        .btn-primary { background: white; color: var(--forest); border: none; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: #e8f5ea; transform: translateY(-1px); }
+        .btn-large { padding: 16px 36px; font-size: 16px; border-radius: 10px; font-weight: 600; }
+        .btn-outline-green { background: none; border: 2px solid rgba(255,255,255,0.3); color: white; padding: 14px 32px; border-radius: 10px; font-family: 'Roboto', sans-serif; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-outline-green:hover { border-color: white; background: rgba(255,255,255,0.08); }
 
         /* HAMBURGER */
-        .nav-hamburger { display: none; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; flex-direction: column; gap: 4px; }
-        .nav-hamburger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; }
+        .nav-hamburger { display: none; background: none; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 10px; cursor: pointer; flex-direction: column; gap: 4px; }
+        .nav-hamburger span { display: block; width: 18px; height: 2px; background: white; border-radius: 2px; }
         .nav-center-logo { display: none; }
         .nav-left-logo { display: block; }
-        .mobile-menu { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 500; padding: 24px; overflow-y: auto; }
+        .mobile-menu { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--forest); z-index: 500; padding: 24px; overflow-y: auto; }
         .mobile-menu.open { display: flex; flex-direction: column; }
         .mobile-menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-        .mobile-menu-close { background: none; border: none; font-size: 28px; color: var(--text); cursor: pointer; line-height: 1; }
-        .mobile-menu-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); text-decoration: none; }
+        .mobile-menu-close { background: none; border: none; font-size: 28px; color: white; cursor: pointer; line-height: 1; }
+        .mobile-menu-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-decoration: none; }
         .mobile-menu-item:last-child { border-bottom: none; }
-        .mobile-menu-icon { font-size: 20px; color: var(--green); flex-shrink: 0; margin-top: 2px; }
-        .mobile-menu-label { font-size: 16px; font-weight: 600; color: var(--dark); margin-bottom: 3px; }
-        .mobile-menu-desc { font-size: 13px; color: var(--muted); }
+        .mobile-menu-icon { font-size: 20px; color: var(--green-light); flex-shrink: 0; margin-top: 2px; }
+        .mobile-menu-label { font-size: 16px; font-weight: 600; color: white; margin-bottom: 3px; }
+        .mobile-menu-desc { font-size: 13px; color: rgba(255,255,255,0.5); }
         .mobile-menu-cta { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
 
-        /* BUTTONS */
-        .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text); padding: 9px 20px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-        .btn-ghost:hover { border-color: var(--green); color: var(--green); }
-        .btn-primary { background: var(--green); color: white; border: none; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .btn-primary:hover { background: var(--green-light); transform: translateY(-1px); }
-        .btn-large { padding: 16px 36px; font-size: 16px; border-radius: 10px; font-weight: 600; }
-        .btn-outline-green { background: none; border: 2px solid var(--green); color: var(--green); padding: 14px 32px; border-radius: 10px; font-family: 'Roboto', sans-serif; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .btn-outline-green:hover { background: var(--green-pale); }
-
         /* HERO */
-        .hero { max-width: 1100px; margin: 0 auto; padding: 48px 48px 64px; text-align: center; }
-        .hero-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(40px, 6vw, 72px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; color: var(--dark); margin-bottom: 24px; }
-        .hero-accent { color: var(--green); }
-        .hero-sub { font-size: 18px; color: var(--muted); max-width: 600px; margin: 0 auto 36px; line-height: 1.6; font-weight: 300; }
+        .hero { background: var(--forest); max-width: 100%; padding: 80px 48px 96px; text-align: center; }
+        .hero-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(44px, 7vw, 80px); font-weight: 800; line-height: 1.0; letter-spacing: -2.5px; color: white; margin-bottom: 24px; }
+        .hero-accent { color: #6fcf8a; }
+        .hero-sub { font-size: 19px; color: rgba(255,255,255,0.6); max-width: 580px; margin: 0 auto 12px; line-height: 1.65; font-weight: 300; }
         .hero-actions { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 48px; }
-        .hero-note { font-size: 13px; color: var(--muted); }
+        .hero-note { font-size: 13px; color: rgba(255,255,255,0.4); }
+
+        /* URL INPUT FIELD */
+        .hero-url-form { display: flex; align-items: center; max-width: 580px; margin: 40px auto 16px; background: white; border-radius: 100px; padding: 6px 6px 6px 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
+        .hero-url-input { flex: 1; border: none; outline: none; font-size: 15px; font-family: 'Roboto', sans-serif; color: var(--dark); background: transparent; }
+        .hero-url-input::placeholder { color: #9ab09c; }
+        .hero-url-btn { background: var(--forest); color: white; border: none; border-radius: 100px; padding: 12px 28px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Roboto', sans-serif; }
+        .hero-url-btn:hover { background: #1a3a22; }
 
         /* SCREENSHOT SECTION */
         .screenshot-section { background: var(--dark); padding: 32px 48px; text-align: center; }
@@ -854,15 +892,17 @@ export default function Landing() {
         .footer-links a:hover { color: rgba(255,255,255,0.7); }
 
         @media (max-width: 900px) {
-          .landing-nav { padding: 14px 20px; }
+          .landing-nav { padding: 0 20px; }
           .landing-nav-links { display: none; }
           .landing-nav-actions { display: none; }
           .nav-hamburger { display: flex; }
           .nav-left-logo { display: none; }
           .nav-center-logo { display: block; position: absolute; left: 50%; transform: translateX(-50%); }
-          .hero { padding: 32px 20px 40px; }
+          .hero { padding: 48px 20px 56px; }
           .hero-sub { font-size: 16px; }
-          .hero-actions { margin-bottom: 32px; }
+          .hero-url-form { margin: 32px 0 16px; flex-direction: column; border-radius: 14px; padding: 12px; gap: 8px; }
+          .hero-url-input { font-size: 14px; }
+          .hero-url-btn { width: 100%; border-radius: 8px; }
           .features-grid { grid-template-columns: 1fr; }
           .pricing-grid { grid-template-columns: 1fr; gap: 16px; }
           .features-section, .pricing-section, .cta-section, .faq-section { padding: 48px 20px; }
@@ -879,48 +919,63 @@ export default function Landing() {
       {/* HERO */}
       <div className="hero">
         <h1 className="hero-title">
-          Your store, visible everywhere.<br />
-          <span className="hero-accent">Google. ChatGPT. Gemini.</span>
+          Be visible everywhere<br />
+          <span className="hero-accent">search happens.</span>
         </h1>
         <p className="hero-sub">
-          Dablin. It checks if ChatGPT, Gemini, and Claude mention your brand, audits your pages for AI engine visibility, fixes your SEO issues, and generates product descriptions — all in one place.
+          Capture visibility across Google and AI — all with one platform built for today's search.
         </p>
-        <p className="hero-note" style={{ marginBottom: '32px' }}>AI-powered · No subscription · No credit card required</p>
-        <div className="hero-actions">
-          <div onClick={() => trackEvent('sign_up_modal_opened', { location: 'hero' })}>
-            <SignUpButton mode="modal">
-              <button className="btn-primary btn-large">Try it now</button>
-            </SignUpButton>
+
+        {/* URL INPUT FIELD */}
+        <HeroUrlForm />
+
+        <p className="hero-note">AI-powered · No subscription · No credit card required</p>
+
+        {/* STATS */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '48px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: '#6fcf8a' }}>10X</div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>faster audits</div>
+          </div>
+          <div style={{ width: '1px', height: '36px', background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: '#6fcf8a' }}>18</div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>SEO checks</div>
+          </div>
+          <div style={{ width: '1px', height: '36px', background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '28px', fontWeight: '800', color: '#6fcf8a' }}>Free</div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>to start</div>
           </div>
         </div>
       </div>
 
-      {/* DEMO TABS */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: 'clamp(32px,5vw,56px) clamp(20px,4vw,48px)' }}>
-        <HeroDemoTabs />
-      </div>
-
-      {/* THE TOOL */}
-      <div className="screenshot-section">
-        <p className="section-label">The tool</p>
-        <h2 className="section-title">Generate. Audit. Fix. Repeat.</h2>
-        <p className="section-sub">Check if ChatGPT, Gemini, and Claude mention your brand. Fix what's hiding you from AI engines. Audit your SEO. Write product descriptions that rank. All from one place.</p>
-      </div>
-
-      {/* FEATURES */}
-      <div className="features-section">
-        <div className="features-header">
-          <p className="section-label" style={{color:'var(--green)'}}>Why Dablin</p>
-          <h2 className="section-title-dark">Everything your product pages need</h2>
-          <p className="section-sub-dark">From writing new copy to auditing existing pages and checking AI engine visibility — Dablin covers it all.</p>
-        </div>
-        <div className="features-grid">
-          {FEATURES.map(f => (
-            <div className="feature-card" key={f.title}>
-              <div className="feature-title">{f.title}</div>
-              <div className="feature-desc">{f.desc}</div>
+      {/* VIDEO SECTION */}
+      <div style={{ background: '#f7fbf7', padding: '56px 40px', textAlign: 'center', borderTop: '1px solid #d4e8d6' }}>
+        <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#3d9e4e', marginBottom: '14px' }}>See it in action</p>
+        <h2 style={{ fontSize: '36px', fontWeight: '800', color: '#0f1a10', letterSpacing: '-1px', marginBottom: '12px' }}>Everything your pages need</h2>
+        <p style={{ fontSize: '16px', color: '#5a7a5e', maxWidth: '500px', margin: '0 auto 40px', lineHeight: '1.6' }}>
+          From SEO audits to AI visibility checks — Dablin covers it all in one place.
+        </p>
+        <div style={{ maxWidth: '860px', margin: '0 auto', background: '#0d2116', borderRadius: '16px', overflow: 'hidden', border: '1px solid #1a3a22' }}>
+          <div style={{ background: '#122a1a', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
+            <span style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>dablin.co</span>
+          </div>
+          {/* SWAP src WITH YOUR YOUTUBE/VIMEO EMBED URL WHEN READY */}
+          {/* Example YouTube: src="https://www.youtube.com/embed/YOUR_VIDEO_ID" */}
+          {/* Example Vimeo:   src="https://player.vimeo.com/video/YOUR_VIDEO_ID" */}
+          <div style={{ aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1e12' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(111,207,138,0.15)', border: '2px solid rgba(111,207,138,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <div style={{ width: 0, height: 0, borderTop: '12px solid transparent', borderBottom: '12px solid transparent', borderLeft: '20px solid #6fcf8a', marginLeft: '4px' }} />
+              </div>
+              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Product demo coming soon</p>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', margin: '6px 0 0' }}>Replace this block with an iframe embed when ready</p>
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
