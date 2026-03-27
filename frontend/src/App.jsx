@@ -34,7 +34,7 @@ function GoogleUpdatePopup() {
 
   function handleCTA() {
     sessionStorage.setItem("g2026popup", "1");
-    window.location.href = "/seo-audit";
+    window.location.href = "/dashboard/seo-audit";
   }
 
   if (!visible) return null;
