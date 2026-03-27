@@ -794,10 +794,9 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       const href = $(el).attr("href") || "";
       if (href.startsWith("/") || href.includes(parsedUrl.hostname)) internalLinks++;
     });
-    const internalLinksOk = internalLinks > 0;
+    const internalLinksOk = internalLinks >= 3;
 
     // ── CHECK 14: Information Gain (Google March 2026) ────────
-    // Detects thin/rehashed content penalised by Gemini Semantic Filter
     const hasAuthor =
       $('[rel="author"], [itemprop="author"], .author, .byline').length > 0 ||
       /"author"\s*:/.test(html);
@@ -810,7 +809,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     const informationGainOk = wordCount >= 600 && uniqueSignals >= 2;
 
     // ── CHECK 15: AI Overview eligibility (Google March 2026) ─
-    // FAQ/HowTo schema or question-structured headings increase SGE citation chances
     let faqSchemaOk = false;
     schemaScripts.each((_, el) => {
       try {
@@ -824,6 +822,31 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       return text.endsWith("?") || /^(what|how|why|when|is |are |can |does |do )/.test(text);
     }).length;
     const aiOverviewOk = faqSchemaOk || questionH2Count >= 2;
+
+    // ── CHECK 16: Image optimisation ─────────────────────────
+    let unoptimisedImages = 0;
+    images.each((_, el) => {
+      const hasWidth = $(el).attr("width");
+      const hasHeight = $(el).attr("height");
+      const hasLazy = $(el).attr("loading") === "lazy";
+      if (!hasWidth || !hasHeight || !hasLazy) unoptimisedImages++;
+    });
+    const imageOptOk = images.length === 0 || unoptimisedImages === 0;
+
+    // ── CHECK 17: Render-blocking resources ──────────────────
+    const renderBlockingScripts = $('head script:not([async]):not([defer]):not([type="application/ld+json"])').length;
+    const renderBlockingOk = renderBlockingScripts === 0;
+
+    // ── CHECK 18: Sitemap reference ───────────────────────────
+    let sitemapOk = false;
+    try {
+      const sitemapFetch = await fetch(`${parsedUrl.origin}/sitemap.xml`, {
+        method: "HEAD",
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; DablinSEOBot/1.0)" },
+        signal: AbortSignal.timeout(5000),
+      });
+      sitemapOk = sitemapFetch.ok;
+    } catch {}
 
     // ── BUILD ISSUES ─────────────────────────────────────────
     const issues = {};
@@ -852,15 +875,16 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     if (!productSchemaOk) issues.productSchema = "No Product schema found — missing Google Shopping eligibility";
     if (!breadcrumbOk) issues.breadcrumb = "No BreadcrumbList schema — navigation context missing for Google";
     if (!reviewSchemaOk) issues.reviewSchema = "No review/rating schema — missing star ratings in search results";
-    if (!internalLinksOk) issues.internalLinks = "No internal links found — poor crawlability";
+    if (!internalLinksOk) issues.internalLinks = `Only ${internalLinks} internal link${internalLinks === 1 ? "" : "s"} found — aim for at least 3 to improve crawlability and topical authority`;
     if (!informationGainOk) {
       issues.informationGain = wordCount < 600
         ? `Only ${wordCount} words — Google's March 2026 update penalises thin pages. Aim for 600+ words with original data or unique insights.`
         : `Page lacks information gain signals (author, date, stats, structured lists). Add unique perspective to avoid being filtered as low-value content.`;
     }
-    if (!aiOverviewOk) {
-      issues.aiOverview = "No FAQ schema or question-structured headings — low eligibility for Google AI Overviews (SGE). Add FAQPage schema or H2/H3s phrased as questions.";
-    }
+    if (!aiOverviewOk) issues.aiOverview = "No FAQ schema or question-structured headings — low eligibility for Google AI Overviews. Add FAQPage schema or H2/H3s phrased as questions.";
+    if (!imageOptOk) issues.imageOpt = `${unoptimisedImages} image${unoptimisedImages > 1 ? "s" : ""} missing width/height attributes or lazy loading — hurts Core Web Vitals (CLS/LCP)`;
+    if (!renderBlockingOk) issues.renderBlocking = `${renderBlockingScripts} render-blocking script${renderBlockingScripts > 1 ? "s" : ""} in <head> without async/defer — slows page load and hurts Core Web Vitals`;
+    if (!sitemapOk) issues.sitemap = "No sitemap.xml found — Google may miss pages on your site. Create and submit a sitemap via Google Search Console.";
 
     const allChecks = {
       meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk,
@@ -868,6 +892,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       og: ogOk, viewport: viewportOk, productSchema: productSchemaOk,
       breadcrumb: breadcrumbOk, reviewSchema: reviewSchemaOk, internalLinks: internalLinksOk,
       informationGain: informationGainOk, aiOverview: aiOverviewOk,
+      imageOpt: imageOptOk, renderBlocking: renderBlockingOk, sitemap: sitemapOk,
     };
 
     // ── GENERATE AI FIXES FOR FAILED CHECKS ──────────────────
@@ -905,8 +930,11 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
           wordCount: `The page has only ${wordCount} words of visible content. Suggest 3 content sections (with titles) that could be added. Keep it brief.\n${contentContext}`,
           alt: `${missingAlt} images are missing alt text. In 2 sentences explain how to add alt text in Shopify/WordPress, then give 2 example formats for product images.`,
           internalLinks: `Suggest 3 internal link ideas for this page. Format as: "Link text → /suggested-url-path".\n${contentContext}`,
-          informationGain: `This page may lack information gain signals. Suggest 3 specific improvements: one data point or stat to add, one structural element (e.g. comparison table, numbered list), and one way to show author expertise. Keep it brief and actionable.\n${contentContext}`,
+          informationGain: `This page may lack information gain. Suggest 3 specific improvements: one data point or stat to add, one structural element (e.g. comparison table, numbered list), and one way to show author expertise. Keep it brief and actionable.\n${contentContext}`,
           aiOverview: `Write 3 FAQ entries relevant to this page (question + 2-sentence answer each). Then return a complete JSON-LD FAQPage schema block containing those 3 questions. Return the FAQ text first, then the schema.\n${contentContext}`,
+          imageOpt: `${unoptimisedImages} images are missing width/height or loading="lazy". In 2 sentences explain how to fix this in Shopify/WordPress. Then show a correct example: <img src="product.jpg" width="800" height="600" loading="lazy" alt="Product name">.`,
+          renderBlocking: `${renderBlockingScripts} render-blocking scripts found in <head>. Return a 2-sentence explanation of how to add async or defer to fix this, then show a before/after example.`,
+          sitemap: `Explain in 2 sentences how to create a sitemap.xml and submit it to Google Search Console. Then provide a minimal valid sitemap.xml example for this site.\n${contentContext}`,
         };
 
         const fixRequests = failedKeys.filter(k => fixPrompts[k]);

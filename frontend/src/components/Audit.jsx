@@ -37,23 +37,24 @@ const CHECK_GROUPS = [
     key: "links",
     label: "Link Structure",
     checks: [
-      { key: "internalLinks", label: "Internal links", desc: "At least one link to another page on the site" },
+      { key: "internalLinks", label: "Internal links", desc: "At least 3 links to other pages on the site for crawlability" },
     ],
   },
   {
     key: "google2026",
     label: "Google March 2026",
     checks: [
-      {
-        key: "informationGain",
-        label: "Information gain",
-        desc: "600+ words with original signals: author, date, data points, or structured lists",
-      },
-      {
-        key: "aiOverview",
-        label: "AI Overview eligibility",
-        desc: "FAQPage / HowTo schema or question-structured H2s for Google SGE citations",
-      },
+      { key: "informationGain", label: "Information gain", desc: "600+ words with original signals: author, date, data points, or structured lists" },
+      { key: "aiOverview", label: "AI Overview eligibility", desc: "FAQPage / HowTo schema or question-structured H2s for Google SGE citations" },
+    ],
+  },
+  {
+    key: "performance",
+    label: "Performance",
+    checks: [
+      { key: "imageOpt", label: "Image optimisation", desc: "All images have width, height and loading=lazy for Core Web Vitals (CLS/LCP)" },
+      { key: "renderBlocking", label: "Render-blocking scripts", desc: "No synchronous scripts in <head> — use async or defer" },
+      { key: "sitemap", label: "Sitemap", desc: "A sitemap.xml is accessible for Google to discover all pages" },
     ],
   },
 ];
@@ -68,7 +69,7 @@ export default function Audit({ setPage }) {
   const [error, setError] = useState(null);
   const [noCredits, setNoCredits] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({
-    content: true, technical: true, schema: true, links: true, aeo: true, google2026: true,
+    content: true, technical: true, schema: true, links: true, aeo: true, google2026: true, performance: true,
   });
   const [copied, setCopied] = useState(null);
 
@@ -104,7 +105,7 @@ export default function Audit({ setPage }) {
       setResult(data);
       window.dataLayer = window.dataLayer || [];
       const passed = Object.values(data.checks || {}).filter(Boolean).length;
-      const total = Object.keys(data.checks || {}).length || 15;
+      const total = Object.keys(data.checks || {}).length || 18;
       window.dataLayer.push({ event: 'seo_audit_completed', url, score: Math.round(passed / total * 100), passed, total });    } catch (e) {
       setError(e.message);
     } finally {
@@ -235,7 +236,7 @@ export default function Audit({ setPage }) {
       `}</style>
 
       <p className="audit-sub">
-      Paste a product page URL and Dablin will run 15 SEO checks — including schema, Open Graph, technical SEO, and Google March 2026 signals.
+      Paste a product page URL and Dablin will run 18 SEO checks — including Core Web Vitals signals, Google March 2026 signals, and schema validation.
       </p>
 
       <div className="audit-input-row">
