@@ -98,7 +98,7 @@ function GoogleUpdatePopup() {
           </p>
 
           {/* CTA */}
-          <SignInButton mode="modal" afterSignInUrl="/dashboard/seo-audit" afterSignUpUrl="/dashboard/seo-audit">
+          <SignInButton mode="modal" fallbackRedirectUrl="/dashboard/seo-audit">
             <button style={{
               width: "100%", background: "#ffffff", color: "#0f2a1a",
               border: "none", borderRadius: "12px", padding: "15px",
