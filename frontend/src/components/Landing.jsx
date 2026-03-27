@@ -928,26 +928,6 @@ export default function Landing() {
 
         {/* URL INPUT FIELD */}
         <HeroUrlForm />
-
-        <p className="hero-note">AI-powered · No subscription · No credit card required</p>
-
-        {/* STATS */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '48px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: '#6fcf8a' }}>10X</div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>faster audits</div>
-          </div>
-          <div style={{ width: '1px', height: '36px', background: 'rgba(255,255,255,0.1)' }} />
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: '#6fcf8a' }}>18</div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>SEO checks</div>
-          </div>
-          <div style={{ width: '1px', height: '36px', background: 'rgba(255,255,255,0.1)' }} />
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: '800', color: '#6fcf8a' }}>Free</div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>to start</div>
-          </div>
-        </div>
       </div>
 
       {/* VIDEO SECTION */}
@@ -967,15 +947,12 @@ export default function Landing() {
           {/* SWAP src WITH YOUR YOUTUBE/VIMEO EMBED URL WHEN READY */}
           {/* Example YouTube: src="https://www.youtube.com/embed/YOUR_VIDEO_ID" */}
           {/* Example Vimeo:   src="https://player.vimeo.com/video/YOUR_VIDEO_ID" */}
-          <div style={{ aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1e12' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(111,207,138,0.15)', border: '2px solid rgba(111,207,138,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <div style={{ width: 0, height: 0, borderTop: '12px solid transparent', borderBottom: '12px solid transparent', borderLeft: '20px solid #6fcf8a', marginLeft: '4px' }} />
-              </div>
-              <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Product demo coming soon</p>
-              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', margin: '6px 0 0' }}>Replace this block with an iframe embed when ready</p>
-            </div>
-          </div>
+          <iframe
+            src="https://www.youtube.com/embed/pHVILT29ElE"
+            style={{ width: '100%', aspectRatio: '16/9', border: 'none', display: 'block' }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         </div>
       </div>
 
