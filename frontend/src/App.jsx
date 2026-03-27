@@ -120,6 +120,13 @@ function GoogleUpdatePopup() {
 }
 
 function AppShell() {
+  useEffect(() => {
+    const redirect = sessionStorage.getItem("postLoginRedirect");
+    if (redirect) {
+      sessionStorage.removeItem("postLoginRedirect");
+      navigate(redirect.replace("/dashboard", "") || "/");
+    }
+  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   const { getToken } = useAuth();
@@ -276,7 +283,7 @@ export default function App() {
       <Route path="/dashboard/*" element={
         <>
           <SignedOut>
-            <Navigate to="/?redirectTo=seo-audit" replace />
+            <Navigate to="/" replace />
           </SignedOut>
           <SignedIn>
             <AppShell />
@@ -291,10 +298,7 @@ export default function App() {
             <GoogleUpdatePopup />
           </SignedOut>
           <SignedIn>
-            {new URLSearchParams(window.location.search).get("redirectTo") === "seo-audit"
-              ? <Navigate to="/dashboard/seo-audit" replace />
-              : <Navigate to="/dashboard" replace />
-            }
+            <Navigate to="/dashboard" replace />
           </SignedIn>
         </>
       } />
