@@ -380,15 +380,16 @@ export default function Audit({ setPage }) {
           )}
 
           {/* Next Steps */}
+          <div style={{ borderTop: "1px solid #d4e8d6", margin: "24px 0 0" }} />
           <div style={{
             background: "#f7fbf7", border: "1px solid #d4e8d6", borderRadius: "12px",
-            padding: "24px", marginTop: "12px",
+            padding: "24px", marginTop: "24px",
           }}>
             <div style={{ fontSize: "13px", fontWeight: "700", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>
-              Next steps — beyond this audit
+              Next steps
             </div>
             <p style={{ fontSize: "13px", color: "#5a7a5e", lineHeight: "1.6", margin: "0 0 16px" }}>
-              Dablin covers on-page SEO and AI visibility — the things you can fix today. For a complete SEO strategy, also check these:
+              Dablin covers on-page SEO and AI visibility, the things you can fix today. For a complete SEO strategy, also check these:
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {[
