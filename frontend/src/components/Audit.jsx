@@ -381,34 +381,38 @@ export default function Audit({ setPage }) {
 
           {/* Next Steps */}
           <div style={{
-            background: "#0f1a10", borderRadius: "12px",
+            background: "#f7fbf7", border: "1px solid #d4e8d6", borderRadius: "12px",
             padding: "24px", marginTop: "12px",
           }}>
-            <div style={{ fontSize: "13px", fontWeight: "700", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>
               Next steps — beyond this audit
             </div>
-            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: "1.6", margin: "0 0 16px" }}>
+            <p style={{ fontSize: "13px", color: "#5a7a5e", lineHeight: "1.6", margin: "0 0 16px" }}>
               Dablin covers on-page SEO and AI visibility — the things you can fix today. For a complete SEO strategy, also check these:
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {[
                 { label: "Google Search Console", desc: "See which pages Google is indexing and fix crawl errors", url: "https://search.google.com/search-console" },
                 { label: "PageSpeed Insights", desc: "Real Core Web Vitals scores from actual users", url: `https://pagespeed.web.dev/report?url=${encodeURIComponent(result.url)}` },
-                { label: "Google Keyword Planner", desc: "Find high-volume keywords your competitors are winning", url: "https://ads.google.com/home/tools/keyword-planner/" },
-              ].map(item => (
-                <a key={item.label} href={item.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-                  <div style={{
-                    background: "rgba(255,255,255,0.06)", borderRadius: "8px", padding: "12px 16px",
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
-                    border: "0.5px solid rgba(255,255,255,0.1)",
-                  }}>
-                    <div>
-                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#fff", marginBottom: "2px" }}>{item.label}</div>
-                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>{item.desc}</div>
+              ].map((item, i, arr) => (
+                <div key={item.label}>
+                  <a href={item.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                    <div style={{
+                      background: "#eef7ef", borderRadius: "8px", padding: "12px 16px",
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
+                      border: "0.5px solid #d4e8d6",
+                    }}>
+                      <div>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f1a10", marginBottom: "2px" }}>{item.label}</div>
+                        <div style={{ fontSize: "12px", color: "#5a7a5e" }}>{item.desc}</div>
+                      </div>
+                      <span style={{ color: "#2d7a3a", fontSize: "14px", flexShrink: 0 }}>→</span>
                     </div>
-                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", flexShrink: 0 }}>→</span>
-                  </div>
-                </a>
+                  </a>
+                  {i < arr.length - 1 && (
+                    <div style={{ height: "1px", background: "#d4e8d6", margin: "10px 0" }} />
+                  )}
+                </div>
               ))}
             </div>
           </div>
