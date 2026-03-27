@@ -120,19 +120,21 @@ function GoogleUpdatePopup() {
 }
 
 function AppShell() {
-  useEffect(() => {
-    const redirect = sessionStorage.getItem("postLoginRedirect");
-    if (redirect) {
-      sessionStorage.removeItem("postLoginRedirect");
-      navigate(redirect.replace("/dashboard", "") || "/");
-    }
-  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   const { getToken } = useAuth();
   const { user } = useUser();
   const [prevUserId, setPrevUserId] = useState(null);
   const [creditKey, setCreditKey] = useState(0);
+
+  useEffect(() => {
+    const redirect = sessionStorage.getItem("postLoginRedirect");
+    if (redirect) {
+      sessionStorage.removeItem("postLoginRedirect");
+      const internal = redirect.replace("/dashboard", "") || "/";
+      navigate(internal);
+    }
+  }, []);
 
   const path = location.pathname.replace('/dashboard', '') || '/';
   const page = path === '/' || path === '' ? 'dashboard'
@@ -160,7 +162,12 @@ function AppShell() {
   }
 
   useEffect(() => {
-    if (user) {
+    const redirect = sessionStorage.getItem("postLoginRedirect");
+    if (redirect) {
+      sessionStorage.removeItem("postLoginRedirect");
+      navigate(redirect.replace("/dashboard", "") || "/");
+    }
+  }, []);
       if (!prevUserId && user.id) {
         const isNewUser = (Date.now() - new Date(user.createdAt).getTime()) < 60000;
         if (isNewUser) {
