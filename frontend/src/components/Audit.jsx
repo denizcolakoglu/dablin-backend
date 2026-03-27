@@ -328,6 +328,91 @@ export default function Audit({ setPage }) {
               </div>
             );
           })}
+
+          {/* PageSpeed Card */}
+          {result.pageSpeed && (
+            <div style={{
+              background: "#f7fbf7", border: "1px solid #d4e8d6", borderRadius: "12px",
+              padding: "20px 24px", marginTop: "12px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f1a10" }}>⚡ PageSpeed Insights (mobile)</span>
+                <span style={{
+                  fontSize: "13px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px",
+                  background: result.pageSpeed.score >= 90 ? "#e8f5ea" : result.pageSpeed.score >= 50 ? "#fff8e1" : "#fef2f2",
+                  color: result.pageSpeed.score >= 90 ? "#2d7a3a" : result.pageSpeed.score >= 50 ? "#e08a00" : "#c0392b",
+                }}>
+                  {result.pageSpeed.label}
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                <div style={{ textAlign: "center", minWidth: "72px" }}>
+                  <div style={{
+                    fontSize: "28px", fontWeight: "800",
+                    color: result.pageSpeed.score >= 90 ? "#2d7a3a" : result.pageSpeed.score >= 50 ? "#e08a00" : "#c0392b",
+                  }}>{result.pageSpeed.score}</div>
+                  <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>Score</div>
+                </div>
+                {result.pageSpeed.lcp && (
+                  <div style={{ textAlign: "center", minWidth: "72px" }}>
+                    <div style={{ fontSize: "18px", fontWeight: "700", color: "#0f1a10" }}>{result.pageSpeed.lcp}</div>
+                    <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>LCP</div>
+                  </div>
+                )}
+                {result.pageSpeed.cls && (
+                  <div style={{ textAlign: "center", minWidth: "72px" }}>
+                    <div style={{ fontSize: "18px", fontWeight: "700", color: "#0f1a10" }}>{result.pageSpeed.cls}</div>
+                    <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>CLS</div>
+                  </div>
+                )}
+                {result.pageSpeed.tbt && (
+                  <div style={{ textAlign: "center", minWidth: "72px" }}>
+                    <div style={{ fontSize: "18px", fontWeight: "700", color: "#0f1a10" }}>{result.pageSpeed.tbt}</div>
+                    <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>TBT</div>
+                  </div>
+                )}
+              </div>
+              <a href={`https://pagespeed.web.dev/report?url=${encodeURIComponent(result.url)}`} target="_blank" rel="noreferrer"
+                style={{ display: "inline-block", marginTop: "12px", fontSize: "12px", color: "#2d7a3a", textDecoration: "underline" }}>
+                View full PageSpeed report →
+              </a>
+            </div>
+          )}
+
+          {/* Next Steps */}
+          <div style={{
+            background: "#0f1a10", borderRadius: "12px",
+            padding: "24px", marginTop: "12px",
+          }}>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>
+              Next steps — beyond this audit
+            </div>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: "1.6", margin: "0 0 16px" }}>
+              Dablin covers on-page SEO and AI visibility — the things you can fix today. For a complete SEO strategy, also check these:
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {[
+                { label: "Google Search Console", desc: "See which pages Google is indexing and fix crawl errors", url: "https://search.google.com/search-console" },
+                { label: "PageSpeed Insights", desc: "Real Core Web Vitals scores from actual users", url: `https://pagespeed.web.dev/report?url=${encodeURIComponent(result.url)}` },
+                { label: "Google Keyword Planner", desc: "Find high-volume keywords your competitors are winning", url: "https://ads.google.com/home/tools/keyword-planner/" },
+              ].map(item => (
+                <a key={item.label} href={item.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                  <div style={{
+                    background: "rgba(255,255,255,0.06)", borderRadius: "8px", padding: "12px 16px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
+                    border: "0.5px solid rgba(255,255,255,0.1)",
+                  }}>
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#fff", marginBottom: "2px" }}>{item.label}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>{item.desc}</div>
+                    </div>
+                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", flexShrink: 0 }}>→</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        
         </>
       )}
 

@@ -848,6 +848,33 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       sitemapOk = sitemapFetch.ok;
     } catch {}
 
+    // ── PAGESPEED INSIGHTS (non-blocking) ─────────────────────
+    let pageSpeed = null;
+    try {
+      const psiFetch = await fetch(
+        `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance`,
+        { signal: AbortSignal.timeout(15000) }
+      );
+      if (psiFetch.ok) {
+        const psiData = await psiFetch.json();
+        const score = psiData?.lighthouseResult?.categories?.performance?.score;
+        const lcp = psiData?.lighthouseResult?.audits?.["largest-contentful-paint"]?.displayValue;
+        const cls = psiData?.lighthouseResult?.audits?.["cumulative-layout-shift"]?.displayValue;
+        const fid = psiData?.lighthouseResult?.audits?.["total-blocking-time"]?.displayValue;
+        if (score !== undefined) {
+          pageSpeed = {
+            score: Math.round(score * 100),
+            lcp: lcp || null,
+            cls: cls || null,
+            tbt: fid || null,
+            label: score >= 0.9 ? "Good" : score >= 0.5 ? "Needs improvement" : "Poor",
+          };
+        }
+      }
+    } catch (e) {
+      console.log("[audit] PageSpeed fetch skipped:", e.message);
+    }
+
     // ── BUILD ISSUES ─────────────────────────────────────────
     const issues = {};
     if (!metaOk) {
@@ -995,6 +1022,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       images_total: images.length,
       images_missing_alt: missingAlt,
       word_count: wordCount,
+      pageSpeed,
       creditsRemaining: updated.rows[0]?.credits ?? null,
     });
 
