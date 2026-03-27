@@ -34,8 +34,6 @@ function GoogleUpdatePopup() {
 
   function handleCTA() {
     sessionStorage.setItem("g2026popup", "1");
-    sessionStorage.setItem("postLoginRedirect", "/dashboard/seo-audit");
-    window.location.href = "/dashboard/seo-audit";
   }
 
   if (!visible) return null;
@@ -100,14 +98,16 @@ function GoogleUpdatePopup() {
           </p>
 
           {/* CTA */}
-          <button onClick={handleCTA} style={{
-            width: "100%", background: "#ffffff", color: "#0f2a1a",
-            border: "none", borderRadius: "12px", padding: "15px",
-            fontSize: "15px", fontWeight: "700", cursor: "pointer",
-            marginBottom: "10px", letterSpacing: "-0.2px",
-          }}>
-            Run free SEO Audit →
-          </button>
+          <SignInButton mode="modal" afterSignInUrl="/dashboard/seo-audit" afterSignUpUrl="/dashboard/seo-audit">
+            <button style={{
+              width: "100%", background: "#ffffff", color: "#0f2a1a",
+              border: "none", borderRadius: "12px", padding: "15px",
+              fontSize: "15px", fontWeight: "700", cursor: "pointer",
+              marginBottom: "10px", letterSpacing: "-0.2px",
+            }}>
+              Run free SEO Audit →
+            </button>
+          </SignInButton>
 
           <p style={{ textAlign: "center", fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: 0 }}>
             Free · No card needed · 7 credits on signup
@@ -126,15 +126,6 @@ function AppShell() {
   const { user } = useUser();
   const [prevUserId, setPrevUserId] = useState(null);
   const [creditKey, setCreditKey] = useState(0);
-
-  useEffect(() => {
-    const redirect = sessionStorage.getItem("postLoginRedirect");
-    if (redirect) {
-      sessionStorage.removeItem("postLoginRedirect");
-      const internal = redirect.replace("/dashboard", "") || "/";
-      navigate(internal);
-    }
-  }, []);
 
   const path = location.pathname.replace('/dashboard', '') || '/';
   const page = path === '/' || path === '' ? 'dashboard'
