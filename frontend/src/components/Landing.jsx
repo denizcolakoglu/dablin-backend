@@ -948,7 +948,7 @@ export default function Landing() {
           {/* Example YouTube: src="https://www.youtube.com/embed/YOUR_VIDEO_ID" */}
           {/* Example Vimeo:   src="https://player.vimeo.com/video/YOUR_VIDEO_ID" */}
           <iframe
-            src="https://www.youtube.com/embed/pHVILT29ElE"
+            src="https://www.youtube.com/embed/pHVILT29ElE?rel=0&modestbranding=1"
             style={{ width: '100%', aspectRatio: '16/9', border: 'none', display: 'block' }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
