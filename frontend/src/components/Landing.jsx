@@ -733,6 +733,83 @@ function NavBar() {
   );
 }
 
+function GoogleUpdatePopup() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("g2026popup")) return;
+    const timer = setTimeout(() => setVisible(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  function dismiss() {
+    sessionStorage.setItem("g2026popup", "1");
+    setVisible(false);
+  }
+
+  if (!visible) return null;
+
+  return (
+    <div onClick={dismiss} style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "rgba(0,0,0,0.5)", display: "flex",
+      alignItems: "center", justifyContent: "center", padding: "24px",
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        maxWidth: "420px", width: "100%", borderRadius: "20px",
+        overflow: "hidden", position: "relative",
+        background: "linear-gradient(135deg, #0f2a1a 0%, #1a4a2a 50%, #2d6a3a 100%)",
+      }}>
+        <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "180px", height: "180px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-30px", left: "-30px", width: "140px", height: "140px", borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+        <div style={{ position: "relative", padding: "32px" }}>
+          <button onClick={dismiss} style={{
+            position: "absolute", top: "16px", right: "16px",
+            background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%",
+            width: "26px", height: "26px", color: "rgba(255,255,255,0.6)",
+            cursor: "pointer", fontSize: "12px", display: "flex",
+            alignItems: "center", justifyContent: "center",
+          }}>✕</button>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)",
+            borderRadius: "20px", padding: "4px 12px", fontSize: "11px",
+            fontWeight: "500", letterSpacing: "0.08em", textTransform: "uppercase",
+            marginBottom: "18px", border: "0.5px solid rgba(255,255,255,0.15)",
+          }}>
+            ⚡ Google March 2026
+          </div>
+          <h2 style={{
+            fontSize: "26px", fontWeight: "700", color: "#ffffff",
+            lineHeight: "1.15", margin: "0 0 10px", letterSpacing: "-0.5px",
+          }}>
+            Does your site pass<br />the new ranking signals?
+          </h2>
+          <p style={{
+            fontSize: "14px", color: "rgba(255,255,255,0.6)",
+            lineHeight: "1.6", margin: "0 0 24px", fontWeight: "300",
+          }}>
+            Dablin now checks <span style={{ color: "#fff", fontWeight: "500" }}>Information Gain</span> and <span style={{ color: "#fff", fontWeight: "500" }}>AI Overview eligibility</span> — the 2 signals from Google's fastest update ever.
+          </p>
+          <SignInButton mode="modal" fallbackRedirectUrl="/dashboard/seo-audit">
+            <button onClick={() => sessionStorage.setItem("g2026popup", "1")} style={{
+              width: "100%", background: "#ffffff", color: "#0f2a1a",
+              border: "none", borderRadius: "12px", padding: "15px",
+              fontSize: "15px", fontWeight: "700", cursor: "pointer",
+              marginBottom: "10px", letterSpacing: "-0.2px",
+            }}>
+              Run free SEO Audit →
+            </button>
+          </SignInButton>
+          <p style={{ textAlign: "center", fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: 0 }}>
+            Free · No card needed · 7 credits on signup
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HeroUrlForm() {
   const [url, setUrl] = useState('');
 
@@ -930,29 +1007,32 @@ export default function Landing() {
         <HeroUrlForm />
       </div>
 
-      {/* VIDEO SECTION */}
-      <div style={{ background: '#f7fbf7', padding: '56px 40px', textAlign: 'center', borderTop: '1px solid #d4e8d6' }}>
-        <p style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#3d9e4e', marginBottom: '14px' }}>See it in action</p>
-        <h2 style={{ fontSize: '36px', fontWeight: '800', color: '#0f1a10', letterSpacing: '-1px', marginBottom: '12px' }}>Everything your pages need</h2>
-        <p style={{ fontSize: '16px', color: '#5a7a5e', maxWidth: '500px', margin: '0 auto 40px', lineHeight: '1.6' }}>
-          From SEO audits to AI visibility checks — Dablin covers it all in one place.
-        </p>
-        <div style={{ maxWidth: '860px', margin: '0 auto', background: '#0d2116', borderRadius: '16px', overflow: 'hidden', border: '1px solid #1a3a22' }}>
-          <div style={{ background: '#122a1a', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
-            <span style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>dablin.co</span>
-          </div>
-          {/* SWAP src WITH YOUR YOUTUBE/VIMEO EMBED URL WHEN READY */}
-          {/* Example YouTube: src="https://www.youtube.com/embed/YOUR_VIDEO_ID" */}
-          {/* Example Vimeo:   src="https://player.vimeo.com/video/YOUR_VIDEO_ID" */}
-          <iframe
-            src="https://www.youtube.com/embed/pHVILT29ElE?rel=0&modestbranding=1"
-            style={{ width: '100%', aspectRatio: '16/9', border: 'none', display: 'block' }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+      {/* DEMO TABS */}
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: 'clamp(32px,5vw,56px) clamp(20px,4vw,48px)' }}>
+        <HeroDemoTabs />
+      </div>
+
+      {/* THE TOOL */}
+      <div className="screenshot-section">
+        <p className="section-label">The tool</p>
+        <h2 className="section-title">Generate. Audit. Fix. Repeat.</h2>
+        <p className="section-sub">Check if ChatGPT, Gemini, and Claude mention your brand. Fix what's hiding you from AI engines. Audit your SEO. Write product descriptions that rank. All from one place.</p>
+      </div>
+
+      {/* FEATURES */}
+      <div className="features-section">
+        <div className="features-header">
+          <p className="section-label" style={{color:'var(--green)'}}>Why Dablin</p>
+          <h2 className="section-title-dark">Everything your product pages need</h2>
+          <p className="section-sub-dark">From writing new copy to auditing existing pages and checking AI engine visibility — Dablin covers it all.</p>
+        </div>
+        <div className="features-grid">
+          {FEATURES.map(f => (
+            <div className="feature-card" key={f.title}>
+              <div className="feature-title">{f.title}</div>
+              <div className="feature-desc">{f.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -996,6 +1076,8 @@ export default function Landing() {
           <a href="mailto:hello@dablin.co">Contact us: hello@dablin.co</a>
         </div>
       </footer>
+
+      <GoogleUpdatePopup />
     </div>
   );
 }

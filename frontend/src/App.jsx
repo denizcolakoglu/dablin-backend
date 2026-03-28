@@ -288,7 +288,6 @@ export default function App() {
         <>
           <SignedOut>
             <Landing />
-            <GoogleUpdatePopup />
           </SignedOut>
           <SignedIn>
             <Navigate to="/dashboard" replace />
