@@ -1007,32 +1007,98 @@ export default function Landing() {
         <HeroUrlForm />
       </div>
 
-      {/* DEMO TABS */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: 'clamp(32px,5vw,56px) clamp(20px,4vw,48px)' }}>
-        <HeroDemoTabs />
-      </div>
+      {/* PRODUCT SECTIONS */}
 
-      {/* THE TOOL */}
-      <div className="screenshot-section">
-        <p className="section-label">The tool</p>
-        <h2 className="section-title">Generate. Audit. Fix. Repeat.</h2>
-        <p className="section-sub">Check if ChatGPT, Gemini, and Claude mention your brand. Fix what's hiding you from AI engines. Audit your SEO. Write product descriptions that rank. All from one place.</p>
-      </div>
-
-      {/* FEATURES */}
-      <div className="features-section">
-        <div className="features-header">
-          <p className="section-label" style={{color:'var(--green)'}}>Why Dablin</p>
-          <h2 className="section-title-dark">Everything your product pages need</h2>
-          <p className="section-sub-dark">From writing new copy to auditing existing pages and checking AI engine visibility — Dablin covers it all.</p>
-        </div>
-        <div className="features-grid">
-          {FEATURES.map(f => (
-            <div className="feature-card" key={f.title}>
-              <div className="feature-title">{f.title}</div>
-              <div className="feature-desc">{f.desc}</div>
+      {/* 1: AI Visibility Check — text left, demo right */}
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>◎ AI Visibility Check</div>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
+              Does ChatGPT mention<br />your brand?
+            </h2>
+            <p style={{ fontSize: '16px', color: 'var(--muted)', lineHeight: '1.7', marginBottom: '28px', fontWeight: '300' }}>
+              Enter your URL and Dablin generates 7 real customer queries — the kind buyers type into ChatGPT before they find you. Then it sends them to Claude, GPT-4o, and Gemini simultaneously and shows you exactly who mentions your brand and which competitors they recommend instead.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '36px' }}>
+              {['7 auto-generated customer queries from your URL', 'Runs across Claude, GPT-4o and Gemini at once', 'Shows which competitors AI engines recommend instead', 'Track changes over time with saved queries'].map(b => (
+                <div key={b} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: 'var(--text)' }}>
+                  <span style={{ color: 'var(--green)', fontWeight: '700', flexShrink: 0, marginTop: '1px' }}>✓</span>{b}
+                </div>
+              ))}
             </div>
-          ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div onClick={() => trackEvent('sign_up_modal_opened', { location: 'aicheck_section' })}>
+                <SignUpButton mode="modal">
+                  <button className="btn-primary">Check my AI visibility →</button>
+                </SignUpButton>
+              </div>
+              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>7 free credits · no card needed</span>
+            </div>
+          </div>
+          <div><AiCheckDemo /></div>
+        </div>
+      </div>
+
+      {/* 2: AI Visibility Audit — demo left, text right */}
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+          <div><AiVisibilityDemo /></div>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>◈ AI Visibility Audit</div>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
+              Why can't AI engines<br />find your pages?
+            </h2>
+            <p style={{ fontSize: '16px', color: 'var(--muted)', lineHeight: '1.7', marginBottom: '28px', fontWeight: '300' }}>
+              12 technical checks that identify exactly what's stopping AI engines from understanding your brand. From llms.txt to Organization schema, sameAs links, and AI crawler access — every failed check comes with a ready-to-copy fix.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '36px' }}>
+              {['12 checks for AI engine visibility', 'Detects missing llms.txt, schema and crawler access', 'AI-generated fix for every failed check', 'No developer needed — copy and paste fixes'].map(b => (
+                <div key={b} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: 'var(--text)' }}>
+                  <span style={{ color: 'var(--green)', fontWeight: '700', flexShrink: 0, marginTop: '1px' }}>✓</span>{b}
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div onClick={() => trackEvent('sign_up_modal_opened', { location: 'aiaudit_section' })}>
+                <SignUpButton mode="modal">
+                  <button className="btn-primary">Run AI Visibility Audit →</button>
+                </SignUpButton>
+              </div>
+              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>7 free credits · no card needed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3: SEO Audit — text left, demo right */}
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>⊕ SEO Audit</div>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
+              18 checks. AI fixes.<br />Google March 2026 ready.
+            </h2>
+            <p style={{ fontSize: '16px', color: 'var(--muted)', lineHeight: '1.7', marginBottom: '28px', fontWeight: '300' }}>
+              Paste any product page URL and Dablin runs 18 SEO checks — including the two new signals from Google's March 2026 update: Information Gain and AI Overview eligibility. Every failed check includes an AI-generated fix ready to copy and paste.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '36px' }}>
+              {['18 checks across content, technical SEO and structured data', 'Information Gain score (Google March 2026)', 'AI Overview eligibility check (FAQPage / HowTo schema)', 'PageSpeed Insights score included'].map(b => (
+                <div key={b} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: 'var(--text)' }}>
+                  <span style={{ color: 'var(--green)', fontWeight: '700', flexShrink: 0, marginTop: '1px' }}>✓</span>{b}
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div onClick={() => trackEvent('sign_up_modal_opened', { location: 'seoaudit_section' })}>
+                <SignUpButton mode="modal">
+                  <button className="btn-primary">Audit my page →</button>
+                </SignUpButton>
+              </div>
+              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>7 free credits · no card needed</span>
+            </div>
+          </div>
+          <div><SeoAuditDemo /></div>
         </div>
       </div>
 
