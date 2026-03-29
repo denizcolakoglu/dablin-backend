@@ -17,6 +17,85 @@ function FaqItem({ q, a }) {
   );
 }
 
+const NAV_ITEMS = [
+  { href: "/ai-visibility-check", icon: "◎", label: "AI Visibility Check", desc: "See if ChatGPT, Gemini & Claude mention you" },
+  { href: "/ai-visibility-audit", icon: "⌕", label: "AI Visibility Audit", desc: "12 checks for AI engine discoverability" },
+  { href: "/seo-audit", icon: "✓", label: "SEO Audit", desc: "18-point SEO check with AI fixes" },
+  { href: "/generate-product-description", icon: "✦", label: "Generate Product Description", desc: "AI-powered, SEO-ready in seconds" },
+];
+
+function NavBar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  return (
+    <>
+      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 48px', height: '72px', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #eef2ee', zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={() => setMenuOpen(true)} style={{ display: 'none' }} aria-label="Open menu" className="seo-hamburger">
+            <span /><span /><span />
+          </button>
+          <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src="/logo.svg" alt="Dablin" height="44" />
+          </a>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }} className="seo-nav-links">
+          <a href="/ai-visibility-check" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>AI Visibility Check</a>
+          <a href="/ai-visibility-audit" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>AI Visibility Audit</a>
+          <a href="/seo-audit" style={{ fontSize: '15px', fontWeight: '500', color: '#1a7a3a', textDecoration: 'none', fontWeight: '600' }}>SEO Audit</a>
+          <a href="/generate-product-description" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>Generate</a>
+          <a href="/pricing" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>Pricing</a>
+          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>Blog</a>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <SignInButton mode="modal">
+            <button className="seo-btn-ghost">Sign in</button>
+          </SignInButton>
+          <div onClick={() => trackEvent('sign_up_modal_opened', { location: 'nav' })}>
+            <SignUpButton mode="modal">
+              <button className="seo-btn-primary">Sign up</button>
+            </SignUpButton>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div style={{ display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'white', zIndex: 500, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <img src="/logo.svg" alt="Dablin" height="40" />
+            <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', fontSize: '28px', color: '#2a3d2b', cursor: 'pointer' }}>×</button>
+          </div>
+          {NAV_ITEMS.map(item => (
+            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 0', borderBottom: '1px solid #eef2ee', textDecoration: 'none' }}>
+              <span style={{ fontSize: '20px', color: '#1a7a3a', flexShrink: 0, marginTop: '2px' }}>{item.icon}</span>
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: '#0d1f0e', marginBottom: '3px' }}>{item.label}</div>
+                <div style={{ fontSize: '13px', color: '#4a6b4c' }}>{item.desc}</div>
+              </div>
+            </a>
+          ))}
+          <a href="/pricing" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 0', borderBottom: '1px solid #eef2ee', textDecoration: 'none' }}>
+            <span style={{ fontSize: '20px', color: '#1a7a3a', flexShrink: 0, marginTop: '2px' }}>€</span>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#0d1f0e', marginBottom: '3px' }}>Pricing</div>
+              <div style={{ fontSize: '13px', color: '#4a6b4c' }}>Pay per use, credits never expire</div>
+            </div>
+          </a>
+          <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div onClick={() => { trackEvent('sign_up_modal_opened', { location: 'mobile_menu' }); setMenuOpen(false); }}>
+              <SignUpButton mode="modal">
+                <button className="seo-btn-primary" style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '10px' }}>Sign up free</button>
+              </SignUpButton>
+            </div>
+            <SignInButton mode="modal">
+              <button className="seo-btn-ghost" style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '10px' }} onClick={() => setMenuOpen(false)}>Sign in</button>
+            </SignInButton>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 const CHECKS = [
   { group: "Content Quality", items: [
     { title: "Meta description", desc: "Present, unique and between 120–155 characters." },
@@ -68,32 +147,22 @@ export default function PageSeoAudit() {
         .seo-btn-large { padding: 15px 36px; font-size: 16px; border-radius: 10px; }
         .seo-btn-ghost { background: none; border: 1.5px solid #d0e8d4; color: #1a7a3a; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
         .seo-btn-ghost:hover { border-color: #1a7a3a; background: #eef8f0; }
-        @media (max-width: 768px) {
+        .seo-hamburger { display: none; background: none; border: 1px solid #eef2ee; border-radius: 8px; padding: 8px 10px; cursor: pointer; flex-direction: column; gap: 4px; }
+        .seo-hamburger span { display: block; width: 18px; height: 2px; background: #2a3d2b; border-radius: 2px; }
+        @media (max-width: 900px) {
+          .seo-nav-links { display: none !important; }
+          .seo-hamburger { display: flex !important; }
           .seo-grid-2 { grid-template-columns: 1fr !important; }
           .seo-grid-3 { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 768px) {
           .seo-hero-title { font-size: 40px !important; }
-          .seo-nav { padding: 0 20px !important; }
-          .seo-section { padding: 48px 20px !important; }
+          .seo-section { padding-left: 20px !important; padding-right: 20px !important; }
         }
       `}</style>
 
       {/* NAV */}
-      <nav className="seo-nav" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 48px', height: '72px', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #eef2ee', zIndex: 100 }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <img src="/logo.svg" alt="Dablin" height="32" />
-          <span style={{ color: '#0d1f0e', fontSize: '17px', fontWeight: '700', letterSpacing: '-0.3px' }}>dablin</span>
-        </a>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <SignInButton mode="modal">
-            <button className="seo-btn-ghost">Sign in</button>
-          </SignInButton>
-          <div onClick={() => trackEvent('sign_up_click', { location: 'seo_audit_page_nav' })}>
-            <SignUpButton mode="modal">
-              <button className="seo-btn-primary">Sign up free</button>
-            </SignUpButton>
-          </div>
-        </div>
-      </nav>
+      <NavBar />
 
       {/* HERO */}
       <div className="seo-section" style={{ background: '#eef8f0', padding: '96px 48px 108px', textAlign: 'center' }}>
