@@ -849,77 +849,74 @@ export default function Landing() {
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
 
         :root {
-          --green: #2d7a3a; --green-light: #3d9e4e; --green-pale: #e8f5ea;
-          --green-mid: #c8e6cb; --dark: #0f1a10; --dark-mid: #1a2e1c;
-          --text: #1c2e1e; --muted: #5a7a5e; --border: #d4e8d6;
-          --white: #ffffff; --off-white: #f7fbf7;
-          --forest: #0d2116; --forest-mid: #122a1a;
+          --green: #1a7a3a; --green-light: #2d9a4e; --green-pale: #eef8f0;
+          --green-mid: #d0e8d4; --dark: #0d1f0e; --dark-mid: #1a2e1c;
+          --text: #2a3d2b; --muted: #4a6b4c; --border: #eef2ee;
+          --white: #ffffff; --off-white: #f8faf8; --mint: #eef8f0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; }
 
         /* NAV */
-        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: sticky; top: 0; background: #ffffff; backdrop-filter: blur(12px); border-bottom: 1px solid #d4e8d6; z-index: 100; }
+        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: sticky; top: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
         .nav-brand img { display: block; }
         .landing-nav-links { display: flex; align-items: center; gap: 32px; }
-        .nav-text-link { font-size: 15px; font-weight: 500; color: #1c2e1e; text-decoration: none; transition: color 0.2s; }
-        .nav-text-link:hover { color: #2d7a3a; }
-        .nav-direct-link { font-size: 15px; font-weight: 500; color: #1c2e1e; text-decoration: none; transition: color 0.2s; white-space: nowrap; }
-        .nav-direct-link:hover { color: #2d7a3a; }
-        .landing-nav-actions { display: flex; gap: 12px; align-items: center; }
-        .btn-ghost { background: none; border: 1px solid #d4e8d6; color: #1c2e1e; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-        .btn-ghost:hover { border-color: #2d7a3a; color: #2d7a3a; }
-        .btn-primary { background: #2d7a3a; color: white; border: none; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .btn-primary:hover { background: #3d9e4e; transform: translateY(-1px); }
-        .btn-large { padding: 16px 36px; font-size: 16px; border-radius: 10px; font-weight: 600; }
-        .btn-outline-green { background: none; border: 2px solid rgba(255,255,255,0.3); color: white; padding: 14px 32px; border-radius: 10px; font-family: 'Roboto', sans-serif; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .btn-outline-green:hover { border-color: white; background: rgba(255,255,255,0.08); }
+        .nav-text-link { font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; transition: color 0.2s; }
+        .nav-text-link:hover { color: var(--green); }
+        .nav-direct-link { font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; transition: color 0.2s; white-space: nowrap; }
+        .nav-direct-link:hover { color: var(--green); }
+        .landing-nav-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-ghost { background: none; border: 1.5px solid var(--green-mid); color: var(--green); padding: 9px 20px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-ghost:hover { border-color: var(--green); background: var(--green-pale); }
+        .btn-primary { background: var(--green); color: white; border: none; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: var(--green-light); transform: translateY(-1px); }
+        .btn-large { padding: 15px 36px; font-size: 16px; border-radius: 10px; font-weight: 600; }
+        .btn-outline-green { background: none; border: 2px solid var(--green-mid); color: var(--green); padding: 14px 32px; border-radius: 10px; font-family: 'Roboto', sans-serif; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-outline-green:hover { border-color: var(--green); background: var(--green-pale); }
 
         /* HAMBURGER */
-        .nav-hamburger { display: none; background: none; border: 1px solid #d4e8d6; border-radius: 8px; padding: 8px 10px; cursor: pointer; flex-direction: column; gap: 4px; }
-        .nav-hamburger span { display: block; width: 18px; height: 2px; background: #1c2e1e; border-radius: 2px; }
+        .nav-hamburger { display: none; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; flex-direction: column; gap: 4px; }
+        .nav-hamburger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; }
         .nav-center-logo { display: none; }
         .nav-left-logo { display: block; }
         .mobile-menu { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 500; padding: 24px; overflow-y: auto; }
         .mobile-menu.open { display: flex; flex-direction: column; }
         .mobile-menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-        .mobile-menu-close { background: none; border: none; font-size: 28px; color: #1c2e1e; cursor: pointer; line-height: 1; }
-        .mobile-menu-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid #d4e8d6; text-decoration: none; }
+        .mobile-menu-close { background: none; border: none; font-size: 28px; color: var(--text); cursor: pointer; line-height: 1; }
+        .mobile-menu-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); text-decoration: none; }
         .mobile-menu-item:last-child { border-bottom: none; }
-        .mobile-menu-icon { font-size: 20px; color: #2d7a3a; flex-shrink: 0; margin-top: 2px; }
-        .mobile-menu-label { font-size: 16px; font-weight: 600; color: #0f1a10; margin-bottom: 3px; }
-        .mobile-menu-desc { font-size: 13px; color: #5a7a5e; }
+        .mobile-menu-icon { font-size: 20px; color: var(--green); flex-shrink: 0; margin-top: 2px; }
+        .mobile-menu-label { font-size: 16px; font-weight: 600; color: var(--dark); margin-bottom: 3px; }
+        .mobile-menu-desc { font-size: 13px; color: var(--muted); }
         .mobile-menu-cta { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
 
         /* HERO */
-        .hero { background: var(--forest); max-width: 100%; padding: 80px 48px 96px; text-align: center; }
-        .hero-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(44px, 7vw, 80px); font-weight: 800; line-height: 1.0; letter-spacing: -2.5px; color: white; margin-bottom: 24px; }
-        .hero-accent { color: #6fcf8a; }
-        .hero-sub { font-size: 19px; color: rgba(255,255,255,0.6); max-width: 580px; margin: 0 auto 12px; line-height: 1.65; font-weight: 300; }
+        .hero { background: var(--mint); max-width: 100%; padding: 96px 48px 108px; text-align: center; }
+        .hero-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(48px, 7vw, 84px); font-weight: 800; line-height: 1.0; letter-spacing: -3px; color: var(--dark); margin-bottom: 24px; }
+        .hero-accent { color: var(--green); }
+        .hero-sub { font-size: 19px; color: var(--muted); max-width: 540px; margin: 0 auto 12px; line-height: 1.65; font-weight: 300; }
         .hero-actions { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 48px; }
-        .hero-note { font-size: 13px; color: rgba(255,255,255,0.4); }
+        .hero-note { font-size: 13px; color: var(--muted); }
 
         /* URL INPUT FIELD */
-        .hero-url-form { display: flex; align-items: center; max-width: 580px; margin: 40px auto 16px; background: white; border-radius: 100px; padding: 6px 6px 6px 24px; box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
+        .hero-url-form { display: flex; align-items: center; max-width: 580px; margin: 40px auto 12px; background: white; border-radius: 100px; padding: 6px 6px 6px 24px; border: 1.5px solid var(--green-mid); }
         .hero-url-input { flex: 1; border: none; outline: none; font-size: 15px; font-family: 'Roboto', sans-serif; color: var(--dark); background: transparent; }
         .hero-url-input::placeholder { color: #9ab09c; }
-        .hero-url-btn { background: var(--forest); color: white; border: none; border-radius: 100px; padding: 12px 28px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Roboto', sans-serif; }
-        .hero-url-btn:hover { background: #1a3a22; }
+        .hero-url-btn { background: var(--green); color: white; border: none; border-radius: 100px; padding: 12px 28px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Roboto', sans-serif; }
+        .hero-url-btn:hover { background: var(--green-light); }
 
-        /* SCREENSHOT SECTION */
-        .screenshot-section { background: var(--dark); padding: 32px 48px; text-align: center; }
-        .section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--green-light); margin-bottom: 16px; }
-        .section-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(28px, 4vw, 44px); font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: -1px; }
-        .section-sub { font-size: 16px; color: rgba(255,255,255,0.5); max-width: 600px; margin: 0 auto; line-height: 1.6; }
-
-        /* FEATURES */
+        /* SECTIONS */
+        .section-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--green); margin-bottom: 14px; }
+        .section-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: var(--dark); margin-bottom: 16px; letter-spacing: -1px; }
+        .section-sub { font-size: 16px; color: var(--muted); max-width: 560px; margin: 0 auto; line-height: 1.6; }
+        .section-title-dark { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: var(--dark); margin-bottom: 16px; letter-spacing: -1px; }
+        .section-sub-dark { font-size: 16px; color: var(--muted); max-width: 520px; margin: 0 auto; line-height: 1.6; }
+        .screenshot-section { background: var(--off-white); padding: 80px 48px; text-align: center; border-top: 1px solid var(--border); }
         .features-section { padding: 80px 48px; max-width: 1100px; margin: 0 auto; }
         .features-header { text-align: center; margin-bottom: 56px; }
-        .section-title-dark { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(28px, 4vw, 44px); font-weight: 700; color: var(--dark); margin-bottom: 16px; letter-spacing: -1px; }
-        .section-sub-dark { font-size: 16px; color: var(--muted); max-width: 520px; margin: 0 auto; line-height: 1.6; }
         .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
         .feature-card { background: var(--off-white); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: all 0.2s; }
-        .feature-card:hover { border-color: var(--green-mid); box-shadow: 0 4px 20px rgba(45,122,58,0.08); transform: translateY(-2px); }
+        .feature-card:hover { border-color: var(--green-mid); box-shadow: 0 4px 20px rgba(26,122,58,0.06); transform: translateY(-2px); }
         .feature-title { font-family: 'Roboto Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
         .feature-desc { font-size: 14px; color: var(--muted); line-height: 1.55; }
 
@@ -928,8 +925,8 @@ export default function Landing() {
         .pricing-header { text-align: center; margin-bottom: 48px; }
         .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: start; }
         .pricing-card { border: 1px solid var(--border); border-radius: 14px; padding: 28px; background: white; position: relative; transition: all 0.2s; min-width: 0; }
-        .pricing-card:hover { box-shadow: 0 8px 32px rgba(45,122,58,0.1); transform: translateY(-2px); }
-        .pricing-card.highlight { border-color: var(--green); border-width: 2px; background: var(--off-white); }
+        .pricing-card:hover { box-shadow: 0 8px 32px rgba(26,122,58,0.08); transform: translateY(-2px); }
+        .pricing-card.highlight { border-color: var(--green); border-width: 2px; background: var(--green-pale); }
         .pricing-popular { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--green); color: white; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 4px 14px; border-radius: 100px; white-space: nowrap; }
         .pricing-name { font-family: 'Roboto Condensed', sans-serif; font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
         .pricing-price { font-family: 'Roboto Condensed', sans-serif; font-size: 36px; font-weight: 800; color: var(--dark); margin-bottom: 2px; }
@@ -955,14 +952,14 @@ export default function Landing() {
         .faq-answer { font-size: 15px; color: var(--muted); line-height: 1.65; margin-top: 12px; padding-right: 32px; }
 
         /* CTA */
-        .cta-section { background: var(--dark); padding: 80px 48px; text-align: center; }
-        .cta-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(28px, 4vw, 48px); font-weight: 800; color: white; margin-bottom: 16px; letter-spacing: -1.5px; }
-        .cta-title span { color: var(--green-light); }
+        .cta-section { background: var(--dark); padding: 96px 48px; text-align: center; }
+        .cta-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(28px, 4vw, 52px); font-weight: 800; color: white; margin-bottom: 16px; letter-spacing: -1.5px; }
+        .cta-title span { color: #6fcf8a; }
         .cta-sub { font-size: 17px; color: rgba(255,255,255,0.5); margin-bottom: 36px; line-height: 1.6; }
         .cta-actions { display: flex; align-items: center; justify-content: center; gap: 16px; }
 
         /* FOOTER */
-        .landing-footer { background: var(--dark-mid); padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); }
+        .landing-footer { background: #0a1a0b; padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); }
         .footer-copy { font-size: 13px; color: rgba(255,255,255,0.3); }
         .footer-links { display: flex; gap: 24px; }
         .footer-links a { font-size: 13px; color: rgba(255,255,255,0.3); text-decoration: none; }
@@ -975,15 +972,15 @@ export default function Landing() {
           .nav-hamburger { display: flex; }
           .nav-left-logo { display: none; }
           .nav-center-logo { display: block; position: absolute; left: 50%; transform: translateX(-50%); }
-          .hero { padding: 48px 20px 56px; }
+          .hero { padding: 56px 20px 64px; }
           .hero-sub { font-size: 16px; }
-          .hero-url-form { margin: 32px 0 16px; flex-direction: column; border-radius: 14px; padding: 12px; gap: 8px; }
+          .hero-url-form { margin: 32px 0 12px; flex-direction: column; border-radius: 14px; padding: 12px; gap: 8px; }
           .hero-url-input { font-size: 14px; }
           .hero-url-btn { width: 100%; border-radius: 8px; }
           .features-grid { grid-template-columns: 1fr; }
           .pricing-grid { grid-template-columns: 1fr; gap: 16px; }
           .features-section, .pricing-section, .cta-section, .faq-section { padding: 48px 20px; }
-          .screenshot-section { padding: 40px 20px; }
+          .screenshot-section { padding: 48px 20px; }
           .landing-footer { padding: 24px 20px; flex-direction: column; gap: 16px; text-align: center; }
           .cta-actions { flex-direction: column; }
           .faq-answer { padding-right: 0; }
@@ -995,6 +992,9 @@ export default function Landing() {
 
       {/* HERO */}
       <div className="hero">
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid var(--green-mid)', borderRadius: '20px', padding: '6px 16px', fontSize: '13px', fontWeight: '600', color: 'var(--green)', marginBottom: '28px', letterSpacing: '0.02em' }}>
+          ⚡ Now includes Google March 2026 signals
+        </div>
         <h1 className="hero-title">
           Be visible everywhere<br />
           <span className="hero-accent">search happens.</span>
@@ -1002,9 +1002,8 @@ export default function Landing() {
         <p className="hero-sub">
           Capture visibility across Google and AI — all with one platform built for today's search.
         </p>
-
-        {/* URL INPUT FIELD */}
         <HeroUrlForm />
+        <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '0' }}>Free to start · No card needed · 7 credits on signup</p>
       </div>
 
       {/* PRODUCT SECTIONS */}
@@ -1103,20 +1102,20 @@ export default function Landing() {
       </div>
 
       {/* HOW IT WORKS */}
-      <div style={{ background: 'var(--dark)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--mint)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', borderTop: '1px solid var(--border)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green-light)', marginBottom: '14px' }}>How it works</p>
-          <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'white', letterSpacing: '-1px', marginBottom: '56px' }}>From URL to actionable fixes in 30 seconds</h2>
+          <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>How it works</p>
+          <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', marginBottom: '56px' }}>From URL to actionable fixes in 30 seconds</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', position: 'relative' }}>
             {[
-              { step: '01', title: 'Enter your URL', desc: 'Paste any product page or homepage URL. Dablin fetches and analyses your page automatically.' },
-              { step: '02', title: 'Get your results', desc: 'See your AI visibility score, SEO health, and which AI engines mention your brand — all in under 30 seconds.' },
-              { step: '03', title: 'Copy the fixes', desc: 'Every failed check comes with a ready-to-copy AI-generated fix. No developer, no guesswork.' },
+              { step: '1', title: 'Enter your URL', desc: 'Paste any product page or homepage URL. Dablin fetches and analyses your page automatically.' },
+              { step: '2', title: 'Get your results', desc: 'See your AI visibility score, SEO health, and which AI engines mention your brand — all in under 30 seconds.' },
+              { step: '3', title: 'Copy the fixes', desc: 'Every failed check comes with a ready-to-copy AI-generated fix. No developer, no guesswork.' },
             ].map((s, i) => (
-              <div key={s.step} style={{ padding: '0 40px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none', textAlign: 'left' }}>
-                <div style={{ fontSize: '48px', fontWeight: '800', color: 'rgba(255,255,255,0.08)', fontFamily: "'Roboto Condensed', sans-serif", lineHeight: 1, marginBottom: '20px' }}>{s.step}</div>
-                <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'white', marginBottom: '12px', letterSpacing: '-0.3px' }}>{s.title}</h3>
-                <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.65', fontWeight: '300' }}>{s.desc}</p>
+              <div key={s.step} style={{ padding: '0 40px', borderRight: i < 2 ? '1px solid var(--green-mid)' : 'none', textAlign: 'left' }}>
+                <div style={{ width: '44px', height: '44px', background: 'white', border: '1.5px solid var(--green-mid)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '800', color: 'var(--green)', marginBottom: '20px' }}>{s.step}</div>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--dark)', marginBottom: '12px', letterSpacing: '-0.3px' }}>{s.title}</h3>
+                <p style={{ fontSize: '15px', color: 'var(--muted)', lineHeight: '1.65', fontWeight: '300' }}>{s.desc}</p>
               </div>
             ))}
           </div>
@@ -1124,7 +1123,7 @@ export default function Landing() {
       </div>
 
       {/* BEFORE / AFTER */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
             <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>The difference</p>
@@ -1173,7 +1172,7 @@ export default function Landing() {
       </div>
 
       {/* COMPETITOR COMPARISON */}
-      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
             <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>Why Dablin</p>
@@ -1220,7 +1219,7 @@ export default function Landing() {
       </div>
 
       {/* BLOG POSTS */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
