@@ -282,10 +282,10 @@ function SeoAuditDemo() {
 
   const checks = [
     { label: 'Meta description', pass: true },
-    { label: 'Heading structure', pass: true },
-    { label: 'Product schema', pass: false, issue: 'No Product schema — missing Google Shopping' },
-    { label: 'Open Graph tags', pass: false, issue: 'Missing og:image tag' },
-    { label: 'Internal links', pass: true },
+    { label: 'Heading structure (H1)', pass: true },
+    { label: 'Information Gain', pass: false, issue: 'Only 280 words — Google March 2026 requires 600+ with original data' },
+    { label: 'AI Overview eligibility', pass: false, issue: 'No FAQPage schema or question-structured H2s found' },
+    { label: 'Image optimisation', pass: false, issue: '4 images missing width/height and loading=lazy — hurts Core Web Vitals' },
   ];
 
   return (
@@ -307,10 +307,10 @@ function SeoAuditDemo() {
         </div>
         {showScore && (
           <div style={{ background: 'var(--off-white)', border: '1px solid var(--border)', borderRadius: '10px', padding: '16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '3px solid #d97706', background: '#fff8e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#d97706', flexShrink: 0 }}>62%</div>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '3px solid #d97706', background: '#fff8e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#d97706', flexShrink: 0 }}>67%</div>
             <div>
               <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--dark)', marginBottom: '2px' }}>Needs improvement</div>
-              <div style={{ fontSize: '12px', color: 'var(--muted)' }}>8 of 13 checks passed</div>
+              <div style={{ fontSize: '12px', color: 'var(--muted)' }}>12 of 18 checks passed</div>
             </div>
           </div>
         )}
@@ -366,10 +366,10 @@ function AiVisibilityDemo() {
   }
 
   const checks = [
-    { label: 'llms.txt file', pass: false, issue: 'No llms.txt — AI engines can\'t identify your site' },
+    { label: 'llms.txt file', pass: false, issue: 'No llms.txt found — AI engines cannot identify your brand context' },
     { label: 'AI crawlers allowed', pass: true },
-    { label: 'Organization schema', pass: false, issue: 'No Organization schema — brand identity unclear' },
-    { label: 'HTTPS', pass: true },
+    { label: 'Organization schema', pass: false, issue: 'No Organization schema — brand identity unclear to AI engines' },
+    { label: 'sameAs social links', pass: false, issue: 'No sameAs links in schema — AI cannot verify brand across platforms' },
     { label: 'Open Graph tags', pass: true },
   ];
 
@@ -431,7 +431,7 @@ function AiCheckDemo() {
 
   function runDemo() {
     setPhase('typing'); setUrlVal(''); setShowResults(false); setVisibleRows(0);
-    typeText('https://mystore.com', setUrlVal, () => {
+    typeText('https://dablin.co', setUrlVal, () => {
       setTimeout(() => {
         setPhase('checking');
         let d = 0;
@@ -451,11 +451,11 @@ function AiCheckDemo() {
   }
 
   const rows = [
-    { query: 'digital loyalty card program for cafés', claude: false, gpt: false, gemini: false, competitors: ['Stamp Me', 'Loopy'] },
-    { query: 'replace paper stamp cards with digital', claude: false, gpt: true, gemini: false, competitors: ['Loopy', 'Punchh'] },
-    { query: 'mobile wallet loyalty program software', claude: false, gpt: false, gemini: true, competitors: ['Yotpo', 'Stamp Me'] },
-    { query: 'free digital rewards card for restaurants', claude: false, gpt: false, gemini: false, competitors: ['Loopy', 'Thanx'] },
-    { query: 'Apple Wallet loyalty card for small business', claude: true, gpt: false, gemini: false, competitors: ['Stocard', 'Loopy'] },
+    { query: 'best AI visibility tool for e-commerce', claude: true, gpt: true, gemini: false, competitors: ['Semrush', 'Ahrefs'] },
+    { query: 'how to check if ChatGPT mentions my brand', claude: true, gpt: false, gemini: true, competitors: ['BrightEdge', 'Semrush'] },
+    { query: 'SEO audit tool for Shopify stores', claude: false, gpt: true, gemini: false, competitors: ['Ahrefs', 'Screaming Frog'] },
+    { query: 'AI search visibility checker free', claude: false, gpt: false, gemini: false, competitors: ['Semrush', 'Moz'] },
+    { query: 'GEO generative engine optimization tool', claude: true, gpt: false, gemini: true, competitors: ['BrightEdge', 'Conductor'] },
   ];
 
   const mentionColor = (v) => v ? '#2d7a3a' : '#c0392b';
@@ -480,10 +480,10 @@ function AiCheckDemo() {
         {showResults && (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '16px' }}>
-              {[{ label: 'Claude', count: 1, color: '#c67b2f' }, { label: 'GPT-4o', count: 1, color: '#10a37f' }, { label: 'Gemini', count: 1, color: '#4285f4' }].map(e => (
+              {[{ label: 'Claude', count: '3/5', color: '#c67b2f' }, { label: 'GPT-4o', count: '2/5', color: '#10a37f' }, { label: 'Gemini', count: '2/5', color: '#4285f4' }].map(e => (
                 <div key={e.label} style={{ background: 'var(--off-white)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: '700', color: e.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{e.label}</div>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#2d7a3a', fontFamily: "'Roboto Condensed', sans-serif" }}>1/5</div>
+                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#2d7a3a', fontFamily: "'Roboto Condensed', sans-serif" }}>{e.count}</div>
                   <div style={{ fontSize: '10px', color: 'var(--muted)' }}>queries mentioned</div>
                 </div>
               ))}
