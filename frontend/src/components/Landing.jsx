@@ -84,35 +84,35 @@ const PRICING = [
 const FAQ = [
   {
     q: "What is Dablin?",
-    a: "Dablin is the only e-commerce tool that combines AI brand visibility checking, AI visibility auditing, SEO auditing, and product description generation in one place. It tells you if ChatGPT, Gemini, and Claude mention your brand — and helps you fix what's stopping them.",
+    a: "Dablin is an AI visibility and SEO toolkit for brands and e-commerce sellers. It checks if ChatGPT, Gemini, and Claude mention your brand when buyers search your category, audits your pages for AI engine visibility and SEO issues, and generates SEO-ready product descriptions — all in one place, pay per use.",
   },
   {
-    q: "Does ChatGPT mention my store?",
-    a: "Most stores are invisible to AI engines. Dablin's AI Visibility Check queries Claude, GPT-4o, and Gemini with 5 variations of your category searches and shows you exactly which AI engines mention your brand — and which competitors they recommend instead.",
+    q: "Does ChatGPT mention my brand?",
+    a: "Most brands are completely invisible to AI engines and have no idea. Dablin's AI Visibility Check enters your URL, auto-generates 7 real customer queries, sends them to Claude, GPT-4o, and Gemini simultaneously, and returns a table showing which AI engines mention your brand — and which competitors they recommend instead.",
   },
   {
-    q: "What is an AI Visibility Audit?",
-    a: "It's a 12-point technical check that finds why AI engines can't find or understand your page. It checks for llms.txt, AI crawler access, Organization schema, sameAs links, HTTPS, response speed, Open Graph tags, and more — with a ready-to-copy fix for every issue.",
+    q: "What is the AI Visibility Audit?",
+    a: "It's a 12-point technical check that finds why AI engines can't find or understand your pages. It checks for llms.txt, AI crawler access in robots.txt, Organization schema, sameAs social links, WebSite schema, HTTPS, response time, H1, meta description, canonical URL, and Open Graph tags. Every failed check includes a ready-to-copy AI-generated fix.",
   },
   {
     q: "What does the SEO Audit check?",
-    a: "13 checks across content quality (meta description, headings, word count, image alt text), technical SEO (canonical, robots, viewport, Open Graph), structured data (Product schema, BreadcrumbList, reviews), and link structure — each with an AI-generated fix.",
+    a: "18 checks across four categories: content quality (meta description, heading structure, word count, image alt text), technical SEO (canonical, robots, viewport, Open Graph, render-blocking scripts, sitemap), structured data (schema markup, Product schema, BreadcrumbList, review schema), and Google March 2026 signals (Information Gain score, AI Overview eligibility). Every failed check includes an AI-generated fix and the audit includes a PageSpeed Insights score.",
   },
   {
-    q: "How many credits does each tool use?",
-    a: "1 credit per description · 5 credits per SEO Audit · 5 credits per AI Visibility Audit · 7 credits per AI Visibility Check. New accounts get 7 free credits — enough for one full AI Visibility Check.",
-  },
-  {
-    q: "What platforms does it support?",
-    a: "Description generation works for Shopify, Amazon, and WooCommerce. All audits work on any publicly accessible URL.",
-  },
-  {
-    q: "How is it different from ChatGPT?",
-    a: "ChatGPT can't tell you if it mentions your brand, audit your pages, or generate SEO-scored descriptions with correct character limits. Dablin does all of this in one tool, purpose-built for e-commerce.",
+    q: "What are the Google March 2026 signals?",
+    a: "The March 2026 core update introduced two new ranking signals that Dablin now checks. Information Gain evaluates whether your page adds something original to the internet — pages with no unique data, author signal, or structured content are penalised. AI Overview eligibility checks whether your page has FAQPage or HowTo schema, or question-structured headings, which increases the chance of appearing in Google's AI-generated search summaries.",
   },
   {
     q: "How does the credit system work?",
-    a: "Credits are shared across all four tools. Buy once in one-time packs — no subscription, no monthly fees, credits never expire.",
+    a: "Dablin is pay per use with no subscription. New accounts get 7 free credits — enough for one full AI Visibility Check. Credits are purchased in one-time top-ups from €3 to €50 and never expire. Cost per run: AI Visibility Check €1.00 · AI Query Check €1.00 · AI Visibility Audit €0.80 · SEO Audit €0.50 · Description Generator €0.05.",
+  },
+  {
+    q: "What platforms does it support?",
+    a: "The Description Generator works for Shopify, Amazon, WooCommerce, and any other e-commerce platform. All audits work on any publicly accessible URL — product pages, landing pages, blog posts, or homepages.",
+  },
+  {
+    q: "How is it different from Ahrefs or Semrush?",
+    a: "Ahrefs and Semrush were built for traditional Google search. They don't check whether AI engines like ChatGPT or Gemini mention your brand, don't audit for llms.txt or AI crawler access, and don't check the new Google March 2026 signals. Dablin covers the AI visibility layer that traditional tools miss, alongside core SEO checks — at a fraction of the cost with no subscription.",
   },
 ];
 
