@@ -671,7 +671,6 @@ function NavBar() {
           <a href="/ai-visibility-check" className="nav-direct-link">AI Visibility Check</a>
           <a href="/ai-visibility-audit" className="nav-direct-link">AI Visibility Audit</a>
           <a href="/seo-audit" className="nav-direct-link">SEO Audit</a>
-          <a href="/generate-product-description" className="nav-direct-link">Generate</a>
           <a href="/pricing" className="nav-direct-link">Pricing</a>
           <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="nav-direct-link">Blog</a>
         </div>

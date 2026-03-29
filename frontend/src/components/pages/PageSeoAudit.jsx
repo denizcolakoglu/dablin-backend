@@ -21,7 +21,6 @@ const NAV_ITEMS = [
   { href: "/ai-visibility-check", icon: "◎", label: "AI Visibility Check", desc: "See if ChatGPT, Gemini & Claude mention you" },
   { href: "/ai-visibility-audit", icon: "⌕", label: "AI Visibility Audit", desc: "12 checks for AI engine discoverability" },
   { href: "/seo-audit", icon: "✓", label: "SEO Audit", desc: "18-point SEO check with AI fixes" },
-  { href: "/generate-product-description", icon: "✦", label: "Generate Product Description", desc: "AI-powered, SEO-ready in seconds" },
 ];
 
 function NavBar() {
@@ -30,18 +29,17 @@ function NavBar() {
     <>
       <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 48px', height: '72px', position: 'sticky', top: 0, background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #eef2ee', zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => setMenuOpen(true)} style={{ display: 'none' }} aria-label="Open menu" className="seo-hamburger">
+          <button onClick={() => setMenuOpen(true)} className="seo-hamburger" aria-label="Open menu">
             <span /><span /><span />
           </button>
-          <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <a href="/" style={{ textDecoration: 'none' }}>
             <img src="/logo.svg" alt="Dablin" height="44" />
           </a>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }} className="seo-nav-links">
+        <div className="seo-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
           <a href="/ai-visibility-check" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>AI Visibility Check</a>
           <a href="/ai-visibility-audit" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>AI Visibility Audit</a>
-          <a href="/seo-audit" style={{ fontSize: '15px', fontWeight: '500', color: '#1a7a3a', textDecoration: 'none', fontWeight: '600' }}>SEO Audit</a>
-          <a href="/generate-product-description" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>Generate</a>
+          <a href="/seo-audit" style={{ fontSize: '15px', fontWeight: '600', color: '#1a7a3a', textDecoration: 'none' }}>SEO Audit</a>
           <a href="/pricing" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>Pricing</a>
           <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" style={{ fontSize: '15px', fontWeight: '500', color: '#2a3d2b', textDecoration: 'none' }}>Blog</a>
         </div>
@@ -78,6 +76,13 @@ function NavBar() {
             <div>
               <div style={{ fontSize: '16px', fontWeight: '600', color: '#0d1f0e', marginBottom: '3px' }}>Pricing</div>
               <div style={{ fontSize: '13px', color: '#4a6b4c' }}>Pay per use, credits never expire</div>
+            </div>
+          </a>
+          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 0', borderBottom: '1px solid #eef2ee', textDecoration: 'none' }}>
+            <span style={{ fontSize: '20px', color: '#1a7a3a', flexShrink: 0, marginTop: '2px' }}>✍</span>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: '600', color: '#0d1f0e', marginBottom: '3px' }}>Blog</div>
+              <div style={{ fontSize: '13px', color: '#4a6b4c' }}>AI visibility, GEO and SEO guides</div>
             </div>
           </a>
           <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
