@@ -1102,7 +1102,176 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* FAQ */}
+      {/* HOW IT WORKS */}
+      <div style={{ background: 'var(--dark)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green-light)', marginBottom: '14px' }}>How it works</p>
+          <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'white', letterSpacing: '-1px', marginBottom: '56px' }}>From URL to actionable fixes in 30 seconds</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', position: 'relative' }}>
+            {[
+              { step: '01', title: 'Enter your URL', desc: 'Paste any product page or homepage URL. Dablin fetches and analyses your page automatically.' },
+              { step: '02', title: 'Get your results', desc: 'See your AI visibility score, SEO health, and which AI engines mention your brand — all in under 30 seconds.' },
+              { step: '03', title: 'Copy the fixes', desc: 'Every failed check comes with a ready-to-copy AI-generated fix. No developer, no guesswork.' },
+            ].map((s, i) => (
+              <div key={s.step} style={{ padding: '0 40px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none', textAlign: 'left' }}>
+                <div style={{ fontSize: '48px', fontWeight: '800', color: 'rgba(255,255,255,0.08)', fontFamily: "'Roboto Condensed', sans-serif", lineHeight: 1, marginBottom: '20px' }}>{s.step}</div>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'white', marginBottom: '12px', letterSpacing: '-0.3px' }}>{s.title}</h3>
+                <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.65', fontWeight: '300' }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* BEFORE / AFTER */}
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>The difference</p>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', marginBottom: '12px' }}>Invisible vs found</h2>
+            <p style={{ fontSize: '16px', color: 'var(--muted)', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Most brands are invisible to AI engines and have no idea. Here's what changes when you fix it.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            {/* BEFORE */}
+            <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '16px', padding: '32px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fee2e2', color: '#c0392b', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '24px' }}>✗ Before Dablin</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {[
+                  'ChatGPT recommends your competitors when buyers search your category',
+                  'No llms.txt — AI engines can\'t identify your brand context',
+                  'Missing Organization schema — brand identity unclear to AI',
+                  'Product pages fail Information Gain — filtered by Google March 2026',
+                  'No FAQPage schema — invisible in Google AI Overviews',
+                  'You don\'t know any of this is happening',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', fontSize: '14px', color: '#7f1d1d', lineHeight: '1.5' }}>
+                    <span style={{ color: '#c0392b', fontWeight: '700', flexShrink: 0, fontSize: '16px' }}>✗</span>{item}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* AFTER */}
+            <div style={{ background: '#f0faf1', border: '1px solid #b7debb', borderRadius: '16px', padding: '32px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#e8f5ea', color: '#2d7a3a', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '24px' }}>✓ After Dablin</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {[
+                  'You know exactly which AI engines mention you and which don\'t',
+                  'llms.txt created and indexed — AI engines understand your brand',
+                  'Organization schema in place — brand entity confirmed',
+                  'Pages pass Information Gain — protected from Google March 2026',
+                  'FAQPage schema live — appearing in Google AI Overviews',
+                  'Track your AI visibility score over time as you improve',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', fontSize: '14px', color: '#1a3a1e', lineHeight: '1.5' }}>
+                    <span style={{ color: '#2d7a3a', fontWeight: '700', flexShrink: 0, fontSize: '16px' }}>✓</span>{item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPETITOR COMPARISON */}
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>Why Dablin</p>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', marginBottom: '12px' }}>Built for the new era of search</h2>
+            <p style={{ fontSize: '16px', color: 'var(--muted)', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Traditional SEO tools were built for Google blue links. Dablin is built for AI search too.</p>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ textAlign: 'left', padding: '14px 16px', color: 'var(--muted)', fontWeight: '600', fontSize: '13px' }}>Feature</th>
+                  {[
+                    { name: 'Dablin', highlight: true },
+                    { name: 'Ahrefs', highlight: false },
+                    { name: 'Semrush', highlight: false },
+                    { name: 'Screaming Frog', highlight: false },
+                  ].map(col => (
+                    <th key={col.name} style={{ textAlign: 'center', padding: '14px 16px', color: col.highlight ? 'var(--green)' : 'var(--muted)', fontWeight: '700', fontSize: '14px', background: col.highlight ? 'var(--green-pale)' : 'transparent', borderRadius: col.highlight ? '8px 8px 0 0' : '0' }}>{col.name}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { feature: 'AI brand mention check (ChatGPT/Gemini/Claude)', dablin: true, ahrefs: false, semrush: false, sf: false },
+                  { feature: 'AI Visibility Audit (llms.txt, schema, crawlers)', dablin: true, ahrefs: false, semrush: false, sf: false },
+                  { feature: 'Google March 2026 signals (Information Gain)', dablin: true, ahrefs: false, semrush: false, sf: false },
+                  { feature: 'AI Overview eligibility check', dablin: true, ahrefs: false, semrush: false, sf: false },
+                  { feature: 'SEO Audit with AI-generated fixes', dablin: true, ahrefs: true, semrush: true, sf: true },
+                  { feature: 'Product description generator', dablin: true, ahrefs: false, semrush: false, sf: false },
+                  { feature: 'Pay per use — no subscription', dablin: true, ahrefs: false, semrush: false, sf: false },
+                  { feature: 'PageSpeed Insights integration', dablin: true, ahrefs: false, semrush: true, sf: true },
+                ].map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--off-white)' }}>
+                    <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '500' }}>{row.feature}</td>
+                    {[row.dablin, row.ahrefs, row.semrush, row.sf].map((v, j) => (
+                      <td key={j} style={{ textAlign: 'center', padding: '14px 16px', background: j === 0 ? 'rgba(232,245,234,0.5)' : 'transparent', fontWeight: '700', fontSize: '16px', color: v ? '#2d7a3a' : '#d4e8d6' }}>{v ? '✓' : '—'}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* BLOG POSTS */}
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '8px' }}>From the blog</p>
+              <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(24px,3vw,36px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px' }}>Latest guides</h2>
+            </div>
+            <a href="https://blog.dablin.co" target="_blank" rel="noreferrer" style={{ fontSize: '14px', color: 'var(--green)', fontWeight: '600', textDecoration: 'none' }}>View all posts →</a>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+            {[
+              {
+                tag: 'SEO · Google',
+                title: 'Google March 2026: What the Fastest Core Update in History Means for Your Site',
+                desc: 'The March 2026 core update finished in under 20 hours. Here\'s what it targeted and what founders need to fix.',
+                date: '26 Mar 2026',
+                url: 'https://blog.dablin.co/google-march-2026-update',
+                img: 'https://blog.dablin.co/images/google-march-2026-update.png',
+              },
+              {
+                tag: 'SEO · Backlinks',
+                title: 'Not All Backlinks Are Equal. Here\'s Why Most Link Building is a Waste of Time.',
+                desc: 'A link from a low-reputation site does almost nothing. Here\'s what actually moves the needle.',
+                date: '23 Mar 2026',
+                url: 'https://blog.dablin.co/backlink-quality-vs-quantity',
+                img: 'https://blog.dablin.co/images/backlink-quality-vs-quantity.png',
+              },
+              {
+                tag: 'AI Visibility · GEO',
+                title: 'What Is Dablin? The Problem It Solves and How to Use It',
+                desc: 'Most brands are invisible to AI engines and have no idea. Dablin was built to close that gap.',
+                date: '21 Mar 2026',
+                url: 'https://blog.dablin.co/what-is-dablin',
+                img: 'https://blog.dablin.co/images/what-is-dablin.png',
+              },
+            ].map((post, i) => (
+              <a key={i} href={post.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', background: 'white', border: '1px solid var(--border)', borderRadius: '14px', overflow: 'hidden', transition: 'all 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+              >
+                <img src={post.img} alt={post.title} style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }} />
+                <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>{post.tag}</div>
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--dark)', lineHeight: '1.35', marginBottom: '10px', flex: 1 }}>{post.title}</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.55', marginBottom: '14px' }}>{post.desc}</p>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: '500' }}>{post.date} · Dablin</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
       <div className="faq-section">
         <div className="faq-inner">
           <div className="features-header">
