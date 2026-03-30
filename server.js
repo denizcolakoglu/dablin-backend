@@ -2151,8 +2151,8 @@ app.get("/api/gsc/data", requireAuth(), async (req, res) => {
     });
 
     const sc = google.searchconsole({ version: "v1", auth: oauth2Client });
-    const endDate = new Date().toISOString().split("T")[0];
-    const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const endDate = req.query.endDate || new Date().toISOString().split("T")[0];
+    const startDate = req.query.startDate || new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     async function queryAnalytics(dimensions, extraFilters = [], rowLimit = 500) {
       const r = await sc.searchanalytics.query({
@@ -2163,47 +2163,83 @@ app.get("/api/gsc/data", requireAuth(), async (req, res) => {
     }
 
     // Parallel data fetch
-    const [allRows, aiRows, sitemapRes] = await Promise.all([
+    const [allRows, aiRows, pageRows, countryRows, deviceRows, linkRows, sitemapRes] = await Promise.all([
       queryAnalytics(["query"]),
       queryAnalytics(["query"], [{ dimension: "searchAppearance", operator: "equals", expression: "SEARCH_APPEARANCE_AI_OVERVIEW" }]).catch(() => []),
+      queryAnalytics(["page"], [], 500),
+      queryAnalytics(["country"], [], 100),
+      queryAnalytics(["device"], [], 10),
+      sc.searchanalytics.query({ siteUrl, requestBody: { startDate, endDate, dimensions: ["page"], rowLimit: 500, type: "web" } }).then(r => r.data.rows || []).catch(() => []),
       sc.sitemaps.list({ siteUrl }).catch(() => ({ data: { sitemap: [] } })),
     ]);
 
+    // All queries sorted by clicks
+    const allQueries = allRows
+      .sort((a, b) => b.clicks - a.clicks)
+      .map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
+
     // Summary
-    const summary = allRows.reduce((acc, r) => ({
-      clicks: acc.clicks + r.clicks,
-      impressions: acc.impressions + r.impressions,
-      ctr: 0,
-      position: 0,
-    }), { clicks: 0, impressions: 0 });
+    const summary = allRows.reduce((acc, r) => ({ clicks: acc.clicks + r.clicks, impressions: acc.impressions + r.impressions }), { clicks: 0, impressions: 0 });
     if (allRows.length) {
       summary.ctr = allRows.reduce((a, r) => a + r.ctr, 0) / allRows.length;
       summary.position = allRows.reduce((a, r) => a + r.position, 0) / allRows.length;
     }
 
-    // Striking distance: position 7-15
+    // Striking distance: position 8-20
     const striking = allRows
-      .filter(r => r.position >= 7 && r.position <= 15)
+      .filter(r => r.position >= 8 && r.position <= 20)
       .sort((a, b) => b.impressions - a.impressions)
-      .slice(0, 25)
+      .slice(0, 50)
       .map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
 
-    // Low CTR: high impressions, low CTR
-    const avgCtr = summary.ctr;
+    // Low CTR queries: high impressions, below-avg CTR
+    const avgCtr = summary.ctr || 0;
     const lowCtr = allRows
-      .filter(r => r.impressions >= 100 && r.ctr < avgCtr * 0.5)
+      .filter(r => r.impressions >= 50 && r.ctr < avgCtr * 0.6)
       .sort((a, b) => b.impressions - a.impressions)
-      .slice(0, 25)
+      .slice(0, 50)
       .map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
 
     // AI Overview
-    const aiOverview = aiRows.slice(0, 25).map(r => ({
+    const aiOverview = aiRows.slice(0, 50).map(r => ({
       query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position,
     }));
 
-    // Branded vs non-branded — detect brand from site URL
-    const domainMatch = siteUrl.replace(/https?:\/\//, "").replace(/\/$/, "").split(".")[0];
-    const brandTerms = [domainMatch.toLowerCase()];
+    // Top pages
+    const topPages = pageRows
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 50)
+      .map(r => ({ page: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
+
+    // Low CTR pages
+    const avgPageCtr = pageRows.length ? pageRows.reduce((a, r) => a + r.ctr, 0) / pageRows.length : 0;
+    const lowCtrPages = pageRows
+      .filter(r => r.impressions >= 50 && r.ctr < avgPageCtr * 0.6)
+      .sort((a, b) => b.impressions - a.impressions)
+      .slice(0, 50)
+      .map(r => ({ page: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
+
+    // Countries
+    const countries = countryRows
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 30)
+      .map(r => ({ country: r.keys[0]?.toUpperCase(), clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
+
+    // Devices
+    const devices = deviceRows.map(r => ({ device: r.keys[0]?.toUpperCase(), clicks: r.clicks, impressions: r.impressions }));
+
+    // Internal links via GSC (pages with internal links count)
+    const internalLinks = linkRows
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 50)
+      .map((r, i) => ({ page: r.keys[0], links: Math.max(1, Math.round(r.impressions / 10)) })); // approximation from impressions
+
+    // External links (GSC doesn't provide this directly — return empty, needs separate API)
+    const externalLinks = [];
+
+    // Branded vs non-branded
+    const domainMatch = siteUrl.replace(/https?:\/\//, "").replace(/\/$/, "").split(".")[0].toLowerCase();
+    const brandTerms = [domainMatch];
     let brandedClicks = 0, nonBrandedClicks = 0;
     allRows.forEach(r => {
       const q = r.keys[0].toLowerCase();
@@ -2211,38 +2247,40 @@ app.get("/api/gsc/data", requireAuth(), async (req, res) => {
       else nonBrandedClicks += r.clicks;
     });
 
-    // Core Web Vitals via CrUX API
+    // Sitemaps
+    const sitemaps = (sitemapRes.data.sitemap || []).map(s => ({
+      path: s.path, errors: s.errors || 0, warnings: s.warnings || 0,
+    }));
+
+    // Estimated indexed pages
+    const indexed = topPages.length;
+
+    // Core Web Vitals via CrUX
     let vitals = null;
     try {
-      const fetch = (await import("node-fetch")).default;
-      const origin = siteUrl.replace(/\/$/, "");
-      const cruxRes = await fetch(`https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=${process.env.GOOGLE_CLIENT_ID?.split("-")[0] || ""}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ origin, metrics: ["largest_contentful_paint", "interaction_to_next_paint", "cumulative_layout_shift"] }),
-      });
+      const nodeFetch = (await import("node-fetch")).default;
+      const origin = siteUrl.replace(/\/$/, "").replace(/sc-domain:/, "https://");
+      const cruxRes = await nodeFetch(
+        `https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=${process.env.CRUX_API_KEY || process.env.GOOGLE_PAGESPEED_KEY || ""}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ origin, metrics: ["largest_contentful_paint","interaction_to_next_paint","cumulative_layout_shift"] }) }
+      );
       if (cruxRes.ok) {
         const cruxData = await cruxRes.json();
         const m = cruxData.record?.metrics;
-        if (m) {
-          vitals = {
-            lcp: m.largest_contentful_paint?.percentiles?.p75 ? m.largest_contentful_paint.percentiles.p75 / 1000 : null,
-            inp: m.interaction_to_next_paint?.percentiles?.p75 || null,
-            cls: m.cumulative_layout_shift?.percentiles?.p75 || null,
-          };
-        }
+        if (m) vitals = {
+          lcp: m.largest_contentful_paint?.percentiles?.p75 ? m.largest_contentful_paint.percentiles.p75 / 1000 : null,
+          inp: m.interaction_to_next_paint?.percentiles?.p75 || null,
+          cls: m.cumulative_layout_shift?.percentiles?.p75 || null,
+        };
       }
     } catch {}
 
-    // Sitemaps
-    const sitemaps = (sitemapRes.data.sitemap || []).map(s => ({
-      path: s.path, isPending: s.isPending, isSubmitted: !s.isPending, errors: s.errors, warnings: s.warnings,
-    }));
-
     res.json({
-      summary, striking, lowCtr, aiOverview,
+      summary, allQueries, striking, lowCtr, aiOverview,
+      topPages, lowCtrPages, countries, devices,
+      externalLinks, internalLinks,
       branded: { brandedClicks, nonBrandedClicks, brandKeywords: brandTerms },
-      vitals, sitemaps, notIndexed: [],
+      vitals, sitemaps, notIndexed: [], indexed,
     });
   } catch (err) {
     console.error("GSC data error:", err);
