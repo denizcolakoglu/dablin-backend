@@ -105,19 +105,74 @@ function PerformancePanel({ data }) {
 }
 
 function QueriesPanel({ data }) {
+  const [sub, setSub] = useState("all");
   const [search, setSearch] = useState("");
   const all = data?.allQueries || [];
-  const rows = search ? all.filter(r => r.query.toLowerCase().includes(search.toLowerCase())) : all;
+
+  // Hidden opportunities: impressions >= 20, 0 clicks — terms Google shows you for but users don't click
+  const opportunities = all.filter(r => r.impressions >= 20 && r.clicks === 0)
+    .sort((a, b) => b.impressions - a.impressions);
+
+  // Intent mismatch: high impressions, position <= 5, but very low CTR (content doesn't match what searcher wants)
+  const intentMismatch = all.filter(r => r.impressions >= 30 && r.position <= 5 && r.ctr < 0.05)
+    .sort((a, b) => b.impressions - a.impressions);
+
+  const filtered = search ? all.filter(r => r.query.toLowerCase().includes(search.toLowerCase())) : all;
+
+  const qFmt = { clicks: v=>fmt(v,"num"), impressions: v=>fmt(v,"num"), ctr: v=>fmt(v,"ctr"), position: v=>fmt(v,"pos") };
+
   return (
     <div>
-      <SectionHeader title="All Queries" desc="Every search term bringing traffic — sorted by clicks." />
-      <div style={{ padding: "12px 24px", borderBottom: "1px solid #eef2ee" }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search queries..." style={{ width: "100%", maxWidth: "320px", padding: "8px 12px", border: "1px solid #eef2ee", borderRadius: "8px", fontSize: "13px", outline: "none", color: "#0d1f0e", background: "#f8faf8" }} />
-      </div>
-      <DataTable rows={rows.slice(0,200)}
-        cols={["Query","Clicks","Impressions","CTR","Position"]} keys={["query","clicks","impressions","ctr","position"]}
-        formatters={{ clicks: v=>fmt(v,"num"), impressions: v=>fmt(v,"num"), ctr: v=>fmt(v,"ctr"), position: v=>fmt(v,"pos") }} />
-      {rows.length > 200 && <div style={{ padding: "12px 24px", fontSize: "12px", color: "#4a6b4c" }}>Showing 200 of {rows.length} queries</div>}
+      <SectionHeader title="Queries" desc="Search terms driving traffic — plus hidden opportunities and intent gaps." />
+      <SubTabs
+        tabs={[
+          { id: "all",          label: "All Queries" },
+          { id: "opportunities",label: "Hidden Opportunities" },
+          { id: "intent",       label: "Content Intent" },
+        ]}
+        active={sub} onChange={setSub}
+      />
+
+      {sub === "all" && (
+        <>
+          <Tip text="Sort by impressions to find queries where you're visible but not ranking highly enough to get clicks." />
+          <div style={{ padding: "10px 24px", borderBottom: "1px solid #eef2ee" }}>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Filter queries..." style={{ width: "100%", maxWidth: "320px", padding: "7px 12px", border: "1px solid #eef2ee", borderRadius: "8px", fontSize: "13px", outline: "none", color: "#0d1f0e", background: "#f8faf8" }} />
+          </div>
+          <DataTable rows={filtered.slice(0, 200)} cols={["Query","Clicks","Impressions","CTR","Position"]} keys={["query","clicks","impressions","ctr","position"]} formatters={qFmt} />
+          {filtered.length > 200 && <div style={{ padding: "10px 24px", fontSize: "12px", color: "#4a6b4c" }}>Showing 200 of {filtered.length} queries</div>}
+        </>
+      )}
+
+      {sub === "opportunities" && (
+        <>
+          <Tip text="These queries get impressions but zero clicks — Google already shows you for them. Create or improve content targeting these exact terms to start capturing that traffic." />
+          <DataTable
+            rows={opportunities.slice(0, 100)}
+            cols={["Query","Impressions","Clicks","CTR","Position"]}
+            keys={["query","impressions","clicks","ctr","position"]}
+            formatters={qFmt}
+          />
+          {!opportunities.length && (
+            <div style={{ padding: "40px 24px", textAlign: "center", color: "#4a6b4c", fontSize: "14px" }}>No zero-click queries found — great signal that your content is converting impressions.</div>
+          )}
+        </>
+      )}
+
+      {sub === "intent" && (
+        <>
+          <Tip text="You rank in the top 5 for these queries but CTR is below 5% — your title or meta description probably doesn't match what the searcher actually wants. Revisit the content angle." />
+          <DataTable
+            rows={intentMismatch.slice(0, 100)}
+            cols={["Query","Impressions","Clicks","CTR","Position"]}
+            keys={["query","impressions","clicks","ctr","position"]}
+            formatters={qFmt}
+          />
+          {!intentMismatch.length && (
+            <div style={{ padding: "40px 24px", textAlign: "center", color: "#4a6b4c", fontSize: "14px" }}>No intent mismatches detected — your top-ranking content appears well aligned with user intent.</div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -142,46 +197,123 @@ function PagesPanel({ data }) {
 }
 
 function IndexingPanel({ data }) {
+  const [sub, setSub] = useState("overview");
   const notIndexed = data?.notIndexed || [];
+  const excluded = data?.excluded || [];
   const sitemaps = data?.sitemaps || [];
+
   return (
     <div>
-      <SectionHeader title="Indexing" desc="Indexed pages, excluded pages, and sitemap health." />
-      <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px", borderBottom: "1px solid #eef2ee" }}>
+      <SectionHeader title="Indexing" desc="Which pages Google has indexed, excluded, and any sitemap errors." />
+
+      {/* Summary cards */}
+      <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px", borderBottom: "1px solid #eef2ee" }}>
         {[
-          { label: "Estimated Indexed", value: fmt(data?.indexed,"num"), color: "#1a7a3a" },
-          { label: "Not Indexed", value: fmt(notIndexed.length,"num"), color: notIndexed.length > 0 ? "#f59e0b" : "#1a7a3a" },
-          { label: "Sitemaps", value: fmt(sitemaps.length,"num"), color: "#4a6b4c" },
+          { label: "Estimated Indexed", value: fmt(data?.indexed, "num"), color: "#1a7a3a" },
+          { label: "Not Indexed", value: fmt(notIndexed.length, "num"), color: notIndexed.length > 0 ? "#f59e0b" : "#1a7a3a" },
+          { label: "Excluded", value: fmt(excluded.length, "num"), color: excluded.length > 0 ? "#ef4444" : "#4a6b4c" },
+          { label: "Sitemaps", value: fmt(sitemaps.length, "num"), color: "#4a6b4c" },
         ].map(m => (
-          <div key={m.label} style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "16px 20px" }}>
+          <div key={m.label} style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "14px 18px" }}>
             <div style={{ fontSize: "11px", fontWeight: "700", color: "#4a6b4c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>{m.label}</div>
-            <div style={{ fontSize: "26px", fontWeight: "800", color: m.color, fontFamily: "'Roboto Condensed', sans-serif" }}>{m.value}</div>
+            <div style={{ fontSize: "24px", fontWeight: "800", color: m.color, fontFamily: "'Roboto Condensed', sans-serif" }}>{m.value}</div>
           </div>
         ))}
       </div>
-      {notIndexed.length > 0 && <>
-        <div style={{ padding: "12px 24px", fontSize: "13px", fontWeight: "600", color: "#0d1f0e", borderBottom: "1px solid #eef2ee", background: "#fffbf0" }}>⚠️ Discovered — not yet indexed</div>
-        {notIndexed.map((url, i) => (
-          <div key={i} style={{ padding: "10px 24px", borderBottom: "1px solid #eef2ee", fontSize: "13px", display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ color: "#f59e0b", fontWeight: "700" }}>!</span>
-            <a href={url} target="_blank" rel="noreferrer" style={{ color: "#1a7a3a", textDecoration: "none" }}>{url}</a>
-          </div>
-        ))}
-      </>}
-      {sitemaps.length > 0 && <>
-        <div style={{ padding: "12px 24px", fontSize: "13px", fontWeight: "600", color: "#0d1f0e", borderBottom: "1px solid #eef2ee" }}>Sitemaps</div>
-        {sitemaps.map((s, i) => (
-          <div key={i} style={{ padding: "10px 24px", borderBottom: "1px solid #eef2ee", fontSize: "13px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ color: "#0d1f0e" }}>{s.path}</span>
-            <div style={{ display: "flex", gap: "6px" }}>
-              {s.errors > 0 && <span style={{ background: "#fef2f2", color: "#c0392b", border: "1px solid #fca5a5", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: "600" }}>{s.errors} errors</span>}
-              {s.warnings > 0 && <span style={{ background: "#fffbf0", color: "#b45309", border: "1px solid #fcd34d", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: "600" }}>{s.warnings} warnings</span>}
-              {!s.errors && !s.warnings && <span style={{ background: "#eef8f0", color: "#1a7a3a", border: "1px solid #d0e8d4", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: "600" }}>OK</span>}
+
+      <SubTabs
+        tabs={[
+          { id: "overview",   label: "Overview" },
+          { id: "notindexed", label: "Not Indexed" },
+          { id: "excluded",   label: "Excluded Pages" },
+          { id: "sitemaps",   label: "Sitemaps" },
+        ]}
+        active={sub} onChange={setSub}
+      />
+
+      {sub === "overview" && (
+        <div style={{ padding: "20px 24px" }}>
+          {[
+            { icon: "✅", title: "Indexed pages", desc: "Pages Google has crawled and added to its index. These are eligible to appear in search results.", count: data?.indexed },
+            { icon: "⚠️", title: "Discovered — not indexed", desc: "Google found these pages but hasn't indexed them yet. Common causes: low quality signals, thin content, crawl budget.", count: notIndexed.length, warn: notIndexed.length > 0 },
+            { icon: "🚫", title: "Excluded pages", desc: "Pages intentionally or unintentionally excluded from Google's index. Check for noindex tags, canonical issues, or redirect chains.", count: excluded.length, warn: excluded.length > 0 },
+            { icon: "🗺️", title: "Sitemaps submitted", desc: "Sitemaps help Google discover all your pages. Check for errors and warnings below.", count: sitemaps.length },
+          ].map(item => (
+            <div key={item.title} style={{ display: "flex", gap: "16px", padding: "14px 0", borderBottom: "1px solid #eef2ee", alignItems: "flex-start" }}>
+              <span style={{ fontSize: "20px", flexShrink: 0, marginTop: "1px" }}>{item.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#0d1f0e", marginBottom: "3px" }}>{item.title}</div>
+                <div style={{ fontSize: "13px", color: "#4a6b4c", lineHeight: "1.5" }}>{item.desc}</div>
+              </div>
+              <div style={{ fontSize: "20px", fontWeight: "800", color: item.warn ? "#f59e0b" : "#1a7a3a", fontFamily: "'Roboto Condensed', sans-serif", flexShrink: 0 }}>{fmt(item.count, "num")}</div>
             </div>
-          </div>
-        ))}
-      </>}
-      {!notIndexed.length && !sitemaps.length && <div style={{ padding: "40px 24px", textAlign: "center", color: "#4a6b4c", fontSize: "14px" }}>No indexing issues detected.</div>}
+          ))}
+        </div>
+      )}
+
+      {sub === "notindexed" && (
+        <>
+          <Tip text="Submit these URLs in Google Search Console's URL Inspection tool to request indexing. Also check for thin content or noindex tags." />
+          {!notIndexed.length
+            ? <div style={{ padding: "40px 24px", textAlign: "center", color: "#4a6b4c", fontSize: "14px" }}>No unindexed pages detected.</div>
+            : notIndexed.map((url, i) => (
+              <div key={i} style={{ padding: "10px 24px", borderBottom: "1px solid #eef2ee", fontSize: "13px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ color: "#f59e0b", fontWeight: "700", flexShrink: 0 }}>!</span>
+                <a href={url} target="_blank" rel="noreferrer" style={{ color: "#1a7a3a", textDecoration: "none" }}>{url}</a>
+              </div>
+            ))
+          }
+        </>
+      )}
+
+      {sub === "excluded" && (
+        <>
+          <Tip text="Excluded pages are blocked from Google's index. Check for noindex meta tags, canonical tags pointing elsewhere, or redirect chains causing issues." />
+          {!excluded.length ? (
+            <div style={{ padding: "24px" }}>
+              <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "20px 24px" }}>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#0d1f0e", marginBottom: "8px" }}>Common exclusion reasons</div>
+                {[
+                  { reason: "noindex tag", desc: "A <meta name='robots' content='noindex'> tag is blocking Google from indexing the page.", fix: "Remove the noindex tag if the page should be indexed." },
+                  { reason: "Canonical pointing elsewhere", desc: "The page has a canonical tag pointing to a different URL, so Google treats it as a duplicate.", fix: "Verify canonical tags are pointing to the correct canonical version." },
+                  { reason: "Redirect", desc: "The URL redirects to another page, so Google indexes the destination instead.", fix: "Ensure redirects lead to the correct final destination." },
+                  { reason: "Crawl blocked by robots.txt", desc: "The page is disallowed in robots.txt, preventing Google from crawling it.", fix: "Check your robots.txt and remove any unintended disallow rules." },
+                ].map(item => (
+                  <div key={item.reason} style={{ padding: "12px 0", borderBottom: "1px solid #eef2ee" }}>
+                    <div style={{ fontSize: "13px", fontWeight: "700", color: "#c0392b", marginBottom: "3px" }}>🚫 {item.reason}</div>
+                    <div style={{ fontSize: "12px", color: "#4a6b4c", marginBottom: "3px" }}>{item.desc}</div>
+                    <div style={{ fontSize: "12px", color: "#1a7a3a", fontWeight: "500" }}>Fix: {item.fix}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : excluded.map((item, i) => (
+            <div key={i} style={{ padding: "10px 24px", borderBottom: "1px solid #eef2ee", fontSize: "13px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+              <a href={item.url} target="_blank" rel="noreferrer" style={{ color: "#1a7a3a", textDecoration: "none", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.url}</a>
+              <span style={{ background: "#fef2f2", color: "#c0392b", border: "1px solid #fca5a5", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: "600", flexShrink: 0 }}>{item.reason || "Excluded"}</span>
+            </div>
+          ))}
+        </>
+      )}
+
+      {sub === "sitemaps" && (
+        <>
+          <Tip text="Sitemaps help Google discover all your pages. Fix any errors immediately — they can prevent entire sections of your site from being indexed." />
+          {!sitemaps.length
+            ? <div style={{ padding: "40px 24px", textAlign: "center", color: "#4a6b4c", fontSize: "14px" }}>No sitemaps submitted. Go to Google Search Console → Sitemaps to submit your sitemap.xml.</div>
+            : sitemaps.map((s, i) => (
+              <div key={i} style={{ padding: "12px 24px", borderBottom: "1px solid #eef2ee", fontSize: "13px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ color: "#0d1f0e" }}>{s.path}</span>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {s.errors > 0 && <span style={{ background: "#fef2f2", color: "#c0392b", border: "1px solid #fca5a5", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: "600" }}>{s.errors} errors</span>}
+                  {s.warnings > 0 && <span style={{ background: "#fffbf0", color: "#b45309", border: "1px solid #fcd34d", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: "600" }}>{s.warnings} warnings</span>}
+                  {!s.errors && !s.warnings && <span style={{ background: "#eef8f0", color: "#1a7a3a", border: "1px solid #d0e8d4", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: "600" }}>OK</span>}
+                </div>
+              </div>
+            ))
+          }
+        </>
+      )}
     </div>
   );
 }
