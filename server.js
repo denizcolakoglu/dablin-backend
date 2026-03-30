@@ -24,6 +24,17 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// ── GOOGLE OAUTH2 ─────────────────────────────────────────────
+const { google } = require("googleapis");
+function getOAuthClient() {
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+}
+const GSC_SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"];
+
 // ── BREVO EMAIL ───────────────────────────────────────────────
 const FROM_EMAIL = { email: "hello@dablin.co", name: "Dablin" };
 
@@ -2031,6 +2042,213 @@ function scheduleCron() {
   console.log(`[cron] Re-engagement cron scheduled, next run in ${Math.round(msUntilNext / 60000)} minutes`);
 }
 scheduleCron();
+
+// ── GSC: Auth URL ─────────────────────────────────────────────
+app.get("/api/gsc/auth-url", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const oauth2Client = getOAuthClient();
+    const url = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      prompt: "consent",
+      scope: GSC_SCOPES,
+      state: req.auth.userId,
+    });
+    res.json({ url });
+  } catch (err) {
+    console.error("GSC auth-url error:", err);
+    res.status(500).json({ error: "Failed to generate auth URL" });
+  }
+});
+
+// ── GSC: OAuth Callback ───────────────────────────────────────
+app.get("/api/gsc/callback", async (req, res) => {
+  try {
+    const { code, state: clerkId } = req.query;
+    if (!code || !clerkId) return res.status(400).send("Missing code or state");
+    const oauth2Client = getOAuthClient();
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+    // Get list of sites
+    const webmasters = google.webmasters({ version: "v3", auth: oauth2Client });
+    const sitesRes = await webmasters.sites.list();
+    const sites = (sitesRes.data.siteEntry || []).map(s => s.siteUrl);
+    const selectedSite = sites[0] || null;
+    // Store tokens
+    await pool.query(
+      `INSERT INTO gsc_tokens (clerk_id, access_token, refresh_token, expiry, site_url, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
+       ON CONFLICT (clerk_id) DO UPDATE
+       SET access_token=$2, refresh_token=COALESCE($3, gsc_tokens.refresh_token),
+           expiry=$4, site_url=$5, updated_at=NOW()`,
+      [clerkId, tokens.access_token, tokens.refresh_token || null,
+       tokens.expiry_date ? new Date(tokens.expiry_date) : null, selectedSite]
+    );
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/dashboard/search-console?gsc=connected`);
+  } catch (err) {
+    console.error("GSC callback error:", err);
+    res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/dashboard/search-console?gsc=error`);
+  }
+});
+
+// ── GSC: Status ───────────────────────────────────────────────
+app.get("/api/gsc/status", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const row = await pool.query("SELECT site_url, access_token FROM gsc_tokens WHERE clerk_id=$1", [req.auth.userId]);
+    if (!row.rows.length) return res.json({ connected: false });
+    // Get all sites for the selector
+    const tokenRow = row.rows[0];
+    const oauth2Client = getOAuthClient();
+    oauth2Client.setCredentials({ access_token: tokenRow.access_token });
+    const webmasters = google.webmasters({ version: "v3", auth: oauth2Client });
+    const sitesRes = await webmasters.sites.list();
+    const sites = (sitesRes.data.siteEntry || []).map(s => s.siteUrl);
+    res.json({ connected: true, sites, selectedSite: tokenRow.site_url });
+  } catch {
+    res.json({ connected: false });
+  }
+});
+
+// ── GSC: Disconnect ───────────────────────────────────────────
+app.post("/api/gsc/disconnect", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    await pool.query("DELETE FROM gsc_tokens WHERE clerk_id=$1", [req.auth.userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to disconnect" });
+  }
+});
+
+// ── GSC: Data ─────────────────────────────────────────────────
+app.get("/api/gsc/data", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    const siteUrl = req.query.site;
+    if (!siteUrl) return res.status(400).json({ error: "site is required" });
+
+    const tokenRow = await pool.query("SELECT * FROM gsc_tokens WHERE clerk_id=$1", [req.auth.userId]);
+    if (!tokenRow.rows.length) return res.status(401).json({ error: "Not connected" });
+
+    const t = tokenRow.rows[0];
+    const oauth2Client = getOAuthClient();
+    oauth2Client.setCredentials({
+      access_token: t.access_token,
+      refresh_token: t.refresh_token,
+      expiry_date: t.expiry ? new Date(t.expiry).getTime() : null,
+    });
+
+    // Auto-refresh token
+    oauth2Client.on("tokens", async (tokens) => {
+      if (tokens.access_token) {
+        await pool.query(
+          "UPDATE gsc_tokens SET access_token=$1, expiry=$2, updated_at=NOW() WHERE clerk_id=$3",
+          [tokens.access_token, tokens.expiry_date ? new Date(tokens.expiry_date) : null, req.auth.userId]
+        );
+      }
+    });
+
+    const sc = google.searchconsole({ version: "v1", auth: oauth2Client });
+    const endDate = new Date().toISOString().split("T")[0];
+    const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    async function queryAnalytics(dimensions, extraFilters = [], rowLimit = 500) {
+      const r = await sc.searchanalytics.query({
+        siteUrl,
+        requestBody: { startDate, endDate, dimensions, rowLimit, dimensionFilterGroups: extraFilters.length ? [{ filters: extraFilters }] : [] },
+      });
+      return r.data.rows || [];
+    }
+
+    // Parallel data fetch
+    const [allRows, aiRows, sitemapRes] = await Promise.all([
+      queryAnalytics(["query"]),
+      queryAnalytics(["query"], [{ dimension: "searchAppearance", operator: "equals", expression: "SEARCH_APPEARANCE_AI_OVERVIEW" }]).catch(() => []),
+      sc.sitemaps.list({ siteUrl }).catch(() => ({ data: { sitemap: [] } })),
+    ]);
+
+    // Summary
+    const summary = allRows.reduce((acc, r) => ({
+      clicks: acc.clicks + r.clicks,
+      impressions: acc.impressions + r.impressions,
+      ctr: 0,
+      position: 0,
+    }), { clicks: 0, impressions: 0 });
+    if (allRows.length) {
+      summary.ctr = allRows.reduce((a, r) => a + r.ctr, 0) / allRows.length;
+      summary.position = allRows.reduce((a, r) => a + r.position, 0) / allRows.length;
+    }
+
+    // Striking distance: position 7-15
+    const striking = allRows
+      .filter(r => r.position >= 7 && r.position <= 15)
+      .sort((a, b) => b.impressions - a.impressions)
+      .slice(0, 25)
+      .map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
+
+    // Low CTR: high impressions, low CTR
+    const avgCtr = summary.ctr;
+    const lowCtr = allRows
+      .filter(r => r.impressions >= 100 && r.ctr < avgCtr * 0.5)
+      .sort((a, b) => b.impressions - a.impressions)
+      .slice(0, 25)
+      .map(r => ({ query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
+
+    // AI Overview
+    const aiOverview = aiRows.slice(0, 25).map(r => ({
+      query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position,
+    }));
+
+    // Branded vs non-branded — detect brand from site URL
+    const domainMatch = siteUrl.replace(/https?:\/\//, "").replace(/\/$/, "").split(".")[0];
+    const brandTerms = [domainMatch.toLowerCase()];
+    let brandedClicks = 0, nonBrandedClicks = 0;
+    allRows.forEach(r => {
+      const q = r.keys[0].toLowerCase();
+      if (brandTerms.some(b => q.includes(b))) brandedClicks += r.clicks;
+      else nonBrandedClicks += r.clicks;
+    });
+
+    // Core Web Vitals via CrUX API
+    let vitals = null;
+    try {
+      const fetch = (await import("node-fetch")).default;
+      const origin = siteUrl.replace(/\/$/, "");
+      const cruxRes = await fetch(`https://chromeuxreport.googleapis.com/v1/records:queryRecord?key=${process.env.GOOGLE_CLIENT_ID?.split("-")[0] || ""}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ origin, metrics: ["largest_contentful_paint", "interaction_to_next_paint", "cumulative_layout_shift"] }),
+      });
+      if (cruxRes.ok) {
+        const cruxData = await cruxRes.json();
+        const m = cruxData.record?.metrics;
+        if (m) {
+          vitals = {
+            lcp: m.largest_contentful_paint?.percentiles?.p75 ? m.largest_contentful_paint.percentiles.p75 / 1000 : null,
+            inp: m.interaction_to_next_paint?.percentiles?.p75 || null,
+            cls: m.cumulative_layout_shift?.percentiles?.p75 || null,
+          };
+        }
+      }
+    } catch {}
+
+    // Sitemaps
+    const sitemaps = (sitemapRes.data.sitemap || []).map(s => ({
+      path: s.path, isPending: s.isPending, isSubmitted: !s.isPending, errors: s.errors, warnings: s.warnings,
+    }));
+
+    res.json({
+      summary, striking, lowCtr, aiOverview,
+      branded: { brandedClicks, nonBrandedClicks, brandKeywords: brandTerms },
+      vitals, sitemaps, notIndexed: [],
+    });
+  } catch (err) {
+    console.error("GSC data error:", err);
+    res.status(500).json({ error: "Failed to fetch Search Console data: " + err.message });
+  }
+});
 
 // ── START SERVER ─────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;

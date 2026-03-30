@@ -10,6 +10,7 @@ import AiAudit from "./components/AiAudit";
 import VisibilityChecker from "./components/VisibilityChecker";
 import QueryCheck from "./components/QueryCheck";
 import Dashboard from "./components/Dashboard";
+import SearchConsole from "./components/SearchConsole";
 import PageGenerate from "./components/pages/PageGenerate";
 import PageSeoAudit from "./components/pages/PageSeoAudit";
 import PageAiAudit from "./components/pages/PageAiAudit";
@@ -129,25 +130,27 @@ function AppShell() {
 
   const path = location.pathname.replace('/dashboard', '') || '/';
   const page = path === '/' || path === '' ? 'dashboard'
-    : path === '/visibility'   ? 'visibility'
-    : path === '/query-check'  ? 'querycheck'
-    : path === '/ai-audit'     ? 'ai'
-    : path === '/seo-audit'    ? 'audit'
-    : path === '/generate'     ? 'generate'
-    : path === '/history'      ? 'history'
-    : path === '/credits'      ? 'pricing'
+    : path === '/visibility'      ? 'visibility'
+    : path === '/query-check'     ? 'querycheck'
+    : path === '/ai-audit'        ? 'ai'
+    : path === '/seo-audit'       ? 'audit'
+    : path === '/generate'        ? 'generate'
+    : path === '/history'         ? 'history'
+    : path === '/credits'         ? 'pricing'
+    : path === '/search-console'  ? 'searchconsole'
     : 'dashboard';
 
   function setPage(p) {
     const routes = {
-      dashboard:  '/dashboard',
-      visibility: '/dashboard/visibility',
-      querycheck: '/dashboard/query-check',
-      ai:         '/dashboard/ai-audit',
-      audit:      '/dashboard/seo-audit',
-      generate:   '/dashboard/generate',
-      history:    '/dashboard/history',
-      pricing:    '/dashboard/credits',
+      dashboard:      '/dashboard',
+      visibility:     '/dashboard/visibility',
+      querycheck:     '/dashboard/query-check',
+      ai:             '/dashboard/ai-audit',
+      audit:          '/dashboard/seo-audit',
+      generate:       '/dashboard/generate',
+      history:        '/dashboard/history',
+      pricing:        '/dashboard/credits',
+      searchconsole:  '/dashboard/search-console',
     };
     navigate(routes[p] || '/dashboard');
   }
@@ -228,6 +231,9 @@ function AppShell() {
             <button className={`sidebar-link ${page==='audit'?'active':''}`} onClick={() => setPage('audit')}>
               <span className="sidebar-link-icon">⊕</span>SEO Audit
             </button>
+            <button className={`sidebar-link ${page==='searchconsole'?'active':''}`} onClick={() => setPage('searchconsole')}>
+              <span className="sidebar-link-icon">◈</span>Search Console
+            </button>
           </div>
           <div className="sidebar-group">
             <div className="sidebar-group-label">E-commerce</div>
@@ -250,14 +256,15 @@ function AppShell() {
         </div>
       </aside>
       <main className="main-content">
-        {page === "visibility" && <VisibilityChecker setPage={setPage} />}
-        {page === "querycheck" && <QueryCheck setPage={setPage} />}
-        {page === "ai"         && <AiAudit setPage={setPage} />}
-        {page === "audit"      && <Audit setPage={setPage} />}
-        {page === "generate"   && <Generator key={creditKey} />}
-        {page === "dashboard"  && <Dashboard setPage={setPage} />}
-        {page === "history"    && <History />}
-        {page === "pricing"    && <Pricing setPage={setPage} />}
+        {page === "visibility"     && <VisibilityChecker setPage={setPage} />}
+        {page === "querycheck"     && <QueryCheck setPage={setPage} />}
+        {page === "ai"             && <AiAudit setPage={setPage} />}
+        {page === "audit"          && <Audit setPage={setPage} />}
+        {page === "generate"       && <Generator key={creditKey} />}
+        {page === "dashboard"      && <Dashboard setPage={setPage} />}
+        {page === "history"        && <History />}
+        {page === "pricing"        && <Pricing setPage={setPage} />}
+        {page === "searchconsole"  && <SearchConsole setPage={setPage} />}
       </main>
     </div>
   );
