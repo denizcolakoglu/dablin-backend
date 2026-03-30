@@ -81,7 +81,7 @@ function SubTabs({ tabs, active, onChange }) {
 
 // ── PANELS ────────────────────────────────────────────────────
 
-function PerformancePanel({ data }) {
+function PerformancePanel({ data, setPage }) {
   const [sub, setSub] = useState("striking");
   const qFmt = { clicks: v => fmt(v,"num"), impressions: v => fmt(v,"num"), ctr: v => fmt(v,"ctr"), position: v => fmt(v,"pos") };
   return (
@@ -93,11 +93,17 @@ function PerformancePanel({ data }) {
         <DataTable rows={data?.striking} cols={["Query","Clicks","Impressions","CTR","Position"]} keys={["query","clicks","impressions","ctr","position"]} formatters={qFmt} />
       </>}
       {sub === "lowctr" && <>
-        <Tip text="High impressions, low clicks — rewrite your title tags and meta descriptions for these queries." />
+        <div style={{ margin: "12px 24px 0", background: "#eef8f0", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "12px", color: "#1a7a3a", fontWeight: "500" }}>💡 High impressions, low clicks — your title tags and meta descriptions need improvement. Run an SEO Audit to get AI-generated fixes for each page.</span>
+          <button onClick={() => setPage('audit')} style={{ background: "#1a7a3a", color: "white", border: "none", borderRadius: "7px", padding: "7px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", flexShrink: 0 }}>Run SEO Audit →</button>
+        </div>
         <DataTable rows={data?.lowCtr} cols={["Query","Impressions","Clicks","CTR","Position"]} keys={["query","impressions","clicks","ctr","position"]} formatters={qFmt} />
       </>}
       {sub === "aioverview" && <>
-        <Tip text="Add FAQPage or HowTo schema to more pages to increase AI Overview eligibility." />
+        <div style={{ margin: "12px 24px 0", background: "#eef8f0", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "12px", color: "#1a7a3a", fontWeight: "500" }}>💡 To appear in more AI Overviews, run an AI Visibility Audit — it checks for FAQPage schema, HowTo schema, and AI crawler access, and generates ready-to-copy fixes.</span>
+          <button onClick={() => setPage('ai')} style={{ background: "#1a7a3a", color: "white", border: "none", borderRadius: "7px", padding: "7px 16px", fontSize: "12px", fontWeight: "600", cursor: "pointer", flexShrink: 0 }}>Run AI Visibility Audit →</button>
+        </div>
         <DataTable rows={data?.aiOverview} cols={["Query","Clicks","Impressions","CTR","Position"]} keys={["query","clicks","impressions","ctr","position"]} formatters={qFmt} />
       </>}
     </div>
@@ -196,7 +202,7 @@ function PagesPanel({ data }) {
   );
 }
 
-function IndexingPanel({ data }) {
+function IndexingPanel({ data, selectedSite }) {
   const [sub, setSub] = useState("overview");
   const notIndexed = data?.notIndexed || [];
   const excluded = data?.excluded || [];
@@ -298,9 +304,18 @@ function IndexingPanel({ data }) {
 
       {sub === "sitemaps" && (
         <>
-          <Tip text="Sitemaps help Google discover all your pages. Fix any errors immediately — they can prevent entire sections of your site from being indexed." />
+          <div style={{ margin: "12px 24px 0", background: "#eef8f0", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "12px", color: "#1a7a3a", fontWeight: "500" }}>💡 Fix any sitemap errors immediately — they can prevent entire sections of your site from being indexed.</span>
+            <a
+              href={`https://search.google.com/search-console/sitemaps?resource_id=${encodeURIComponent(selectedSite || "")}`}
+              target="_blank" rel="noreferrer"
+              style={{ background: "#1a7a3a", color: "white", borderRadius: "7px", padding: "7px 16px", fontSize: "12px", fontWeight: "600", textDecoration: "none", flexShrink: 0 }}
+            >
+              Open in GSC →
+            </a>
+          </div>
           {!sitemaps.length
-            ? <div style={{ padding: "40px 24px", textAlign: "center", color: "#4a6b4c", fontSize: "14px" }}>No sitemaps submitted. Go to Google Search Console → Sitemaps to submit your sitemap.xml.</div>
+            ? <div style={{ padding: "40px 24px", textAlign: "center", color: "#4a6b4c", fontSize: "14px" }}>No sitemaps submitted. Click "Open in GSC" above to submit your sitemap.xml.</div>
             : sitemaps.map((s, i) => (
               <div key={i} style={{ padding: "12px 24px", borderBottom: "1px solid #eef2ee", fontSize: "13px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ color: "#0d1f0e" }}>{s.path}</span>
@@ -620,10 +635,10 @@ export default function SearchConsole({ setPage }) {
 
           {/* Content */}
           <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "14px", overflow: "hidden" }}>
-            {activeTab === "performance" && <PerformancePanel data={data} />}
+            {activeTab === "performance" && <PerformancePanel data={data} setPage={setPage} />}
             {activeTab === "queries"     && <QueriesPanel data={data} />}
             {activeTab === "pages"       && <PagesPanel data={data} />}
-            {activeTab === "indexing"    && <IndexingPanel data={data} />}
+            {activeTab === "indexing"    && <IndexingPanel data={data} selectedSite={selectedSite} />}
             {activeTab === "links"       && <LinksPanel data={data} />}
             {activeTab === "vitals"      && <VitalsPanel data={data.vitals} />}
             {activeTab === "countries"   && <CountriesPanel data={data} />}
