@@ -23,8 +23,8 @@ const NAV_GROUPS = [
 
 const RESOURCES = [
   { href: "https://blog.dablin.co",                       icon: "✍", label: "Blog",            desc: "AI visibility, GEO and SEO guides", external: true },
-  { href: "https://www.linkedin.com/company/dablin",      icon: "in", label: "Dablin LinkedIn", desc: "Follow us for SEO & AI insights",   external: true },
-  { href: "https://medium.com/dablin",                    icon: "M",  label: "Dablin Medium",   desc: "In-depth articles and guides",      external: true },
+  { href: "https://www.linkedin.com/company/dablin",      icon: "in", label: "Dablin on LinkedIn", desc: "Follow us for SEO & AI insights",   external: true },
+  { href: "https://medium.com/dablin",                    icon: "M",  label: "Dablin on Medium",   desc: "In-depth articles and guides",      external: true },
 ];
 
 function DropdownMenu({ group, activePath }) {
