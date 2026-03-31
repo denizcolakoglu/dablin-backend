@@ -624,17 +624,32 @@ export default function GetStarted({ setPage }) {
         u.audits?.some(a => a.type === "ai")
       );
 
-      // If GSC connected, fetch actual data
+      // If GSC connected, fetch actual data for the matching site
       let gscData = null;
-      if (gscStatus.connected && gscStatus.selectedSite) {
-        setScanMsg("Pulling Google Search Console data…");
-        try {
-          const gscRes = await fetch(
-            `${API}/api/gsc/data?site=${encodeURIComponent(gscStatus.selectedSite)}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (gscRes.ok) gscData = await gscRes.json();
-        } catch {}
+      if (gscStatus.connected && gscStatus.sites?.length > 0) {
+        // Find the GSC site that best matches the scanned URL
+        const scannedHost = inputUrl.replace(/https?:\/\//, "").replace(/\/.*/, "").replace(/^www\./, "");
+
+        const matchedSite = gscStatus.sites.find(site => {
+          // Handle sc-domain: prefix (domain property)
+          const cleanSite = site.replace("sc-domain:", "").replace(/https?:\/\//, "").replace(/\/.*/, "").replace(/^www\./, "");
+          return cleanSite === scannedHost || scannedHost.endsWith("." + cleanSite);
+        }) || gscStatus.sites.find(site => {
+          // Looser match — site contains scanned host or vice versa
+          const cleanSite = site.replace("sc-domain:", "").replace(/https?:\/\//, "").replace(/\/.*/, "").replace(/^www\./, "");
+          return scannedHost.includes(cleanSite) || cleanSite.includes(scannedHost);
+        }) || gscStatus.selectedSite || gscStatus.sites[0];
+
+        if (matchedSite) {
+          setScanMsg("Pulling Google Search Console data…");
+          try {
+            const gscRes = await fetch(
+              `${API}/api/gsc/data?site=${encodeURIComponent(matchedSite)}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (gscRes.ok) gscData = await gscRes.json();
+          } catch {}
+        }
       }
 
       const checks = auditData.checks || {};
