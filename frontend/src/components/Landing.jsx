@@ -719,8 +719,18 @@ function ResourcesDropdown() {
 
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [barVisible, setBarVisible] = useState(true);
   return (
     <>
+      {/* Announcement bar */}
+      {barVisible && (
+        <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 48px", fontSize: "13px", fontWeight: "500", position: "relative", lineHeight: "1.4" }}>
+          <span style={{ fontWeight: "700", marginRight: "8px" }}>⚡ New</span>
+          Now includes Google March 2026 signals — Information Gain &amp; AI Overview eligibility checks
+          <a href="/seo-audit" style={{ marginLeft: "12px", color: "white", fontWeight: "700", textDecoration: "underline", textUnderlineOffset: "3px" }}>Try the SEO Audit →</a>
+          <button onClick={() => setBarVisible(false)} style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
+        </div>
+      )}
       <nav className="landing-nav">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="nav-hamburger" onClick={() => setMenuOpen(true)} aria-label="Open menu">
