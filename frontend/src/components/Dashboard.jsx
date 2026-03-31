@@ -435,22 +435,6 @@ export default function Dashboard({ setPage }) {
             View all posts →
           </a>
 
-          {/* Activity stats */}
-          {auditData && (
-            <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "9px", padding: "12px 14px", marginTop: "4px" }}>
-              <div style={{ fontSize: "11px", fontWeight: "700", color: "#4a6b4c", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Activity</div>
-              {[
-                { label: "Audits run",    value: auditData.totalAudits },
-                { label: "URLs tracked",  value: auditData.urls?.length || 0 },
-                { label: "Descriptions", value: auditData.totalDescriptions },
-              ].map(s => (
-                <div key={s.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: "1px solid #eef2ee" }}>
-                  <span style={{ fontSize: "11px", color: "#4a6b4c" }}>{s.label}</span>
-                  <span style={{ fontSize: "14px", fontWeight: "800", color: "#1a7a3a", fontFamily: "'Roboto Condensed', sans-serif" }}>{s.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
       </div>
