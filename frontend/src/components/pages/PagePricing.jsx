@@ -285,7 +285,7 @@ export default function PagePricing() {
         </div>
       </div>
 
-      {/* FOOTER */}
+
     </PageLayout>
   );
 }

@@ -283,7 +283,6 @@ export default function PageSeoAudit() {
         </div>
       </div>
 
-      {/* FOOTER */}
     </PageLayout>
   );
 }
