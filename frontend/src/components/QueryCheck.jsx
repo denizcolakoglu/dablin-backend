@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { trackEvent } from "../analytics";
 import ShareButton from "./ShareButton";
+import ToolHistory from "./ToolHistory";
 
 const BASE = "https://dablin-backend-production.up.railway.app";
 
@@ -11,6 +12,7 @@ export default function QueryCheck({ setPage }) {
   // Step 1: prompt
   const [prompt, setPrompt] = useState("");
   const [brand, setBrand] = useState("");
+  const [activeToolTab, setActiveToolTab] = useState("tool");
   const [generating, setGenerating] = useState(false);
 
   // Step 2: queries
@@ -88,6 +90,20 @@ export default function QueryCheck({ setPage }) {
   }
 
   return (
+    <div style={{ fontFamily:"'Roboto',sans-serif" }}>
+      <div style={{ display:"flex", borderBottom:"2px solid #d4e8d6" }}>
+        {[["tool","AI Query Check"],["history","History"]].map(([id,label]) => (
+          <button key={id} onClick={() => setActiveToolTab(id)}
+            style={{ padding:"11px 24px", fontSize:"13px", fontWeight:"600",
+              color: activeToolTab===id ? "#2d7a3a" : "#5a7a5e", background:"none", border:"none",
+              cursor:"pointer", borderBottom: activeToolTab===id ? "2px solid #2d7a3a" : "2px solid transparent",
+              marginBottom:"-2px", transition:"all 0.2s" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {activeToolTab === "history" && <ToolHistory type="query-check" />}
+      {activeToolTab === "tool" && (
     <div style={{ maxWidth:"720px", margin:"0 auto", padding:"40px 24px", fontFamily:"'Roboto',sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Condensed:wght@700;800&display=swap');
@@ -334,6 +350,8 @@ export default function QueryCheck({ setPage }) {
             ← Run another check
           </button>
         </>
+      )}
+    </div>
       )}
     </div>
   );

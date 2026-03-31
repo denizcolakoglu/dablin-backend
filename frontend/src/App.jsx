@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth, useUser } from "@clerk/clerk-react";
 import Generator from "./components/Generator";
-import History from "./components/History";
 import Pricing from "./components/Pricing";
 import Landing from "./components/Landing";
 import Audit from "./components/Audit";
@@ -137,7 +136,6 @@ function AppShell() {
     : path === '/ai-audit'        ? 'ai'
     : path === '/seo-audit'       ? 'audit'
     : path === '/generate'        ? 'generate'
-    : path === '/history'         ? 'history'
     : path === '/credits'         ? 'pricing'
     : path === '/search-console'  ? 'searchconsole'
     : 'dashboard';
@@ -151,7 +149,6 @@ function AppShell() {
       ai:             '/dashboard/ai-audit',
       audit:          '/dashboard/seo-audit',
       generate:       '/dashboard/generate',
-      history:        '/dashboard/history',
       pricing:        '/dashboard/credits',
       searchconsole:  '/dashboard/search-console',
     };
@@ -216,9 +213,6 @@ function AppShell() {
             <button className={`sidebar-link ${page==='dashboard'?'active':''}`} onClick={() => setPage('dashboard')}>
               <span className="sidebar-link-icon">⊞</span>Dashboard
             </button>
-            <button className={`sidebar-link ${page==='history'?'active':''}`} onClick={() => setPage('history')}>
-              <span className="sidebar-link-icon">☰</span>History
-            </button>
           </div>
           <div className="sidebar-group">
             <div className="sidebar-group-label">AI Tools</div>
@@ -269,7 +263,6 @@ function AppShell() {
         {page === "audit"          && <Audit setPage={setPage} />}
         {page === "generate"       && <Generator key={creditKey} />}
         {page === "dashboard"      && <Dashboard setPage={setPage} />}
-        {page === "history"        && <History />}
         {page === "pricing"        && <Pricing setPage={setPage} />}
         {page === "searchconsole"  && <SearchConsole setPage={setPage} />}
       </main>

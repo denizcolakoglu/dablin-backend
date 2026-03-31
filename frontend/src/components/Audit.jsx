@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import ShareButton from "./ShareButton";
+import ToolHistory from "./ToolHistory";
+
 
 const CHECK_GROUPS = [
   {
@@ -52,6 +54,7 @@ export default function Audit({ setPage }) {
   if (prefill) sessionStorage.removeItem("prefillUrl");
 
   const [url, setUrl] = useState(prefill);
+  const [activeToolTab, setActiveToolTab] = useState("tool");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -106,7 +109,20 @@ export default function Audit({ setPage }) {
   const score = result ? Math.round((passed / totalChecks) * 100) : null;
 
   return (
-    <div className="audit-page">
+    <div style={{ fontFamily:"'Roboto',sans-serif" }}>
+      <div style={{ display:"flex", gap:"0", borderBottom:"2px solid #d4e8d6" }}>
+        {[["tool","SEO Audit"],["history","History"]].map(([id,label]) => (
+          <button key={id} onClick={() => setActiveToolTab(id)}
+            style={{ padding:"11px 24px", fontSize:"13px", fontWeight:"600",
+              color: activeToolTab===id ? "#2d7a3a" : "#5a7a5e", background:"none", border:"none",
+              cursor:"pointer", borderBottom: activeToolTab===id ? "2px solid #2d7a3a" : "2px solid transparent",
+              marginBottom:"-2px", transition:"all 0.2s" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {activeToolTab === "history" && <ToolHistory type="seo-audit" />}
+      {activeToolTab === "tool" && <div className="audit-page">
       <style>{`
         .audit-page { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
         .audit-sub { font-size: 15px; color: #5a7a5e; margin-bottom: 32px; }
@@ -325,6 +341,8 @@ export default function Audit({ setPage }) {
           <p>Enter a product URL above and click "Audit SEO" to get your report.</p>
         </div>
       )}
+    </div>
+      </div>}
     </div>
   );
 }
