@@ -2,11 +2,115 @@ import { useState } from "react";
 import { SignInButton, SignUpButton } from "@clerk/clerk-react";
 import { trackEvent } from "../../analytics";
 
-const NAV_ITEMS = [
-  { href: "/ai-visibility-check", icon: "◎", label: "AI Visibility Check",  desc: "See if ChatGPT, Gemini & Claude mention you" },
-  { href: "/ai-visibility-audit", icon: "⌕", label: "AI Visibility Audit",  desc: "12 checks for AI engine discoverability" },
-  { href: "/seo-audit",           icon: "✓", label: "SEO Audit",             desc: "18-point SEO check with AI fixes" },
+const NAV_GROUPS = [
+  {
+    label: "AI Visibility",
+    items: [
+      { href: "/ai-visibility-audit", icon: "⌕", label: "AI Visibility Audit",  desc: "12 checks for AI engine discoverability" },
+      { href: "/ai-visibility-check", icon: "◎", label: "AI Visibility Check",  desc: "See if ChatGPT, Gemini & Claude mention you" },
+      { href: "/dashboard/query-check", icon: "↗", label: "AI Query Check",      desc: "Run custom queries across AI engines" },
+    ],
+  },
+  {
+    label: "SEO Expert",
+    items: [
+      { href: "/seo-audit",                    icon: "✓", label: "SEO Audit",               desc: "18-point SEO check with AI fixes" },
+      { href: "/dashboard/search-console",     icon: "📊", label: "Google Search Console",   desc: "Index status, vitals and query data" },
+      { href: "/dashboard",                    icon: "⊞", label: "SEO/GEO Dashboard",        desc: "Your full visibility kanban board" },
+    ],
+  },
 ];
+
+const RESOURCES = [
+  { href: "https://blog.dablin.co",                       icon: "✍", label: "Blog",            desc: "AI visibility, GEO and SEO guides", external: true },
+  { href: "https://www.linkedin.com/company/dablin",      icon: "in", label: "Dablin LinkedIn", desc: "Follow us for SEO & AI insights",   external: true },
+  { href: "https://medium.com/dablin",                    icon: "M",  label: "Dablin Medium",   desc: "In-depth articles and guides",      external: true },
+];
+
+function DropdownMenu({ group, activePath }) {
+  const [open, setOpen] = useState(false);
+  const isActive = group.items?.some(i => activePath === i.href);
+  return (
+    <div
+      style={{ position:"relative" }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button style={{
+        fontSize:"15px", fontWeight: isActive ? "700" : "500",
+        color: isActive ? "#1a7a3a" : "#2a3d2b",
+        background:"none", border:"none", cursor:"pointer",
+        display:"flex", alignItems:"center", gap:"5px", padding:"4px 0",
+        fontFamily:"'Roboto',sans-serif",
+      }}>
+        {group.label}
+        <span style={{ fontSize:"10px", color:"#9ab09c", marginTop:"1px" }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position:"absolute", top:"calc(100% + 12px)", left:"50%", transform:"translateX(-50%)",
+          background:"white", border:"1px solid #eef2ee", borderRadius:"14px",
+          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"8px", minWidth:"280px", zIndex:200,
+        }}>
+          {group.items.map(item => (
+            <a key={item.href} href={item.href} style={{ display:"flex", alignItems:"flex-start", gap:"12px", padding:"10px 12px", borderRadius:"9px", textDecoration:"none", transition:"background 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background="#eef8f0"}
+              onMouseLeave={e => e.currentTarget.style.background="transparent"}
+            >
+              <span style={{ fontSize:"16px", color:"#1a7a3a", flexShrink:0, width:"20px", textAlign:"center", marginTop:"1px" }}>{item.icon}</span>
+              <div>
+                <div style={{ fontSize:"13px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div>
+                <div style={{ fontSize:"12px", color:"#4a6b4c", lineHeight:"1.4" }}>{item.desc}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResourcesMenu() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      style={{ position:"relative" }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button style={{
+        fontSize:"15px", fontWeight:"500", color:"#2a3d2b",
+        background:"none", border:"none", cursor:"pointer",
+        display:"flex", alignItems:"center", gap:"5px", padding:"4px 0",
+        fontFamily:"'Roboto',sans-serif",
+      }}>
+        Resources
+        <span style={{ fontSize:"10px", color:"#9ab09c", marginTop:"1px" }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position:"absolute", top:"calc(100% + 12px)", left:"50%", transform:"translateX(-50%)",
+          background:"white", border:"1px solid #eef2ee", borderRadius:"14px",
+          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"8px", minWidth:"260px", zIndex:200,
+        }}>
+          {RESOURCES.map(item => (
+            <a key={item.href} href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}
+              style={{ display:"flex", alignItems:"flex-start", gap:"12px", padding:"10px 12px", borderRadius:"9px", textDecoration:"none", transition:"background 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background="#eef8f0"}
+              onMouseLeave={e => e.currentTarget.style.background="transparent"}
+            >
+              <span style={{ fontSize:"14px", fontWeight:"700", color:"#1a7a3a", flexShrink:0, width:"20px", textAlign:"center", marginTop:"1px" }}>{item.icon}</span>
+              <div>
+                <div style={{ fontSize:"13px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div>
+                <div style={{ fontSize:"12px", color:"#4a6b4c", lineHeight:"1.4" }}>{item.desc}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function NavBar({ activePath }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,13 +122,11 @@ function NavBar({ activePath }) {
           <a href="/" style={{ textDecoration:"none" }}><img src="/logo.svg" alt="Dablin" height="44" /></a>
         </div>
         <div className="pl-nav-links" style={{ display:"flex", alignItems:"center", gap:"28px" }}>
-          {NAV_ITEMS.map(item => (
-            <a key={item.href} href={item.href} style={{ fontSize:"15px", fontWeight: activePath===item.href ? "700" : "500", color: activePath===item.href ? "#1a7a3a" : "#2a3d2b", textDecoration:"none" }}>
-              {item.label}
-            </a>
+          {NAV_GROUPS.map(group => (
+            <DropdownMenu key={group.label} group={group} activePath={activePath} />
           ))}
           <a href="/pricing" style={{ fontSize:"15px", fontWeight: activePath==="/pricing" ? "700" : "500", color: activePath==="/pricing" ? "#1a7a3a" : "#2a3d2b", textDecoration:"none" }}>Pricing</a>
-          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" style={{ fontSize:"15px", fontWeight:"500", color:"#2a3d2b", textDecoration:"none" }}>Blog</a>
+          <ResourcesMenu />
         </div>
         <div style={{ display:"flex", gap:"10px", alignItems:"center" }}>
           <SignInButton mode="modal"><button className="pl-btn-ghost">Sign in</button></SignInButton>
@@ -34,29 +136,42 @@ function NavBar({ activePath }) {
         </div>
       </nav>
 
+      {/* Mobile menu */}
       {menuOpen && (
         <div style={{ display:"flex", flexDirection:"column", position:"fixed", top:0, left:0, right:0, bottom:0, background:"white", zIndex:500, padding:"24px", overflowY:"auto" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"32px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"24px" }}>
             <img src="/logo.svg" alt="Dablin" height="40" />
             <button onClick={() => setMenuOpen(false)} style={{ background:"none", border:"none", fontSize:"28px", color:"#2a3d2b", cursor:"pointer" }}>×</button>
           </div>
-          {NAV_ITEMS.map(item => (
-            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"16px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
-              <span style={{ fontSize:"20px", color:"#1a7a3a", flexShrink:0, marginTop:"2px" }}>{item.icon}</span>
-              <div>
-                <div style={{ fontSize:"16px", fontWeight:"600", color:"#0d1f0e", marginBottom:"3px" }}>{item.label}</div>
-                <div style={{ fontSize:"13px", color:"#4a6b4c" }}>{item.desc}</div>
-              </div>
+          {/* AI Visibility group */}
+          <div style={{ fontSize:"11px", fontWeight:"700", color:"#9ab09c", textTransform:"uppercase", letterSpacing:"1px", padding:"12px 0 8px" }}>AI Visibility</div>
+          {NAV_GROUPS[0].items.map(item => (
+            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
+              <span style={{ fontSize:"18px", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>{item.icon}</span>
+              <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>{item.desc}</div></div>
             </a>
           ))}
-          <a href="/pricing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"16px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
-            <span style={{ fontSize:"20px", color:"#1a7a3a", flexShrink:0, marginTop:"2px" }}>€</span>
-            <div><div style={{ fontSize:"16px", fontWeight:"600", color:"#0d1f0e", marginBottom:"3px" }}>Pricing</div><div style={{ fontSize:"13px", color:"#4a6b4c" }}>Simple monthly plans</div></div>
+          {/* SEO Expert group */}
+          <div style={{ fontSize:"11px", fontWeight:"700", color:"#9ab09c", textTransform:"uppercase", letterSpacing:"1px", padding:"16px 0 8px" }}>SEO Expert</div>
+          {NAV_GROUPS[1].items.map(item => (
+            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
+              <span style={{ fontSize:"18px", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>{item.icon}</span>
+              <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>{item.desc}</div></div>
+            </a>
+          ))}
+          {/* Pricing */}
+          <a href="/pricing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
+            <span style={{ fontSize:"18px", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>€</span>
+            <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>Pricing</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>Simple monthly plans</div></div>
           </a>
-          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"16px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
-            <span style={{ fontSize:"20px", color:"#1a7a3a", flexShrink:0, marginTop:"2px" }}>✍</span>
-            <div><div style={{ fontSize:"16px", fontWeight:"600", color:"#0d1f0e", marginBottom:"3px" }}>Blog</div><div style={{ fontSize:"13px", color:"#4a6b4c" }}>AI visibility, GEO and SEO guides</div></div>
-          </a>
+          {/* Resources */}
+          <div style={{ fontSize:"11px", fontWeight:"700", color:"#9ab09c", textTransform:"uppercase", letterSpacing:"1px", padding:"16px 0 8px" }}>Resources</div>
+          {RESOURCES.map(item => (
+            <a key={item.href} href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
+              <span style={{ fontSize:"14px", fontWeight:"700", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>{item.icon}</span>
+              <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>{item.desc}</div></div>
+            </a>
+          ))}
           <div style={{ marginTop:"24px", display:"flex", flexDirection:"column", gap:"12px" }}>
             <div onClick={() => { trackEvent("sign_up_modal_opened", { location:"mobile_menu" }); setMenuOpen(false); }}>
               <SignUpButton mode="modal"><button className="pl-btn-primary" style={{ width:"100%", padding:"14px", fontSize:"16px", borderRadius:"10px" }}>Sign up free</button></SignUpButton>
