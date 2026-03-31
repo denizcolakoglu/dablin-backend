@@ -11,6 +11,7 @@ import VisibilityChecker from "./components/VisibilityChecker";
 import QueryCheck from "./components/QueryCheck";
 import Dashboard from "./components/Dashboard";
 import SearchConsole from "./components/SearchConsole";
+import GetStarted from "./components/GetStarted";
 import PageGenerate from "./components/pages/PageGenerate";
 import PageSeoAudit from "./components/pages/PageSeoAudit";
 import PageAiAudit from "./components/pages/PageAiAudit";
@@ -130,6 +131,7 @@ function AppShell() {
 
   const path = location.pathname.replace('/dashboard', '') || '/';
   const page = path === '/' || path === '' ? 'dashboard'
+    : path === '/get-started'     ? 'getstarted'
     : path === '/visibility'      ? 'visibility'
     : path === '/query-check'     ? 'querycheck'
     : path === '/ai-audit'        ? 'ai'
@@ -143,6 +145,7 @@ function AppShell() {
   function setPage(p) {
     const routes = {
       dashboard:      '/dashboard',
+      getstarted:     '/dashboard/get-started',
       visibility:     '/dashboard/visibility',
       querycheck:     '/dashboard/query-check',
       ai:             '/dashboard/ai-audit',
@@ -207,6 +210,9 @@ function AppShell() {
         <nav className="sidebar-nav">
           <div className="sidebar-group">
             <div className="sidebar-group-label">Overview</div>
+            <button className={`sidebar-link ${page==='getstarted'?'active':''}`} onClick={() => setPage('getstarted')} style={{ position:'relative' }}>
+              <span className="sidebar-link-icon">🚀</span>Get Started
+            </button>
             <button className={`sidebar-link ${page==='dashboard'?'active':''}`} onClick={() => setPage('dashboard')}>
               <span className="sidebar-link-icon">⊞</span>Dashboard
             </button>
@@ -256,6 +262,7 @@ function AppShell() {
         </div>
       </aside>
       <main className="main-content">
+        {page === "getstarted"     && <GetStarted setPage={setPage} />}
         {page === "visibility"     && <VisibilityChecker setPage={setPage} />}
         {page === "querycheck"     && <QueryCheck setPage={setPage} />}
         {page === "ai"             && <AiAudit setPage={setPage} />}
