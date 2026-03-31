@@ -4,34 +4,283 @@ import { trackEvent } from "../analytics";
 
 const BASE = "https://dablin-backend-production.up.railway.app";
 
-const FEATURE_PRICES = {
-  visibility_check: 1.00,
-  ai_audit:         0.80,
-  seo_audit:        0.50,
-  generate:         0.05,
-};
+// ── PLAN CONFIG ───────────────────────────────────────────────
+const PLANS = [
+  {
+    id: "starter",
+    name: "Starter",
+    desc: "For solo founders getting SEO foundations right.",
+    monthlyPrice: 9,
+    color: "#4a6b4c",
+    highlight: false,
+    features: [
+      { label: "SEO Audit", included: true, note: "5 / month" },
+      { label: "AI Visibility Audit", included: true, note: "5 / month" },
+      { label: "AI Visibility Check", included: false },
+      { label: "AI Query Check", included: false },
+      { label: "Description Generator", included: true, note: "20 / month" },
+      { label: "Search Console integration", included: false },
+      { label: "URLs tracked", included: true, note: "1 URL" },
+      { label: "Team seats", included: true, note: "1 seat" },
+      { label: "Email support", included: true },
+    ],
+    cta: "Get Starter",
+    stripePriceMonthly: null,
+    stripePriceYearly: null,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    desc: "For brands serious about AI and Google visibility.",
+    monthlyPrice: 19,
+    color: "#1a7a3a",
+    highlight: true,
+    badge: "Most popular",
+    features: [
+      { label: "SEO Audit", included: true, note: "10 / month" },
+      { label: "AI Visibility Audit", included: true, note: "10 / month" },
+      { label: "AI Visibility Check", included: true, note: "Max 7 queries" },
+      { label: "AI Query Check", included: false },
+      { label: "Description Generator", included: true, note: "100 / month" },
+      { label: "Search Console integration", included: false },
+      { label: "URLs tracked", included: true, note: "3 URLs" },
+      { label: "Team seats", included: true, note: "3 seats" },
+      { label: "Priority email support", included: true },
+    ],
+    cta: "Get Pro",
+    stripePriceMonthly: null,
+    stripePriceYearly: null,
+  },
+  {
+    id: "agency",
+    name: "Agency",
+    desc: "For agencies managing multiple brands and clients.",
+    monthlyPrice: 49,
+    color: "#0d1f0e",
+    highlight: false,
+    features: [
+      { label: "SEO Audit", included: true, note: "Unlimited" },
+      { label: "AI Visibility Audit", included: true, note: "Unlimited" },
+      { label: "AI Visibility Check", included: true, note: "Unlimited" },
+      { label: "AI Query Check", included: true, note: "Unlimited" },
+      { label: "Description Generator", included: true, note: "Unlimited" },
+      { label: "Search Console integration", included: true },
+      { label: "URLs tracked", included: true, note: "Unlimited" },
+      { label: "Team seats", included: true, note: "10 seats" },
+      { label: "Priority support + onboarding", included: true },
+    ],
+    cta: "Get Agency",
+    stripePriceMonthly: null,
+    stripePriceYearly: null,
+  },
+];
 
-const FEATURE_LABELS = {
-  visibility_check: 'AI Visibility Check',
-  ai_audit:         'AI Visibility Audit',
-  seo_audit:        'SEO Audit',
-  generate:         'Generate Description',
-};
+const YEARLY_MONTHS = 9; // pay 9, get 12
 
+function yearlyPrice(monthly) {
+  return Math.round(monthly * YEARLY_MONTHS / 12 * 100) / 100;
+}
+
+function yearlyTotal(monthly) {
+  return monthly * YEARLY_MONTHS;
+}
+
+// ── FEATURE ROW ───────────────────────────────────────────────
+function FeatureRow({ feature, highlight }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: "10px",
+      padding: "9px 0",
+      borderBottom: "1px solid " + (highlight ? "rgba(255,255,255,0.08)" : "#eef2ee"),
+    }}>
+      <span style={{
+        fontSize: "14px", flexShrink: 0,
+        color: feature.included ? "#1a7a3a" : "#d0e8d4",
+      }}>
+        {feature.included ? "✓" : "—"}
+      </span>
+      <span style={{
+        fontSize: "13px",
+        color: feature.included
+          ? (highlight ? "white" : "#0d1f0e")
+          : (highlight ? "rgba(255,255,255,0.35)" : "#9ab09c"),
+        flex: 1,
+        textDecoration: feature.included ? "none" : "none",
+      }}>
+        {feature.label}
+      </span>
+      {feature.included && feature.note && (
+        <span style={{
+          fontSize: "11px", fontWeight: "600",
+          color: highlight ? "rgba(255,255,255,0.55)" : "#4a6b4c",
+          flexShrink: 0,
+        }}>
+          {feature.note}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── PLAN CARD ─────────────────────────────────────────────────
+function PlanCard({ plan, yearly, onSelect, currentPlan }) {
+  const isHighlight = plan.highlight;
+  const price = yearly ? yearlyPrice(plan.monthlyPrice) : plan.monthlyPrice;
+  const saving = yearly ? (plan.monthlyPrice * 12 - yearlyTotal(plan.monthlyPrice)) : 0;
+  const isCurrent = currentPlan === plan.id;
+
+  return (
+    <div style={{
+      background: isHighlight ? "#0d1f0e" : "white",
+      border: isHighlight ? "2px solid #1a7a3a" : "1px solid #eef2ee",
+      borderRadius: "16px",
+      padding: "28px 24px",
+      display: "flex",
+      flexDirection: "column",
+      position: "relative",
+      boxShadow: isHighlight ? "0 8px 32px rgba(26,122,58,0.2)" : "none",
+      transition: "transform 0.2s",
+    }}
+      onMouseEnter={e => !isHighlight && (e.currentTarget.style.transform = "translateY(-2px)")}
+      onMouseLeave={e => !isHighlight && (e.currentTarget.style.transform = "none")}
+    >
+      {/* Badge */}
+      {plan.badge && (
+        <div style={{
+          position: "absolute", top: "-13px", left: "50%", transform: "translateX(-50%)",
+          background: "#1a7a3a", color: "white",
+          borderRadius: "20px", padding: "4px 16px",
+          fontSize: "11px", fontWeight: "700", letterSpacing: "0.06em", textTransform: "uppercase",
+          whiteSpace: "nowrap",
+        }}>
+          {plan.badge}
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ marginBottom: "20px" }}>
+        <div style={{ fontSize: "13px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.08em", color: isHighlight ? "#6fcf8a" : plan.color, marginBottom: "6px" }}>
+          {plan.name}
+        </div>
+        <div style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: "42px", fontWeight: "800", color: isHighlight ? "white" : "#0d1f0e", lineHeight: 1, marginBottom: "4px" }}>
+          €{price % 1 === 0 ? price : price.toFixed(2)}
+          <span style={{ fontSize: "15px", fontWeight: "500", color: isHighlight ? "rgba(255,255,255,0.5)" : "#4a6b4c" }}>/mo</span>
+        </div>
+        {yearly && (
+          <div style={{ fontSize: "12px", color: isHighlight ? "rgba(255,255,255,0.5)" : "#4a6b4c", marginBottom: "4px" }}>
+            €{yearlyTotal(plan.monthlyPrice)} billed yearly
+            <span style={{ marginLeft: "6px", background: "#eef8f0", color: "#1a7a3a", border: "1px solid #d0e8d4", borderRadius: "20px", padding: "1px 7px", fontSize: "11px", fontWeight: "700" }}>
+              Save €{saving}
+            </span>
+          </div>
+        )}
+        <div style={{ fontSize: "13px", color: isHighlight ? "rgba(255,255,255,0.5)" : "#4a6b4c", lineHeight: "1.5", marginTop: "8px" }}>
+          {plan.desc}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <button
+        onClick={() => onSelect(plan)}
+        style={{
+          width: "100%", padding: "13px", borderRadius: "9px",
+          border: isHighlight ? "none" : "2px solid #1a7a3a",
+          background: isHighlight ? "#1a7a3a" : "transparent",
+          color: isHighlight ? "white" : "#1a7a3a",
+          fontSize: "14px", fontWeight: "700", cursor: "pointer",
+          fontFamily: "'Roboto', sans-serif", transition: "all 0.2s",
+          marginBottom: "24px",
+          opacity: isCurrent ? 0.6 : 1,
+        }}
+        onMouseEnter={e => {
+          if (!isCurrent) e.currentTarget.style.background = isHighlight ? "#2d9a4e" : "#1a7a3a";
+          if (!isCurrent && !isHighlight) e.currentTarget.style.color = "white";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = isHighlight ? "#1a7a3a" : "transparent";
+          if (!isHighlight) e.currentTarget.style.color = "#1a7a3a";
+        }}
+        disabled={isCurrent}
+      >
+        {isCurrent ? "Current plan" : plan.cta}
+      </button>
+
+      {/* Features */}
+      <div style={{ flex: 1 }}>
+        {plan.features.map((f, i) => (
+          <FeatureRow key={i} feature={f} highlight={isHighlight} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── COMPARE TABLE ─────────────────────────────────────────────
+function CompareTable({ yearly }) {
+  const rows = [
+    { label: "SEO Audit", values: ["5 / mo", "10 / mo", "Unlimited"] },
+    { label: "AI Visibility Audit", values: ["5 / mo", "10 / mo", "Unlimited"] },
+    { label: "AI Visibility Check", values: [false, "Max 7 queries", true] },
+    { label: "AI Query Check", values: [false, false, true] },
+    { label: "Description Generator", values: ["20 / mo", "100 / mo", "Unlimited"] },
+    { label: "Search Console integration", values: [false, false, true] },
+    { label: "URLs tracked", values: ["1", "3", "Unlimited"] },
+    { label: "Team seats", values: ["1", "3", "10"] },
+    { label: "Support", values: ["Email", "Priority email", "Priority + onboarding"] },
+    { label: "Monthly price", values: PLANS.map(p => `€${yearly ? yearlyPrice(p.monthlyPrice) : p.monthlyPrice}/mo`) },
+  ];
+
+  return (
+    <div style={{ overflowX: "auto", marginTop: "48px" }}>
+      <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <p style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#1a7a3a", marginBottom: "8px" }}>Full comparison</p>
+        <h3 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: "28px", fontWeight: "800", color: "#0d1f0e", letterSpacing: "-0.5px" }}>Everything side by side</h3>
+      </div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <thead>
+          <tr style={{ borderBottom: "2px solid #eef2ee" }}>
+            <th style={{ textAlign: "left", padding: "12px 16px", color: "#4a6b4c", fontWeight: "600", width: "35%" }}>Feature</th>
+            {PLANS.map(p => (
+              <th key={p.id} style={{ textAlign: "center", padding: "12px 16px", color: p.highlight ? "#1a7a3a" : "#0d1f0e", fontWeight: "700", background: p.highlight ? "#eef8f0" : "transparent", borderRadius: p.highlight ? "8px 8px 0 0" : "0" }}>
+                {p.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} style={{ borderBottom: "1px solid #eef2ee", background: i % 2 === 0 ? "transparent" : "#fafcfa" }}>
+              <td style={{ padding: "12px 16px", color: "#4a6b4c", fontWeight: "500" }}>{row.label}</td>
+              {row.values.map((val, j) => (
+                <td key={j} style={{ textAlign: "center", padding: "12px 16px", background: PLANS[j].highlight ? "rgba(234,248,240,0.4)" : "transparent" }}>
+                  {val === true
+                    ? <span style={{ color: "#1a7a3a", fontWeight: "700" }}>✓</span>
+                    : val === false
+                    ? <span style={{ color: "#d0e8d4" }}>—</span>
+                    : <span style={{ color: "#0d1f0e", fontWeight: "500" }}>{val}</span>
+                  }
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── MAIN ──────────────────────────────────────────────────────
 export default function Pricing({ setPage }) {
   const { getToken } = useAuth();
-  const [activeTab, setActiveTab] = useState("balance");
-  const [balance, setBalance] = useState(null);
-  const [amount, setAmount] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [amountError, setAmountError] = useState(null);
-  const [usage, setUsage] = useState([]);
-  const [usageType, setUsageType] = useState('visibility_check');
+  const [yearly, setYearly]         = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [currentPlan, setCurrentPlan] = useState(null);
+  const [balance, setBalance]       = useState(null);
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
-    trackEvent('pricing_viewed');
+    trackEvent("pricing_viewed");
     fetchBalance();
-    fetchUsage('visibility_check');
   }, []);
 
   async function fetchBalance() {
@@ -40,197 +289,123 @@ export default function Pricing({ setPage }) {
       const res = await fetch(`${BASE}/api/balance`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       setBalance(parseFloat(data.balance || 0));
-    } catch(e) {}
+      setCurrentPlan(data.plan || null);
+    } catch {}
   }
 
-  async function fetchUsage(type) {
+  async function handleSelect(plan) {
+    if (currentPlan === plan.id) return;
+    trackEvent("subscription_click", { plan: plan.id, billing: yearly ? "yearly" : "monthly" });
+    setLoading(plan.id);
     try {
       const token = await getToken();
-      const res = await fetch(`${BASE}/api/usage/daily?type=${type}`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      setUsage(data.days || []);
-    } catch(e) {}
-  }
-
-  async function handleTopUp() {
-    const amt = parseFloat(amount);
-    if (!amt || amt < 3 || amt > 50) {
-      setAmountError('Enter an amount between €3 and €50');
-      return;
-    }
-    setAmountError(null);
-    trackEvent('purchase_click', { amount: amt });
-    setLoading(true);
-    try {
-      const token = await getToken();
-      const res = await fetch(`${BASE}/api/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ amount: amt }),
+      const res = await fetch(`${BASE}/api/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan: plan.id, billing: yearly ? "yearly" : "monthly" }),
       });
       const data = await res.json();
       if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-    } catch(e) {
-      console.error('Checkout failed', e);
+    } catch (e) {
+      console.error("Subscribe failed", e);
     } finally {
       setLoading(false);
     }
   }
 
-  const totalUsed = usage.reduce((s, d) => s + d.count, 0);
-  const maxUsage = Math.max(...usage.map(d => d.count), 1);
-
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px', fontFamily: "'Roboto', sans-serif" }}>
+    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "40px 24px", fontFamily: "'Roboto', sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Condensed:wght@700;800&display=swap');
-        .pr-tab { padding:10px 24px; font-size:14px; font-weight:600; color:#5a7a5e; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s; font-family:'Roboto',sans-serif; }
-        .pr-tab.active { color:#2d7a3a; border-bottom-color:#2d7a3a; }
-        .pr-tab:hover { color:#2d7a3a; }
-        .pr-input:focus { border-color:#2d7a3a !important; outline:none; }
-        .pr-topup-btn { background:#2d7a3a; color:white; border:none; padding:11px 28px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'Roboto',sans-serif; transition:background 0.2s; white-space:nowrap; }
-        .pr-topup-btn:hover:not(:disabled) { background:#3d9e4e; }
-        .pr-topup-btn:disabled { opacity:0.6; cursor:not-allowed; }
-        .pr-preset:hover { border-color:#2d7a3a !important; color:#2d7a3a !important; }
-        .pr-usage-radio:hover { border-color:#2d7a3a !important; }
-        .bar { background:#2d7a3a; border-radius:4px 4px 0 0; min-height:3px; transition:height 0.3s; }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Condensed:wght@700;800&display=swap');
+        * { box-sizing: border-box; }
       `}</style>
 
-      {/* Tabs */}
-      <div style={{ borderBottom:'2px solid #d4e8d6', display:'flex', marginBottom:'28px' }}>
-        <button className={`pr-tab ${activeTab==='balance'?'active':''}`} onClick={() => setActiveTab('balance')}>My Balance</button>
-        <button className={`pr-tab ${activeTab==='topup'?'active':''}`} onClick={() => setActiveTab('topup')}>Top Up</button>
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "40px" }}>
+        <p style={{ fontSize: "12px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1.5px", color: "#1a7a3a", marginBottom: "10px" }}>Pricing</p>
+        <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: "clamp(28px,4vw,42px)", fontWeight: "800", color: "#0d1f0e", letterSpacing: "-1px", marginBottom: "12px" }}>
+          Simple, transparent pricing
+        </h2>
+        <p style={{ fontSize: "15px", color: "#4a6b4c", maxWidth: "440px", margin: "0 auto 28px", lineHeight: "1.6" }}>
+          Everything you need to be found on Google and AI — no credits, no surprises.
+        </p>
+
+        {/* Billing toggle */}
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "12px", background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "100px", padding: "4px 4px 4px 16px" }}>
+          <span style={{ fontSize: "13px", fontWeight: "500", color: yearly ? "#4a6b4c" : "#0d1f0e" }}>Monthly</span>
+          <button
+            onClick={() => setYearly(y => !y)}
+            style={{
+              width: "44px", height: "24px", borderRadius: "100px",
+              background: yearly ? "#1a7a3a" : "#d0e8d4",
+              border: "none", cursor: "pointer", position: "relative",
+              transition: "background 0.2s",
+            }}
+          >
+            <span style={{
+              position: "absolute", top: "3px",
+              left: yearly ? "23px" : "3px",
+              width: "18px", height: "18px",
+              background: "white", borderRadius: "50%",
+              transition: "left 0.2s",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+            }} />
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", paddingRight: "4px" }}>
+            <span style={{ fontSize: "13px", fontWeight: "500", color: yearly ? "#0d1f0e" : "#4a6b4c" }}>Yearly</span>
+            <span style={{ background: "#eef8f0", color: "#1a7a3a", border: "1px solid #d0e8d4", borderRadius: "20px", padding: "2px 8px", fontSize: "11px", fontWeight: "700" }}>
+              3 months free
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* BALANCE TAB */}
-      {activeTab === 'balance' && (
-        <>
-          {/* Balance card */}
-          <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'28px', marginBottom:'20px' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px' }}>
-              <div>
-                <div style={{ fontSize:'13px', color:'#5a7a5e', marginBottom:'6px' }}>Available balance</div>
-                <div style={{ fontFamily:"'Roboto Condensed',sans-serif", fontSize:'48px', fontWeight:'800', color:'#2d7a3a', lineHeight:1 }}>
-                  €{balance === null ? '—' : balance.toFixed(2)}
-                </div>
-                {balance !== null && balance < 0.35 && (
-                  <div style={{ fontSize:'12px', color:'#e08a00', fontWeight:'600', marginTop:'6px' }}>⚠ Low balance — top up to continue</div>
-                )}
-              </div>
-              <button className="pr-topup-btn" onClick={() => setActiveTab('topup')}>Add balance</button>
-            </div>
+      {/* Plan cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "20px", alignItems: "start" }}>
+        {PLANS.map(plan => (
+          <PlanCard
+            key={plan.id}
+            plan={plan}
+            yearly={yearly}
+            onSelect={handleSelect}
+            currentPlan={currentPlan}
+          />
+        ))}
+      </div>
 
-            {/* What you can run */}
-            <div style={{ borderTop:'1px solid #e8f5ea', paddingTop:'20px' }}>
-              <div style={{ fontSize:'12px', fontWeight:'700', color:'#5a7a5e', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'14px' }}>What you can run with this balance</div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'10px' }}>
-                {Object.entries(FEATURE_PRICES).map(([key, price]) => {
-                  const runs = balance !== null ? Math.floor(balance / price) : 0;
-                  return (
-                    <div key={key} style={{ background:'#f7fbf7', border:'1px solid #d4e8d6', borderRadius:'10px', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <span style={{ fontSize:'13px', color:'#1c2e1e', fontWeight:'500' }}>{FEATURE_LABELS[key]}</span>
-                      <span style={{ fontSize:'13px', fontWeight:'700', color: runs > 0 ? '#2d7a3a' : '#dc2626' }}>{runs}×</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+      {/* Money back + FAQ strip */}
+      <div style={{ display: "flex", justifyContent: "center", gap: "32px", marginTop: "28px", flexWrap: "wrap" }}>
+        {["✓ Cancel anytime", "✓ 14-day money-back guarantee", "✓ No setup fees", "✓ Secured by Stripe"].map(item => (
+          <span key={item} style={{ fontSize: "13px", color: "#4a6b4c", fontWeight: "500" }}>{item}</span>
+        ))}
+      </div>
 
-          {/* Usage chart */}
-          <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'24px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
-              <div style={{ fontSize:'13px', fontWeight:'700', color:'#0f1a10' }}>
-                Last 7 days: <span style={{ color:'#2d7a3a' }}>{totalUsed} {FEATURE_LABELS[usageType]?.toLowerCase()}</span>
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:'8px', flexWrap:'wrap', marginBottom:'20px' }}>
-              {Object.entries(FEATURE_LABELS).map(([key, label]) => (
-                <label key={key} style={{ display:'flex', alignItems:'center', gap:'6px', cursor:'pointer', padding:'6px 14px', border:`1px solid ${usageType===key?'#2d7a3a':'#d4e8d6'}`, borderRadius:'100px', background:usageType===key?'#e8f5ea':'white', transition:'all 0.2s' }}>
-                  <input type="radio" name="usageType" value={key} checked={usageType===key} onChange={() => { setUsageType(key); fetchUsage(key); }} style={{ display:'none' }} />
-                  <span style={{ fontSize:'12px', fontWeight:'600', color:usageType===key?'#2d7a3a':'#5a7a5e' }}>{label}</span>
-                </label>
-              ))}
-            </div>
-            <div style={{ display:'flex', alignItems:'flex-end', gap:'8px', height:'70px' }}>
-              {usage.map((d, i) => {
-                const heightPct = (d.count / maxUsage) * 100;
-                const label = new Date(d.day + 'T12:00:00').toLocaleDateString('en', { weekday:'short' });
-                return (
-                  <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', height:'100%', justifyContent:'flex-end' }}>
-                    {d.count > 0 && <div style={{ fontSize:'10px', fontWeight:'700', color:'#2d7a3a' }}>{d.count}</div>}
-                    <div className="bar" style={{ width:'100%', height:`${Math.max(heightPct, 4)}%`, opacity:d.count===0?0.15:1 }} />
-                    <div style={{ fontSize:'10px', color:'#5a7a5e', whiteSpace:'nowrap' }}>{label}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
+      {/* Compare toggle */}
+      <div style={{ textAlign: "center", marginTop: "32px" }}>
+        <button
+          onClick={() => setShowCompare(c => !c)}
+          style={{ background: "none", border: "none", color: "#1a7a3a", fontSize: "13px", fontWeight: "600", cursor: "pointer", textDecoration: "underline" }}
+        >
+          {showCompare ? "Hide comparison" : "Compare all features →"}
+        </button>
+      </div>
 
-      {/* TOP UP TAB */}
-      {activeTab === 'topup' && (
-        <div style={{ background:'white', border:'1px solid #d4e8d6', borderRadius:'14px', padding:'28px' }}>
-          <div style={{ fontSize:'14px', fontWeight:'700', color:'#0f1a10', marginBottom:'6px' }}>Add balance to your account</div>
-          <div style={{ fontSize:'13px', color:'#5a7a5e', marginBottom:'24px' }}>Minimum €3 · Maximum €50 · Secure payment via Stripe</div>
+      {showCompare && <CompareTable yearly={yearly} />}
 
-          {/* Preset amounts */}
-          <div style={{ display:'flex', gap:'10px', marginBottom:'20px', flexWrap:'wrap' }}>
-            {['5', '10', '20', '50'].map(preset => (
-              <button key={preset} className="pr-preset"
-                onClick={() => setAmount(preset)}
-                style={{ padding:'10px 20px', border:`1px solid ${amount===preset?'#2d7a3a':'#d4e8d6'}`, borderRadius:'8px', background:amount===preset?'#e8f5ea':'white', color:amount===preset?'#2d7a3a':'#1c2e1e', fontSize:'14px', fontWeight:'600', cursor:'pointer', transition:'all 0.2s', fontFamily:"'Roboto',sans-serif" }}>
-                €{preset}
-              </button>
-            ))}
-          </div>
-
-          {/* Custom amount */}
-          <div style={{ marginBottom:'20px' }}>
-            <label style={{ fontSize:'13px', fontWeight:'600', color:'#1c2e1e', display:'block', marginBottom:'8px' }}>Or enter a custom amount</label>
-            <div style={{ display:'flex', gap:'10px' }}>
-              <div style={{ position:'relative', flex:1 }}>
-                <span style={{ position:'absolute', left:'14px', top:'50%', transform:'translateY(-50%)', fontSize:'14px', color:'#5a7a5e', fontWeight:'600' }}>€</span>
-                <input
-                  className="pr-input"
-                  type="number" min="3" max="50" step="1"
-                  placeholder="3 — 50"
-                  value={amount}
-                  onChange={e => { setAmount(e.target.value); setAmountError(null); }}
-                  style={{ width:'100%', padding:'11px 14px 11px 28px', border:'1px solid #d4e8d6', borderRadius:'8px', fontSize:'14px', fontFamily:"'Roboto',sans-serif", color:'#1c2e1e', boxSizing:'border-box' }}
-                />
-              </div>
-              <button className="pr-topup-btn" onClick={handleTopUp} disabled={loading}>
-                {loading ? 'Redirecting…' : 'Pay with Stripe'}
-              </button>
+      {/* Balance note for existing pay-per-use users */}
+      {balance !== null && balance > 0 && (
+        <div style={{ marginTop: "40px", background: "#eef8f0", border: "1px solid #d0e8d4", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px" }}>
+          <span style={{ fontSize: "20px" }}>💰</span>
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "#0d1f0e", marginBottom: "2px" }}>
+              You have €{balance.toFixed(2)} in pay-per-use credits
             </div>
-            {amountError && <div style={{ fontSize:'12px', color:'#c0392b', marginTop:'8px' }}>{amountError}</div>}
-          </div>
-
-          {/* What you get */}
-          {amount && parseFloat(amount) >= 3 && (
-            <div style={{ background:'#f7fbf7', border:'1px solid #d4e8d6', borderRadius:'10px', padding:'16px', marginTop:'20px' }}>
-              <div style={{ fontSize:'12px', fontWeight:'700', color:'#5a7a5e', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'12px' }}>With €{parseFloat(amount).toFixed(0)} you can run</div>
-              <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
-                {Object.entries(FEATURE_PRICES).map(([key, price]) => (
-                  <div key={key} style={{ display:'flex', justifyContent:'space-between', fontSize:'13px' }}>
-                    <span style={{ color:'#5a7a5e' }}>{FEATURE_LABELS[key]}</span>
-                    <span style={{ fontWeight:'700', color:'#2d7a3a' }}>{Math.floor(parseFloat(amount) / price)}× <span style={{ color:'#9ab09c', fontWeight:'400'}}>@ €{price}/run</span></span>
-                  </div>
-                ))}
-              </div>
+            <div style={{ fontSize: "12px", color: "#4a6b4c" }}>
+              Your existing balance will remain on your account and carry over alongside any subscription.
             </div>
-          )}
-
-          <div style={{ marginTop:'20px', fontSize:'13px', color:'#5a7a5e', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:'16px', fontWeight:'500' }}>
-            <span>✓ Balance never expires</span>
-            <span style={{ color:'#d4e8d6' }}>·</span>
-            <span>🔒 Payments secured by Stripe</span>
           </div>
         </div>
       )}
-
     </div>
   );
 }
