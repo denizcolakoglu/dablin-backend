@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { SignInButton, SignUpButton } from "@clerk/clerk-react";
 import { trackEvent } from "../../analytics";
 
@@ -28,36 +28,40 @@ const RESOURCES = [
   { href: "/whats-new",                                       icon: "🆕", label: "What's New",          desc: "Weekly updates every Friday",       external: false },
 ];
 
-function DropdownMenu({ group, activePath }) {
+function useDropdown() {
   const [open, setOpen] = useState(false);
+  const timer = useRef(null);
+  const enter = () => { clearTimeout(timer.current); setOpen(true); };
+  const leave = () => { timer.current = setTimeout(() => setOpen(false), 120); };
+  return { open, enter, leave };
+}
+
+const DROPDOWN_MENU_STYLE = {
+  position:"absolute", top:"100%", marginTop:"4px", left:"50%", transform:"translateX(-50%)",
+  background:"white", border:"1px solid #eef2ee", borderRadius:"14px",
+  boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"16px 8px 8px", minWidth:"270px", zIndex:200,
+};
+
+const DROPDOWN_ITEM_STYLE = {
+  display:"flex", alignItems:"flex-start", gap:"12px", padding:"10px 12px",
+  borderRadius:"9px", textDecoration:"none", transition:"background 0.15s",
+};
+
+function DropdownMenu({ group, activePath }) {
+  const { open, enter, leave } = useDropdown();
   const isActive = group.items?.some(i => activePath === i.href);
   return (
-    <div
-      style={{ position:"relative" }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button style={{
-        fontSize:"15px", fontWeight: isActive ? "700" : "500",
-        color: isActive ? "#1a7a3a" : "#2a3d2b",
-        background:"none", border:"none", cursor:"pointer",
-        display:"flex", alignItems:"center", gap:"5px", padding:"4px 0",
-        fontFamily:"'Roboto',sans-serif",
-      }}>
+    <div style={{ position:"relative" }} onMouseEnter={enter} onMouseLeave={leave}>
+      <button style={{ fontSize:"15px", fontWeight: isActive ? "700" : "500", color: isActive ? "#1a7a3a" : "#2a3d2b", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:"5px", padding:"4px 0", fontFamily:"'Roboto',sans-serif" }}>
         {group.label}
         <span style={{ fontSize:"10px", color:"#9ab09c", marginTop:"1px" }}>▾</span>
       </button>
       {open && (
-        <div style={{
-          position:"absolute", top:"100%", marginTop:"4px", left:"50%", transform:"translateX(-50%)",
-          background:"white", border:"1px solid #eef2ee", borderRadius:"14px",
-          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"16px 8px 8px", minWidth:"280px", zIndex:200,
-        }}>
+        <div style={DROPDOWN_MENU_STYLE} onMouseEnter={enter} onMouseLeave={leave}>
           {group.items.map(item => (
-            <a key={item.href} href={item.href} style={{ display:"flex", alignItems:"flex-start", gap:"12px", padding:"10px 12px", borderRadius:"9px", textDecoration:"none", transition:"background 0.15s" }}
+            <a key={item.href} href={item.href} style={DROPDOWN_ITEM_STYLE}
               onMouseEnter={e => e.currentTarget.style.background="#eef8f0"}
-              onMouseLeave={e => e.currentTarget.style.background="transparent"}
-            >
+              onMouseLeave={e => e.currentTarget.style.background="transparent"}>
               <div>
                 <div style={{ fontSize:"13px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div>
                 <div style={{ fontSize:"12px", color:"#4a6b4c", lineHeight:"1.4" }}>{item.desc}</div>
@@ -71,34 +75,20 @@ function DropdownMenu({ group, activePath }) {
 }
 
 function ResourcesMenu() {
-  const [open, setOpen] = useState(false);
+  const { open, enter, leave } = useDropdown();
   return (
-    <div
-      style={{ position:"relative" }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button style={{
-        fontSize:"15px", fontWeight:"500", color:"#2a3d2b",
-        background:"none", border:"none", cursor:"pointer",
-        display:"flex", alignItems:"center", gap:"5px", padding:"4px 0",
-        fontFamily:"'Roboto',sans-serif",
-      }}>
+    <div style={{ position:"relative" }} onMouseEnter={enter} onMouseLeave={leave}>
+      <button style={{ fontSize:"15px", fontWeight:"500", color:"#2a3d2b", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:"5px", padding:"4px 0", fontFamily:"'Roboto',sans-serif" }}>
         Resources
         <span style={{ fontSize:"10px", color:"#9ab09c", marginTop:"1px" }}>▾</span>
       </button>
       {open && (
-        <div style={{
-          position:"absolute", top:"100%", marginTop:"4px", left:"50%", transform:"translateX(-50%)",
-          background:"white", border:"1px solid #eef2ee", borderRadius:"14px",
-          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"16px 8px 8px", minWidth:"260px", zIndex:200,
-        }}>
+        <div style={DROPDOWN_MENU_STYLE} onMouseEnter={enter} onMouseLeave={leave}>
           {RESOURCES.map(item => (
             <a key={item.href} href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}
-              style={{ display:"flex", alignItems:"flex-start", gap:"12px", padding:"10px 12px", borderRadius:"9px", textDecoration:"none", transition:"background 0.15s" }}
+              style={DROPDOWN_ITEM_STYLE}
               onMouseEnter={e => e.currentTarget.style.background="#eef8f0"}
-              onMouseLeave={e => e.currentTarget.style.background="transparent"}
-            >
+              onMouseLeave={e => e.currentTarget.style.background="transparent"}>
               <div>
                 <div style={{ fontSize:"13px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div>
                 <div style={{ fontSize:"12px", color:"#4a6b4c", lineHeight:"1.4" }}>{item.desc}</div>

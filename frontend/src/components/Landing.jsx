@@ -661,17 +661,23 @@ const RESOURCES = [
   { href: "/whats-new",                                label: "What's New",        desc: "Weekly updates every Friday",        external: false },
 ];
 
-function DropdownMenu({ group }) {
+function useDropdown() {
   const [open, setOpen] = useState(false);
+  const timer = useRef(null);
+  const enter = () => { clearTimeout(timer.current); setOpen(true); };
+  const leave = () => { timer.current = setTimeout(() => setOpen(false), 120); };
+  return { open, enter, leave };
+}
+
+function DropdownMenu({ group }) {
+  const { open, enter, leave } = useDropdown();
   return (
-    <div style={{ position: "relative" }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}>
+    <div style={{ position: "relative" }} onMouseEnter={enter} onMouseLeave={leave}>
       <button className="nav-dropdown-trigger">
         {group.label} <span style={{ fontSize: "10px", color: "#9ab09c" }}>▾</span>
       </button>
       {open && (
-        <div className="nav-dropdown-menu">
+        <div className="nav-dropdown-menu" onMouseEnter={enter} onMouseLeave={leave}>
           {group.items.map(item => (
             <a key={item.href} href={item.href} className="nav-dropdown-item">
               <div>
@@ -687,16 +693,14 @@ function DropdownMenu({ group }) {
 }
 
 function ResourcesDropdown() {
-  const [open, setOpen] = useState(false);
+  const { open, enter, leave } = useDropdown();
   return (
-    <div style={{ position: "relative" }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}>
+    <div style={{ position: "relative" }} onMouseEnter={enter} onMouseLeave={leave}>
       <button className="nav-dropdown-trigger">
         Resources <span style={{ fontSize: "10px", color: "#9ab09c" }}>▾</span>
       </button>
       {open && (
-        <div className="nav-dropdown-menu">
+        <div className="nav-dropdown-menu" onMouseEnter={enter} onMouseLeave={leave}>
           {RESOURCES.map(item => (
             <a key={item.href} href={item.href} className="nav-dropdown-item"
               target={item.external ? "_blank" : undefined}
