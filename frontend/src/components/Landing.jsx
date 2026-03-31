@@ -983,7 +983,7 @@ export default function Landing() {
         .mobile-menu-group-label { font-size: 11px; font-weight: 700; color: #9ab09c; text-transform: uppercase; letter-spacing: 1px; padding: 14px 0 6px; }
 
         /* HERO */
-        .hero { background: var(--mint); max-width: 100%; padding: 96px 48px 108px; text-align: center; }
+        .hero { background: #eef8f0; background-image: linear-gradient(rgba(26,122,58,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(26,122,58,0.06) 1px, transparent 1px); background-size: 36px 36px; max-width: 100%; padding: 96px 48px 108px; text-align: center; position: relative; }
         .hero-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(48px, 7vw, 84px); font-weight: 800; line-height: 1.0; letter-spacing: -3px; color: var(--dark); margin-bottom: 24px; }
         .hero-accent { color: var(--green); }
         .hero-sub { font-size: 19px; color: var(--muted); max-width: 540px; margin: 0 auto 12px; line-height: 1.65; font-weight: 300; }
