@@ -15,18 +15,15 @@ export default function VisibilityChecker({ setPage }) {
   const [error, setError] = useState(null);
   const [noBalance, setNoBalance] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
-  const [confirm, setConfirm] = useState(false);
 
   async function runCheck() {
     if (!url.trim()) return;
-    if (!confirm) { setConfirm(true); return; }
     let fullUrl = url.trim();
     if (!fullUrl.startsWith("http")) fullUrl = "https://" + fullUrl;
     setLoading(true);
     setError(null);
     setResult(null);
     setNoBalance(false);
-    setConfirm(false);
     try {
       const token = await getToken();
       const res = await fetch(`${BASE}/api/visibility-check`, {
@@ -69,7 +66,6 @@ export default function VisibilityChecker({ setPage }) {
         .vc-btn{background:#2d7a3a;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;font-family:'Roboto',sans-serif;}
         .vc-btn:hover:not(:disabled){background:#3d9e4e;}
         .vc-btn:disabled{opacity:0.6;cursor:not-allowed;}
-        .vc-confirm{background:#f0faf1;border:1.5px solid #2d7a3a;border-radius:10px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;}
         .vc-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
         .vc-summary-card{background:#f7fbf7;border:1px solid #d4e8d6;border-radius:12px;padding:18px;text-align:center;}
         .vc-summary-engine{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;}
@@ -100,23 +96,12 @@ export default function VisibilityChecker({ setPage }) {
       {/* URL input */}
       <div style={{ display:'flex', gap:'10px', marginBottom:'20px' }}>
         <input className="vc-url-input" type="url" placeholder="https://yoursite.com"
-          value={url} onChange={e => { setUrl(e.target.value); setConfirm(false); }}
+          value={url} onChange={e => { setUrl(e.target.value); }}
           onKeyDown={e => e.key === "Enter" && runCheck()} disabled={loading} />
         <button className="vc-btn" onClick={runCheck} disabled={loading || !url.trim()}>
-          {loading ? "Checking…" : confirm ? "Confirm — €1.00" : "Check Visibility"}
+          {loading ? "Checking…" : "Check Visibility"}
         </button>
       </div>
-
-      {/* Confirm banner */}
-      {confirm && (
-        <div className="vc-confirm">
-          <div>
-            <div style={{ fontSize:'14px', fontWeight:'700', color:'#1c2e1e' }}>This check costs €1.00</div>
-            <div style={{ fontSize:'13px', color:'#5a7a5e', marginTop:'2px' }}>Queries Claude, GPT-4o, and Gemini with 7 search queries</div>
-          </div>
-          <button className="vc-btn" onClick={runCheck}>Confirm & Run</button>
-        </div>
-      )}
 
       {/* No balance */}
       {noBalance && (
