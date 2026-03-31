@@ -39,7 +39,12 @@ const ALL_CHECKS = CHECK_GROUPS.flatMap(g => g.checks);
 
 export default function AiAudit({ setPage }) {
   const { getToken } = useAuth();
-  const [url, setUrl] = useState("");
+
+  // Pre-fill URL if navigated from GetStarted
+  const prefill = sessionStorage.getItem("prefillUrl") || "";
+  if (prefill) sessionStorage.removeItem("prefillUrl");
+
+  const [url, setUrl] = useState(prefill);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);

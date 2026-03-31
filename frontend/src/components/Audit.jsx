@@ -37,24 +37,7 @@ const CHECK_GROUPS = [
     key: "links",
     label: "Link Structure",
     checks: [
-      { key: "internalLinks", label: "Internal links", desc: "At least 3 links to other pages on the site for crawlability" },
-    ],
-  },
-  {
-    key: "google2026",
-    label: "Google March 2026",
-    checks: [
-      { key: "informationGain", label: "Information gain", desc: "600+ words with original signals: author, date, data points, or structured lists" },
-      { key: "aiOverview", label: "AI Overview eligibility", desc: "FAQPage / HowTo schema or question-structured H2s for Google SGE citations" },
-    ],
-  },
-  {
-    key: "performance",
-    label: "Performance",
-    checks: [
-      { key: "imageOpt", label: "Image optimisation", desc: "All images have width, height and loading=lazy for Core Web Vitals (CLS/LCP)" },
-      { key: "renderBlocking", label: "Render-blocking scripts", desc: "No synchronous scripts in <head> — use async or defer" },
-      { key: "sitemap", label: "Sitemap", desc: "A sitemap.xml is accessible for Google to discover all pages" },
+      { key: "internalLinks", label: "Internal links", desc: "At least one link to another page on the site" },
     ],
   },
 ];
@@ -63,13 +46,18 @@ const ALL_CHECKS = CHECK_GROUPS.flatMap(g => g.checks);
 
 export default function Audit({ setPage }) {
   const { getToken } = useAuth();
-  const [url, setUrl] = useState("");
+
+  // Pre-fill URL if navigated from GetStarted
+  const prefill = sessionStorage.getItem("prefillUrl") || "";
+  if (prefill) sessionStorage.removeItem("prefillUrl");
+
+  const [url, setUrl] = useState(prefill);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [noCredits, setNoCredits] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({
-    content: true, technical: true, schema: true, links: true, aeo: true, google2026: true, performance: true,
+    content: true, technical: true, schema: true, links: true, aeo: true,
   });
   const [copied, setCopied] = useState(null);
 
@@ -105,7 +93,7 @@ export default function Audit({ setPage }) {
       setResult(data);
       window.dataLayer = window.dataLayer || [];
       const passed = Object.values(data.checks || {}).filter(Boolean).length;
-      const total = Object.keys(data.checks || {}).length || 18;
+      const total = Object.keys(data.checks || {}).length || 13;
       window.dataLayer.push({ event: 'seo_audit_completed', url, score: Math.round(passed / total * 100), passed, total });    } catch (e) {
       setError(e.message);
     } finally {
@@ -236,7 +224,7 @@ export default function Audit({ setPage }) {
       `}</style>
 
       <p className="audit-sub">
-      Paste a product page URL and Dablin will run 18 SEO checks — including Core Web Vitals signals, Google March 2026 signals, and schema validation.
+        Paste a product page URL and Dablin will run 13 SEO checks — including schema, Open Graph, and technical SEO.
       </p>
 
       <div className="audit-input-row">
@@ -328,96 +316,6 @@ export default function Audit({ setPage }) {
               </div>
             );
           })}
-
-          {/* PageSpeed Card */}
-          {result.pageSpeed && (
-            <div style={{
-              background: "#f7fbf7", border: "1px solid #d4e8d6", borderRadius: "12px",
-              padding: "20px 24px", marginTop: "12px",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-                <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f1a10" }}>⚡ PageSpeed Insights (mobile)</span>
-                <span style={{
-                  fontSize: "13px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px",
-                  background: result.pageSpeed.score >= 90 ? "#e8f5ea" : result.pageSpeed.score >= 50 ? "#fff8e1" : "#fef2f2",
-                  color: result.pageSpeed.score >= 90 ? "#2d7a3a" : result.pageSpeed.score >= 50 ? "#e08a00" : "#c0392b",
-                }}>
-                  {result.pageSpeed.label}
-                </span>
-              </div>
-              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                <div style={{ textAlign: "center", minWidth: "72px" }}>
-                  <div style={{
-                    fontSize: "28px", fontWeight: "800",
-                    color: result.pageSpeed.score >= 90 ? "#2d7a3a" : result.pageSpeed.score >= 50 ? "#e08a00" : "#c0392b",
-                  }}>{result.pageSpeed.score}</div>
-                  <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>Score</div>
-                </div>
-                {result.pageSpeed.lcp && (
-                  <div style={{ textAlign: "center", minWidth: "72px" }}>
-                    <div style={{ fontSize: "18px", fontWeight: "700", color: "#0f1a10" }}>{result.pageSpeed.lcp}</div>
-                    <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>LCP</div>
-                  </div>
-                )}
-                {result.pageSpeed.cls && (
-                  <div style={{ textAlign: "center", minWidth: "72px" }}>
-                    <div style={{ fontSize: "18px", fontWeight: "700", color: "#0f1a10" }}>{result.pageSpeed.cls}</div>
-                    <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>CLS</div>
-                  </div>
-                )}
-                {result.pageSpeed.tbt && (
-                  <div style={{ textAlign: "center", minWidth: "72px" }}>
-                    <div style={{ fontSize: "18px", fontWeight: "700", color: "#0f1a10" }}>{result.pageSpeed.tbt}</div>
-                    <div style={{ fontSize: "11px", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.06em" }}>TBT</div>
-                  </div>
-                )}
-              </div>
-              <a href={`https://pagespeed.web.dev/report?url=${encodeURIComponent(result.url)}`} target="_blank" rel="noreferrer"
-                style={{ display: "inline-block", marginTop: "12px", fontSize: "12px", color: "#2d7a3a", textDecoration: "underline" }}>
-                View full PageSpeed report →
-              </a>
-            </div>
-          )}
-
-          {/* Next Steps */}
-          <div style={{ borderTop: "1px solid #d4e8d6", margin: "24px 0 0" }} />
-          <div style={{
-            background: "#f7fbf7", border: "1px solid #d4e8d6", borderRadius: "12px",
-            padding: "24px", marginTop: "24px",
-          }}>
-            <div style={{ fontSize: "13px", fontWeight: "700", color: "#5a7a5e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "14px" }}>
-              Next steps
-            </div>
-            <p style={{ fontSize: "13px", color: "#5a7a5e", lineHeight: "1.6", margin: "0 0 16px" }}>
-              Dablin covers on-page SEO and AI visibility, the things you can fix today. For a complete SEO strategy, also check these:
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {[
-                { label: "Google Search Console", desc: "See which pages Google is indexing and fix crawl errors", url: "https://search.google.com/search-console" },
-                { label: "PageSpeed Insights", desc: "Real Core Web Vitals scores from actual users", url: `https://pagespeed.web.dev/report?url=${encodeURIComponent(result.url)}` },
-              ].map((item, i, arr) => (
-                <div key={item.label}>
-                  <a href={item.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-                    <div style={{
-                      background: "#eef7ef", borderRadius: "8px", padding: "12px 16px",
-                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
-                      border: "0.5px solid #d4e8d6",
-                    }}>
-                      <div>
-                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f1a10", marginBottom: "2px" }}>{item.label}</div>
-                        <div style={{ fontSize: "12px", color: "#5a7a5e" }}>{item.desc}</div>
-                      </div>
-                      <span style={{ color: "#2d7a3a", fontSize: "14px", flexShrink: 0 }}>→</span>
-                    </div>
-                  </a>
-                  {i < arr.length - 1 && (
-                    <div style={{ height: "1px", background: "#d4e8d6", margin: "10px 0" }} />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        
         </>
       )}
 

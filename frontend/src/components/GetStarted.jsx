@@ -278,7 +278,12 @@ function CheckItem({ item, result, setPage, expanded, onToggle }) {
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {item.cta && (
               <button
-                onClick={() => setPage(item.cta.page)}
+                onClick={() => {
+                  if (item.cta.page === 'ai' || item.cta.page === 'audit') {
+                    sessionStorage.setItem("prefillUrl", url);
+                  }
+                  setPage(item.cta.page);
+                }}
                 style={{ background: "#1a7a3a", color: "white", border: "none", borderRadius: "8px", padding: "9px 18px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}
               >
                 {item.cta.label}
