@@ -9,37 +9,48 @@ const CHECK_GROUPS = [
     key: "content",
     label: "Content Quality",
     checks: [
-      { key: "meta", label: "Meta description", desc: "Present, unique and under 155 characters" },
-      { key: "headings", label: "Heading structure", desc: "Single H1, no skipped heading levels" },
-      { key: "wordCount", label: "Word count", desc: "At least 300 words for meaningful content" },
-      { key: "alt", label: "Image alt text", desc: "All images have descriptive alt attributes" },
+      { key: "meta",      label: "Meta description",  desc: "Present, unique and between 120–155 characters" },
+      { key: "headings",  label: "Heading structure",  desc: "Single H1, no skipped heading levels" },
+      { key: "wordCount", label: "Word count",         desc: "At least 300 words for meaningful content" },
+      { key: "alt",       label: "Image alt text",     desc: "All images have descriptive alt attributes" },
     ],
   },
   {
     key: "technical",
     label: "Technical SEO",
     checks: [
-      { key: "canonical", label: "Canonical tag", desc: "Prevents duplicate content penalties" },
-      { key: "robots", label: "Robots tag", desc: "Page is not accidentally set to noindex" },
-      { key: "viewport", label: "Mobile viewport", desc: "Viewport meta tag present for mobile" },
-      { key: "og", label: "Open Graph tags", desc: "og:title, og:description, og:image all present" },
+      { key: "canonical",        label: "Canonical tag",              desc: "Prevents duplicate content penalties" },
+      { key: "robots",           label: "Robots tag",                 desc: "Page is not accidentally set to noindex" },
+      { key: "viewport",         label: "Mobile viewport",            desc: "Viewport meta tag present for mobile-first indexing" },
+      { key: "og",               label: "Open Graph tags",            desc: "og:title, og:description, og:image all present" },
+      { key: "renderBlocking",   label: "Render-blocking scripts",    desc: "No synchronous scripts in <head> slowing page load" },
+      { key: "sitemap",          label: "Sitemap",                    desc: "sitemap.xml accessible for Google to discover pages" },
     ],
   },
   {
     key: "schema",
     label: "Structured Data",
     checks: [
-      { key: "schema", label: "Schema markup", desc: "At least one JSON-LD structured data block" },
-      { key: "productSchema", label: "Product schema", desc: "Product type schema for Google Shopping" },
-      { key: "breadcrumb", label: "Breadcrumb schema", desc: "BreadcrumbList for navigation context" },
-      { key: "reviewSchema", label: "Review / rating schema", desc: "Star ratings in search results" },
+      { key: "schema",       label: "Schema markup",          desc: "At least one JSON-LD structured data block" },
+      { key: "productSchema",label: "Product schema",         desc: "Product type schema for Google Shopping eligibility" },
+      { key: "breadcrumb",   label: "Breadcrumb schema",      desc: "BreadcrumbList for navigation context" },
+      { key: "reviewSchema", label: "Review / rating schema", desc: "Star ratings eligible in search results" },
     ],
   },
   {
-    key: "links",
-    label: "Link Structure",
+    key: "march2026",
+    label: "⚡ Google March 2026",
     checks: [
-      { key: "internalLinks", label: "Internal links", desc: "At least one link to another page on the site" },
+      { key: "infoGain",   label: "Information Gain",          desc: "600+ words with original signals: author, date, data or structured lists" },
+      { key: "aiOverview", label: "AI Overview eligibility",   desc: "FAQPage or HowTo schema, or question-structured H2s for Google SGE" },
+    ],
+  },
+  {
+    key: "performance",
+    label: "Performance",
+    checks: [
+      { key: "imageOptimisation", label: "Image optimisation",  desc: "All images have width, height and loading=lazy for Core Web Vitals" },
+      { key: "internalLinks",     label: "Internal links",      desc: "At least 3 internal links for crawlability and topical authority" },
     ],
   },
 ];
@@ -60,7 +71,7 @@ export default function Audit({ setPage }) {
   const [error, setError] = useState(null);
   const [noCredits, setNoCredits] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({
-    content: true, technical: true, schema: true, links: true, aeo: true,
+    content: true, technical: true, schema: true, march2026: true, performance: true,
   });
   const [copied, setCopied] = useState(null);
 
@@ -241,7 +252,7 @@ export default function Audit({ setPage }) {
       `}</style>
 
       <p className="audit-sub">
-        Paste a product page URL and Dablin will run 13 SEO checks — including schema, Open Graph, and technical SEO.
+        Paste a product page URL and Dablin runs 18 SEO checks — including Google March 2026 signals (Information Gain, AI Overview eligibility), schema, technical SEO, and performance.
       </p>
 
       <div className="audit-input-row">
@@ -283,7 +294,7 @@ export default function Audit({ setPage }) {
             </div>
             <div className="audit-score-info">
               <h3>{score >= 75 ? "Good SEO health" : score >= 50 ? "Needs improvement" : "Critical issues found"}</h3>
-              <p>{passed} of {totalChecks} checks passed</p>
+              <p>{passed} of {totalChecks} checks passed{result.pageSpeed ? ` · PageSpeed ${result.pageSpeed}` : ''}</p>
             </div>
           </div>
 
@@ -339,7 +350,7 @@ export default function Audit({ setPage }) {
       {!result && !error && !loading && !noCredits && (
         <div className="audit-coming-soon">
           <h3>Ready to audit</h3>
-          <p>Enter a product URL above and click "Audit SEO" to get your report.</p>
+          <p>Enter a product URL above and click "Audit SEO" to run 18 checks including Google March 2026 signals.</p>
         </div>
       )}
     </div>}
