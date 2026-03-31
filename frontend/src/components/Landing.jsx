@@ -717,20 +717,23 @@ function ResourcesDropdown() {
   );
 }
 
+function AnnouncementBar() {
+  const [visible, setVisible] = useState(true);
+  if (!visible) return null;
+  return (
+    <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 48px", fontSize: "13px", fontWeight: "500", position: "relative", lineHeight: "1.4", zIndex: 99 }}>
+      <span style={{ fontWeight: "700", marginRight: "8px" }}>⚡ New</span>
+      Now includes Google March 2026 signals — Information Gain &amp; AI Overview eligibility checks
+      <a href="/seo-audit" style={{ marginLeft: "12px", color: "white", fontWeight: "700", textDecoration: "underline", textUnderlineOffset: "3px" }}>Try the SEO Audit →</a>
+      <button onClick={() => setVisible(false)} style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
+    </div>
+  );
+}
+
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [barVisible, setBarVisible] = useState(true);
   return (
     <>
-      {/* Announcement bar */}
-      {barVisible && (
-        <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 48px", fontSize: "13px", fontWeight: "500", position: "relative", lineHeight: "1.4" }}>
-          <span style={{ fontWeight: "700", marginRight: "8px" }}>⚡ New</span>
-          Now includes Google March 2026 signals — Information Gain &amp; AI Overview eligibility checks
-          <a href="/seo-audit" style={{ marginLeft: "12px", color: "white", fontWeight: "700", textDecoration: "underline", textUnderlineOffset: "3px" }}>Try the SEO Audit →</a>
-          <button onClick={() => setBarVisible(false)} style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
-        </div>
-      )}
       <nav className="landing-nav">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="nav-hamburger" onClick={() => setMenuOpen(true)} aria-label="Open menu">
@@ -937,7 +940,7 @@ export default function Landing() {
           --white: #ffffff; --off-white: #f8faf8; --mint: #eef8f0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; padding-top: 112px; }
+        .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; padding-top: 72px; }
 
         /* NAV */
         .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
@@ -1096,6 +1099,7 @@ export default function Landing() {
       `}</style>
 
       {/* NAV */}
+      <AnnouncementBar />
       <NavBar />
 
       {/* HERO */}
