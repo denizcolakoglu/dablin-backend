@@ -635,19 +635,89 @@ function ToolTabs() {
 
 // ── MAIN LANDING ─────────────────────────────────────────────────────────────
 
-const NAV_ITEMS = [
-  { href: "/ai-visibility-check", icon: "◎", label: "AI Visibility Check", desc: "See if ChatGPT, Gemini & Claude mention you" },
-  { href: "/ai-visibility-audit", icon: "⌕", label: "AI Visibility Audit", desc: "12 checks for AI engine discoverability" },
-  { href: "/seo-audit", icon: "✓", label: "SEO Audit", desc: "13-point SEO check with AI fixes" },
-  { href: "/generate-product-description", icon: "✦", label: "Generate Product Description", desc: "AI-powered, SEO-ready in seconds" },
+const NAV_GROUPS = [
+  {
+    label: "AI Visibility",
+    items: [
+      { href: "/ai-visibility-audit",       label: "AI Visibility Audit",  desc: "12 checks for AI engine discoverability" },
+      { href: "/ai-visibility-check",       label: "AI Visibility Check",  desc: "See if ChatGPT, Gemini & Claude mention you" },
+      { href: "/dashboard/query-check",     label: "AI Query Check",       desc: "Run custom queries across AI engines" },
+    ],
+  },
+  {
+    label: "SEO Expert",
+    items: [
+      { href: "/seo-audit",                 label: "SEO Audit",              desc: "18-point SEO check with AI fixes" },
+      { href: "/dashboard/search-console",  label: "Google Search Console",  desc: "Index status, vitals and query data" },
+      { href: "/dashboard",                 label: "SEO/GEO Dashboard",      desc: "Your full visibility kanban board" },
+    ],
+  },
 ];
+
+const RESOURCES = [
+  { href: "https://blog.dablin.co",                    label: "Blog",              desc: "AI visibility, GEO and SEO guides",  external: true },
+  { href: "https://www.linkedin.com/company/dablin",   label: "Dablin on LinkedIn", desc: "Follow us for SEO & AI insights",   external: true },
+  { href: "https://medium.com/dablin",                 label: "Dablin on Medium",  desc: "In-depth articles and guides",       external: true },
+  { href: "/whats-new",                                label: "What's New",        desc: "Weekly updates every Friday",        external: false },
+];
+
+function DropdownMenu({ group }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative" }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}>
+      <button className="nav-dropdown-trigger">
+        {group.label} <span style={{ fontSize: "10px", color: "#9ab09c" }}>▾</span>
+      </button>
+      {open && (
+        <div className="nav-dropdown-menu">
+          {group.items.map(item => (
+            <a key={item.href} href={item.href} className="nav-dropdown-item">
+              <div>
+                <div className="nav-dropdown-label">{item.label}</div>
+                <div className="nav-dropdown-desc">{item.desc}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResourcesDropdown() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative" }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}>
+      <button className="nav-dropdown-trigger">
+        Resources <span style={{ fontSize: "10px", color: "#9ab09c" }}>▾</span>
+      </button>
+      {open && (
+        <div className="nav-dropdown-menu">
+          {RESOURCES.map(item => (
+            <a key={item.href} href={item.href} className="nav-dropdown-item"
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}>
+              <div>
+                <div className="nav-dropdown-label">{item.label}</div>
+                <div className="nav-dropdown-desc">{item.desc}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <>
       <nav className="landing-nav">
-        {/* Left: Logo (desktop) / Hamburger (mobile) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="nav-hamburger" onClick={() => setMenuOpen(true)} aria-label="Open menu">
             <span /><span /><span />
@@ -659,23 +729,21 @@ function NavBar() {
           </div>
         </div>
 
-        {/* Center logo on mobile only */}
         <div className="nav-center-logo">
           <a href="/" style={{ textDecoration: 'none' }}>
             <img src="/logo.svg" alt="Dablin" height="40" />
           </a>
         </div>
 
-        {/* Desktop: flat nav links */}
+        {/* Desktop dropdown nav */}
         <div className="landing-nav-links">
-          <a href="/ai-visibility-check" className="nav-direct-link">AI Visibility Check</a>
-          <a href="/ai-visibility-audit" className="nav-direct-link">AI Visibility Audit</a>
-          <a href="/seo-audit" className="nav-direct-link">SEO Audit</a>
+          {NAV_GROUPS.map(group => (
+            <DropdownMenu key={group.label} group={group} />
+          ))}
           <a href="/pricing" className="nav-direct-link">Pricing</a>
-          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="nav-direct-link">Blog</a>
+          <ResourcesDropdown />
         </div>
 
-        {/* Right: Sign in + Sign up */}
         <div className="landing-nav-actions">
           <SignInButton mode="modal">
             <button className="btn-ghost">Sign in</button>
@@ -694,29 +762,30 @@ function NavBar() {
           <img src="/logo.svg" alt="Dablin" height="40" />
           <button className="mobile-menu-close" onClick={() => setMenuOpen(false)}>×</button>
         </div>
-        {NAV_ITEMS.map(item => (
+        <div className="mobile-menu-group-label">AI Visibility</div>
+        {NAV_GROUPS[0].items.map(item => (
           <a key={item.href} href={item.href} className="mobile-menu-item" onClick={() => setMenuOpen(false)}>
-            <span className="mobile-menu-icon">{item.icon}</span>
-            <div>
-              <div className="mobile-menu-label">{item.label}</div>
-              <div className="mobile-menu-desc">{item.desc}</div>
-            </div>
+            <div><div className="mobile-menu-label">{item.label}</div><div className="mobile-menu-desc">{item.desc}</div></div>
+          </a>
+        ))}
+        <div className="mobile-menu-group-label">SEO Expert</div>
+        {NAV_GROUPS[1].items.map(item => (
+          <a key={item.href} href={item.href} className="mobile-menu-item" onClick={() => setMenuOpen(false)}>
+            <div><div className="mobile-menu-label">{item.label}</div><div className="mobile-menu-desc">{item.desc}</div></div>
           </a>
         ))}
         <a href="/pricing" className="mobile-menu-item" onClick={() => setMenuOpen(false)}>
-          <span className="mobile-menu-icon">€</span>
-          <div>
-            <div className="mobile-menu-label">Pricing</div>
-            <div className="mobile-menu-desc">Pay per use, credits never expire</div>
-          </div>
+          <div><div className="mobile-menu-label">Pricing</div><div className="mobile-menu-desc">Simple monthly plans</div></div>
         </a>
-        <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="mobile-menu-item" onClick={() => setMenuOpen(false)}>
-          <span className="mobile-menu-icon">✍</span>
-          <div>
-            <div className="mobile-menu-label">Blog</div>
-            <div className="mobile-menu-desc">AI visibility, GEO and SEO guides</div>
-          </div>
-        </a>
+        <div className="mobile-menu-group-label">Resources</div>
+        {RESOURCES.map(item => (
+          <a key={item.href} href={item.href} className="mobile-menu-item"
+            target={item.external ? "_blank" : undefined}
+            rel={item.external ? "noopener noreferrer" : undefined}
+            onClick={() => setMenuOpen(false)}>
+            <div><div className="mobile-menu-label">{item.label}</div><div className="mobile-menu-desc">{item.desc}</div></div>
+          </a>
+        ))}
         <div className="mobile-menu-cta">
           <div onClick={() => { trackEvent('sign_up_modal_opened', { location: 'mobile_menu' }); setMenuOpen(false); }}>
             <SignUpButton mode="modal">
@@ -888,6 +957,16 @@ export default function Landing() {
         .mobile-menu-label { font-size: 16px; font-weight: 600; color: var(--dark); margin-bottom: 3px; }
         .mobile-menu-desc { font-size: 13px; color: var(--muted); }
         .mobile-menu-cta { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+
+        /* NAV DROPDOWN */
+        .nav-dropdown-trigger { font-size: 15px; font-weight: 500; color: var(--text); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 4px 0; font-family: 'Roboto', sans-serif; transition: color 0.2s; white-space: nowrap; }
+        .nav-dropdown-trigger:hover { color: var(--green); }
+        .nav-dropdown-menu { position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%); background: white; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); padding: 8px; min-width: 260px; z-index: 200; }
+        .nav-dropdown-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border-radius: 9px; text-decoration: none; transition: background 0.15s; }
+        .nav-dropdown-item:hover { background: var(--mint); }
+        .nav-dropdown-label { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 2px; }
+        .nav-dropdown-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+        .mobile-menu-group-label { font-size: 11px; font-weight: 700; color: #9ab09c; text-transform: uppercase; letter-spacing: 1px; padding: 14px 0 6px; }
 
         /* HERO */
         .hero { background: var(--mint); max-width: 100%; padding: 96px 48px 108px; text-align: center; }
