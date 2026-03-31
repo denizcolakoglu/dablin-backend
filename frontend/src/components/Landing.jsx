@@ -992,7 +992,8 @@ export default function Landing() {
 
         /* URL INPUT FIELD */
         .hero-url-form { display: flex; align-items: center; max-width: 580px; margin: 40px auto 12px; background: white; border-radius: 100px; padding: 6px 6px 6px 24px; border: 1.5px solid var(--green-mid); }
-        .hero-url-input { flex: 1; border: none; outline: none; font-size: 15px; font-family: 'Roboto', sans-serif; color: var(--dark); background: transparent; }
+        .hero-url-input { flex: 1; border: none; outline: none; font-size: 15px; font-family: 'Roboto', sans-serif; color: var(--dark); background: transparent; caret-color: #1a7a3a; animation: caret-pulse 1.2s ease-in-out infinite; }
+        @keyframes caret-pulse { 0%, 100% { caret-color: #1a7a3a; } 50% { caret-color: transparent; } }
         .hero-url-input::placeholder { color: #9ab09c; }
         .hero-url-btn { background: var(--green); color: white; border: none; border-radius: 100px; padding: 12px 28px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: 'Roboto', sans-serif; }
         .hero-url-btn:hover { background: var(--green-light); }
