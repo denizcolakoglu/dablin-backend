@@ -961,7 +961,7 @@ export default function Landing() {
         /* NAV DROPDOWN */
         .nav-dropdown-trigger { font-size: 15px; font-weight: 500; color: var(--text); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 4px 0; font-family: 'Roboto', sans-serif; transition: color 0.2s; white-space: nowrap; }
         .nav-dropdown-trigger:hover { color: var(--green); }
-        .nav-dropdown-menu { position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%); background: white; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); padding: 8px; min-width: 260px; z-index: 200; }
+        .nav-dropdown-menu { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); padding: 8px; padding-top: 16px; min-width: 260px; z-index: 200; margin-top: 4px; }
         .nav-dropdown-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; border-radius: 9px; text-decoration: none; transition: background 0.15s; }
         .nav-dropdown-item:hover { background: var(--mint); }
         .nav-dropdown-label { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 2px; }

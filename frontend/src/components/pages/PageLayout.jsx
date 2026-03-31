@@ -49,9 +49,9 @@ function DropdownMenu({ group, activePath }) {
       </button>
       {open && (
         <div style={{
-          position:"absolute", top:"calc(100% + 12px)", left:"50%", transform:"translateX(-50%)",
+          position:"absolute", top:"100%", marginTop:"4px", left:"50%", transform:"translateX(-50%)",
           background:"white", border:"1px solid #eef2ee", borderRadius:"14px",
-          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"8px", minWidth:"280px", zIndex:200,
+          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"16px 8px 8px", minWidth:"280px", zIndex:200,
         }}>
           {group.items.map(item => (
             <a key={item.href} href={item.href} style={{ display:"flex", alignItems:"flex-start", gap:"12px", padding:"10px 12px", borderRadius:"9px", textDecoration:"none", transition:"background 0.15s" }}
@@ -89,9 +89,9 @@ function ResourcesMenu() {
       </button>
       {open && (
         <div style={{
-          position:"absolute", top:"calc(100% + 12px)", left:"50%", transform:"translateX(-50%)",
+          position:"absolute", top:"100%", marginTop:"4px", left:"50%", transform:"translateX(-50%)",
           background:"white", border:"1px solid #eef2ee", borderRadius:"14px",
-          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"8px", minWidth:"260px", zIndex:200,
+          boxShadow:"0 8px 32px rgba(0,0,0,0.1)", padding:"16px 8px 8px", minWidth:"260px", zIndex:200,
         }}>
           {RESOURCES.map(item => (
             <a key={item.href} href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined}
