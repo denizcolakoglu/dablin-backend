@@ -208,20 +208,77 @@ export default function Dashboard({ setPage }) {
 
   useEffect(() => {
     fetchAuditData();
-    // Load GetStarted result
+    loadAndRefresh();
+    setPositions(loadKanban());
+  }, []);
+
+  async function loadAndRefresh() {
+    // Load cached scan result
+    let cached = null;
+    let cachedUrl = "";
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw);
         if (Date.now() - saved.ts < 24 * 60 * 60 * 1000) {
-          setGsResult(saved.result);
-          setGsUrl(saved.url || "");
+          cached = saved.result;
+          cachedUrl = saved.url || "";
         }
       }
     } catch {}
-    // Load saved kanban positions
-    setPositions(loadKanban());
-  }, []);
+
+    if (!cached) { setLoading(false); return; }
+
+    // Always re-check GSC status live so dashboard reflects current connection
+    try {
+      const token = await getToken();
+      const gscRes = await fetch(`${BASE}/api/gsc/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const gscStatus = await gscRes.json();
+      const gscConnected = gscStatus.connected === true;
+
+      // Merge live GSC connection status into cached result
+      let merged = { ...cached, gscConnected };
+
+      // If connected and we don't have fresh GSC data, fetch it now
+      if (gscConnected && gscStatus.sites?.length > 0) {
+        // Match site to the scanned URL
+        const scannedHost = cachedUrl.replace(/https?:\/\//, "").replace(/\/.*/, "").replace(/^www\./, "");
+        const matchedSite = gscStatus.sites.find(site => {
+          const clean = site.replace("sc-domain:", "").replace(/https?:\/\//, "").replace(/\/.*/, "").replace(/^www\./, "");
+          return clean === scannedHost || scannedHost.endsWith("." + clean) || clean.includes(scannedHost) || scannedHost.includes(clean);
+        }) || gscStatus.selectedSite || gscStatus.sites[0];
+
+        if (matchedSite) {
+          try {
+            const dataRes = await fetch(`${BASE}/api/gsc/data?site=${encodeURIComponent(matchedSite)}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (dataRes.ok) {
+              const gscData = await dataRes.json();
+              merged = {
+                ...merged,
+                gscNotIndexed:   gscData.notIndexed?.length > 0,
+                gscNoSitemap:    gscData.sitemaps?.length === 0,
+                gscSitemapErrors: gscData.sitemaps?.some(s => s.errors > 0) || false,
+                gscVitalsFailing: gscData.vitals
+                  ? (gscData.vitals.lcp > 2.5 || gscData.vitals.inp > 200 || gscData.vitals.cls > 0.1)
+                  : false,
+              };
+            }
+          } catch {}
+        }
+      }
+
+      setGsResult(merged);
+      setGsUrl(cachedUrl);
+    } catch {
+      // Fallback to cached if live check fails
+      setGsResult(cached);
+      setGsUrl(cachedUrl);
+    }
+  }
 
   async function fetchAuditData() {
     try {
