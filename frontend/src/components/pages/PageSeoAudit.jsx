@@ -62,7 +62,7 @@ const FAQ = [
 
 export default function PageSeoAudit() {
   return (
-    <div style={{ fontFamily: "'Roboto', sans-serif", color: '#2a3d2b', background: '#ffffff', minHeight: '100vh', overflowX: 'hidden' }}>
+    <PageLayout activePath="/seo-audit">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -84,8 +84,6 @@ export default function PageSeoAudit() {
           .seo-section { padding-left: 20px !important; padding-right: 20px !important; }
         }
       `}</style>
-
-      {/* NAV */}
 
       {/* HERO */}
       <div className="seo-section" style={{ background: '#eef8f0', padding: '96px 48px 108px', textAlign: 'center' }}>
@@ -282,8 +280,6 @@ export default function PageSeoAudit() {
           </SignInButton>
         </div>
       </div>
-
     </PageLayout>
   );
 }
-
