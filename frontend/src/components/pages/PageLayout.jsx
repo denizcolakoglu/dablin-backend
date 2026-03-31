@@ -1,240 +1,228 @@
+import { useState } from "react";
 import { SignInButton, SignUpButton } from "@clerk/clerk-react";
 import { trackEvent } from "../../analytics";
 
-export default function PageLayout({ children }) {
+const NAV_ITEMS = [
+  { href: "/ai-visibility-check", icon: "◎", label: "AI Visibility Check",  desc: "See if ChatGPT, Gemini & Claude mention you" },
+  { href: "/ai-visibility-audit", icon: "⌕", label: "AI Visibility Audit",  desc: "12 checks for AI engine discoverability" },
+  { href: "/seo-audit",           icon: "✓", label: "SEO Audit",             desc: "18-point SEO check with AI fixes" },
+];
+
+function NavBar({ activePath }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <div style={{ fontFamily: "'Roboto', sans-serif", color: '#1c2e1e', background: 'white', minHeight: '100vh' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
-        :root {
-          --green: #2d7a3a; --green-light: #3d9e4e; --green-pale: #e8f5ea;
-          --green-mid: #c8e6cb; --dark: #0f1a10; --dark-mid: #1a2e1c;
-          --text: #1c2e1e; --muted: #5a7a5e; --border: #d4e8d6;
-          --white: #ffffff; --off-white: #f7fbf7;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        .pl-nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; position: sticky; top: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
-        .pl-nav-links { display: flex; align-items: center; gap: 20px; }
-        .pl-nav-link { font-size: 13px; font-weight: 500; color: var(--text); text-decoration: none; transition: color 0.2s; white-space: nowrap; }
-        .pl-nav-link:hover { color: var(--green); }
-        .pl-nav-actions { display: flex; gap: 12px; align-items: center; }
-        .pl-btn-ghost { background: none; border: 1px solid var(--border); color: var(--text); padding: 9px 20px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-        .pl-btn-ghost:hover { border-color: var(--green); color: var(--green); }
-        .pl-btn-primary { background: var(--green); color: white; border: none; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .pl-btn-primary:hover { background: var(--green-light); }
-        .pl-btn-large { padding: 16px 36px; font-size: 16px; border-radius: 10px; font-weight: 600; }
-
-        /* NAV DROPDOWN */
-        .pl-nav-dropdown { position: relative; }
-        .pl-nav-dropdown-trigger { font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; user-select: none; }
-        .pl-nav-dropdown-trigger:hover { color: var(--green); }
-        .pl-nav-dropdown-menu { display: none; position: absolute; top: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: white; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 40px rgba(0,0,0,0.12); padding: 8px; min-width: 320px; z-index: 200; }
-        .pl-nav-dropdown:hover .pl-nav-dropdown-menu { display: flex; flex-direction: column; gap: 2px; }
-        .pl-nav-dropdown-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 10px; text-decoration: none; transition: background 0.15s; }
-        .pl-nav-dropdown-item:hover { background: var(--green-pale); }
-        .pl-nav-dropdown-icon { font-size: 16px; color: var(--green); flex-shrink: 0; margin-top: 2px; }
-        .pl-nav-dropdown-label { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 2px; }
-        .pl-nav-dropdown-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
-
-        /* PAGE SECTIONS */
-        .pl-hero { max-width: 860px; margin: 0 auto; padding: 72px 48px 64px; text-align: center; }
-        .pl-hero-badge { display: inline-block; background: var(--green-pale); color: var(--green); border: 1px solid var(--green-mid); padding: 6px 16px; border-radius: 100px; font-size: 13px; font-weight: 500; margin-bottom: 24px; }
-        .pl-hero-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(36px, 5vw, 64px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; color: var(--dark); margin-bottom: 20px; }
-        .pl-hero-accent { color: var(--green); }
-        .pl-hero-sub { font-size: 18px; color: var(--muted); max-width: 560px; margin: 0 auto 36px; line-height: 1.6; font-weight: 300; }
-        .pl-hero-note { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
-        .pl-section { padding: 72px 48px; max-width: 1100px; margin: 0 auto; }
-        .pl-section-dark { background: var(--dark); padding: 72px 48px; }
-        .pl-section-green { background: var(--green-pale); border-top: 1px solid var(--green-mid); border-bottom: 1px solid var(--green-mid); padding: 72px 48px; }
-        .pl-section-inner { max-width: 1100px; margin: 0 auto; }
-        .pl-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--green); margin-bottom: 16px; }
-        .pl-label-light { color: var(--green-light); }
-        .pl-h2 { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(26px, 3.5vw, 40px); font-weight: 700; color: var(--dark); margin-bottom: 16px; letter-spacing: -1px; }
-        .pl-h2-white { color: white; }
-        .pl-sub { font-size: 16px; color: var(--muted); max-width: 520px; line-height: 1.6; }
-        .pl-sub-white { color: rgba(255,255,255,0.6); max-width: 520px; line-height: 1.6; font-size: 16px; }
-        .pl-center { text-align: center; }
-        .pl-center .pl-sub { margin: 0 auto; }
-        .pl-center .pl-sub-white { margin: 0 auto; }
-
-        /* HOW IT WORKS */
-        .pl-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 56px; }
-        .pl-step { text-align: center; }
-        .pl-step-num { width: 44px; height: 44px; border-radius: 50%; background: var(--green); color: white; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-family: 'Roboto Condensed', sans-serif; }
-        .pl-step-title { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 8px; font-family: 'Roboto Condensed', sans-serif; }
-        .pl-step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
-
-        /* CHECKS GRID */
-        .pl-checks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 48px; }
-        .pl-check-item { display: flex; gap: 12px; align-items: flex-start; background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-        .pl-check-icon { font-size: 16px; flex-shrink: 0; }
-        .pl-check-title { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 3px; }
-        .pl-check-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-        /* FEATURES */
-        .pl-features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
-        .pl-feature-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
-        .pl-feature-title { font-family: 'Roboto Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
-        .pl-feature-desc { font-size: 14px; color: var(--muted); line-height: 1.55; }
-
-        /* CTA BOX */
-        .pl-cta-box { background: var(--dark); border-radius: 20px; padding: 56px 48px; text-align: center; margin-top: 48px; }
-        .pl-cta-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(24px, 3vw, 40px); font-weight: 800; color: white; margin-bottom: 14px; letter-spacing: -1px; }
-        .pl-cta-title span { color: var(--green-light); }
-        .pl-cta-sub { font-size: 16px; color: rgba(255,255,255,0.5); margin-bottom: 32px; }
-        .pl-cta-actions { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
-        .pl-btn-outline { background: none; border: 2px solid rgba(255,255,255,0.3); color: white; padding: 14px 32px; border-radius: 10px; font-family: 'Roboto', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .pl-btn-outline:hover { border-color: white; }
-
-        /* FAQ */
-        .pl-faq-list { max-width: 720px; margin: 48px auto 0; }
-        .pl-faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer; }
-        .pl-faq-item:first-child { border-top: 1px solid var(--border); }
-        .pl-faq-q { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 15px; font-weight: 600; color: var(--dark); }
-        .pl-faq-icon { font-size: 20px; color: var(--green); flex-shrink: 0; }
-        .pl-faq-a { font-size: 14px; color: var(--muted); line-height: 1.65; margin-top: 10px; padding-right: 24px; }
-
-        /* PRICING CALLOUT */
-        .pl-pricing-callout { background: var(--green-pale); border: 1px solid var(--green-mid); border-radius: 16px; padding: 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 48px; }
-        .pl-pricing-left h3 { font-family: 'Roboto Condensed', sans-serif; font-size: 22px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
-        .pl-pricing-left p { font-size: 14px; color: var(--muted); }
-        .pl-pricing-credit { font-size: 28px; font-weight: 800; color: var(--green); font-family: 'Roboto Condensed', sans-serif; white-space: nowrap; }
-
-        /* FOOTER */
-        .pl-footer { background: #0a1a0b; padding: 56px 48px 32px; border-top: 1px solid rgba(255,255,255,0.06); }
-        .pl-footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
-        .pl-footer-brand-desc { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.65; max-width: 260px; margin: 0 0 24px; }
-        .pl-footer-socials { display: flex; gap: 10px; }
-        .pl-footer-social-btn { width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: background 0.2s; border: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
-        .pl-footer-social-btn:hover { background: rgba(255,255,255,0.15); }
-        .pl-footer-col-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 16px; }
-        .pl-footer-col-links { display: flex; flex-direction: column; gap: 10px; }
-        .pl-footer-col-links a { font-size: 13px; color: rgba(255,255,255,0.55); text-decoration: none; transition: color 0.15s; }
-        .pl-footer-col-links a:hover { color: white; }
-        .pl-footer-bottom { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .pl-footer-copy { font-size: 12px; color: rgba(255,255,255,0.25); }
-        .pl-footer-tagline { font-size: 12px; color: rgba(255,255,255,0.25); }
-
-        @media (max-width: 768px) {
-          .pl-nav { padding: 14px 20px; }
-          .pl-nav-links { display: none; }
-          .pl-btn-ghost { display: none; }
-          .pl-hero { padding: 40px 20px 48px; }
-          .pl-hero-sub { font-size: 16px; }
-          .pl-section { padding: 48px 20px; }
-          .pl-section-dark { padding: 48px 20px; }
-          .pl-section-green { padding: 48px 20px; }
-          .pl-steps { grid-template-columns: 1fr; }
-          .pl-checks-grid { grid-template-columns: 1fr; }
-          .pl-features-grid { grid-template-columns: 1fr; }
-          .pl-pricing-callout { flex-direction: column; text-align: center; }
-          .pl-cta-box { padding: 40px 20px; }
-          .pl-cta-actions { flex-direction: column; }
-          .pl-footer { padding: 40px 20px 24px; }
-          .pl-footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
-          .pl-footer-bottom { flex-direction: column; text-align: center; gap: 8px; }
-          .pl-btn-large { padding: 14px 28px; font-size: 15px; }
-        }
-      `}</style>
-
-      {/* NAV */}
-      <nav className="pl-nav">
-        <a href="/" style={{ textDecoration: 'none' }}>
-          <img src="/logo.svg" alt="Dablin" height="44" />
-        </a>
-        <div className="pl-nav-links">
-          {[
-            { href: "/ai-visibility-check", label: "AI Visibility Check" },
-            { href: "/ai-visibility-audit", label: "AI Visibility Audit" },
-            { href: "/seo-audit", label: "SEO Audit" },
-            { href: "/pricing", label: "Pricing" },
-          ].map(item => {
-            const isActive = typeof window !== 'undefined' && window.location.pathname === item.href;
-            return (
-              <a key={item.href} href={item.href} className="pl-nav-link" style={{ color: isActive ? 'var(--green)' : undefined, fontWeight: isActive ? '700' : undefined }}>
-                {item.label}
-              </a>
-            );
-          })}
-          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" className="pl-nav-link">Blog</a>
+    <>
+      <nav style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 48px", height:"72px", position:"sticky", top:0, background:"rgba(255,255,255,0.97)", backdropFilter:"blur(12px)", borderBottom:"1px solid #eef2ee", zIndex:100 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+          <button onClick={() => setMenuOpen(true)} className="pl-hamburger" aria-label="Open menu"><span /><span /><span /></button>
+          <a href="/" style={{ textDecoration:"none" }}><img src="/logo.svg" alt="Dablin" height="44" /></a>
         </div>
-        <div className="pl-nav-actions">
-          <SignInButton mode="modal">
-            <button className="pl-btn-ghost">Sign in</button>
-          </SignInButton>
-          <div onClick={() => trackEvent('sign_up_modal_opened', { location: 'page_nav' })}>
-            <SignUpButton mode="modal">
-              <button className="pl-btn-primary">Sign up</button>
-            </SignUpButton>
+        <div className="pl-nav-links" style={{ display:"flex", alignItems:"center", gap:"28px" }}>
+          {NAV_ITEMS.map(item => (
+            <a key={item.href} href={item.href} style={{ fontSize:"15px", fontWeight: activePath===item.href ? "700" : "500", color: activePath===item.href ? "#1a7a3a" : "#2a3d2b", textDecoration:"none" }}>
+              {item.label}
+            </a>
+          ))}
+          <a href="/pricing" style={{ fontSize:"15px", fontWeight: activePath==="/pricing" ? "700" : "500", color: activePath==="/pricing" ? "#1a7a3a" : "#2a3d2b", textDecoration:"none" }}>Pricing</a>
+          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" style={{ fontSize:"15px", fontWeight:"500", color:"#2a3d2b", textDecoration:"none" }}>Blog</a>
+        </div>
+        <div style={{ display:"flex", gap:"10px", alignItems:"center" }}>
+          <SignInButton mode="modal"><button className="pl-btn-ghost">Sign in</button></SignInButton>
+          <div onClick={() => trackEvent("sign_up_modal_opened", { location:"nav" })}>
+            <SignUpButton mode="modal"><button className="pl-btn-primary">Sign up</button></SignUpButton>
           </div>
         </div>
       </nav>
 
+      {menuOpen && (
+        <div style={{ display:"flex", flexDirection:"column", position:"fixed", top:0, left:0, right:0, bottom:0, background:"white", zIndex:500, padding:"24px", overflowY:"auto" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"32px" }}>
+            <img src="/logo.svg" alt="Dablin" height="40" />
+            <button onClick={() => setMenuOpen(false)} style={{ background:"none", border:"none", fontSize:"28px", color:"#2a3d2b", cursor:"pointer" }}>×</button>
+          </div>
+          {NAV_ITEMS.map(item => (
+            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"16px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
+              <span style={{ fontSize:"20px", color:"#1a7a3a", flexShrink:0, marginTop:"2px" }}>{item.icon}</span>
+              <div>
+                <div style={{ fontSize:"16px", fontWeight:"600", color:"#0d1f0e", marginBottom:"3px" }}>{item.label}</div>
+                <div style={{ fontSize:"13px", color:"#4a6b4c" }}>{item.desc}</div>
+              </div>
+            </a>
+          ))}
+          <a href="/pricing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"16px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
+            <span style={{ fontSize:"20px", color:"#1a7a3a", flexShrink:0, marginTop:"2px" }}>€</span>
+            <div><div style={{ fontSize:"16px", fontWeight:"600", color:"#0d1f0e", marginBottom:"3px" }}>Pricing</div><div style={{ fontSize:"13px", color:"#4a6b4c" }}>Simple monthly plans</div></div>
+          </a>
+          <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"16px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
+            <span style={{ fontSize:"20px", color:"#1a7a3a", flexShrink:0, marginTop:"2px" }}>✍</span>
+            <div><div style={{ fontSize:"16px", fontWeight:"600", color:"#0d1f0e", marginBottom:"3px" }}>Blog</div><div style={{ fontSize:"13px", color:"#4a6b4c" }}>AI visibility, GEO and SEO guides</div></div>
+          </a>
+          <div style={{ marginTop:"24px", display:"flex", flexDirection:"column", gap:"12px" }}>
+            <div onClick={() => { trackEvent("sign_up_modal_opened", { location:"mobile_menu" }); setMenuOpen(false); }}>
+              <SignUpButton mode="modal"><button className="pl-btn-primary" style={{ width:"100%", padding:"14px", fontSize:"16px", borderRadius:"10px" }}>Sign up free</button></SignUpButton>
+            </div>
+            <SignInButton mode="modal"><button className="pl-btn-ghost" style={{ width:"100%", padding:"14px", fontSize:"16px", borderRadius:"10px" }} onClick={() => setMenuOpen(false)}>Sign in</button></SignInButton>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Footer() {
+  const col = (label, links) => (
+    <div>
+      <div style={{ fontSize:"11px", fontWeight:"700", color:"rgba(255,255,255,0.3)", textTransform:"uppercase", letterSpacing:"1.2px", marginBottom:"16px" }}>{label}</div>
+      <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+        {links.map(([text, href]) => (
+          <a key={text} href={href} style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)", textDecoration:"none" }}
+            onMouseEnter={e => e.currentTarget.style.color = "white"}
+            onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.55)"}>
+            {text}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <footer style={{ background:"#0a1a0b", padding:"56px 48px 32px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+      <div className="pl-footer-grid">
+
+        {/* Brand */}
+        <div>
+          <a href="/" style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:"10px", marginBottom:"16px" }}>
+            <img src="/logo.svg" alt="Dablin" height="32" />
+            <span style={{ color:"white", fontSize:"17px", fontWeight:"700", letterSpacing:"-0.3px" }}>dablin</span>
+          </a>
+          <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.45)", lineHeight:"1.65", maxWidth:"260px", margin:"0 0 24px" }}>
+            Be visible everywhere search happens. SEO and AI visibility for brands and e-commerce sellers.
+          </p>
+          <div style={{ display:"flex", gap:"10px" }}>
+            <a href="https://www.linkedin.com/company/dablin" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
+              style={{ width:"34px", height:"34px", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none", flexShrink:0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 9h4v12H2z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="4" cy="4" r="2" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8"/></svg>
+            </a>
+            <a href="https://medium.com/dablin" target="_blank" rel="noopener noreferrer" aria-label="Medium"
+              style={{ width:"34px", height:"34px", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none", flexShrink:0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        {col("Tools", [
+          ["AI Visibility Check", "/ai-visibility-check"],
+          ["AI Visibility Audit", "/ai-visibility-audit"],
+          ["SEO Audit",           "/seo-audit"],
+          ["AI Query Check",      "/dashboard/query-check"],
+        ])}
+
+        {col("Product", [
+          ["Step by Step SEO",      "/dashboard/get-started"],
+          ["SEO/GEO Dashboard",     "/dashboard"],
+          ["Google Search Console", "/dashboard/search-console"],
+          ["Pricing",               "/pricing"],
+          ["Blog",                  "https://blog.dablin.co"],
+        ])}
+
+        {col("Company", [
+          ["Contact us",       "mailto:hello@dablin.co"],
+          ["Privacy Policy",   "/legal.html"],
+          ["Terms of Service", "/legal.html"],
+        ])}
+
+      </div>
+      <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:"24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"12px" }}>
+        <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.25)" }}>© 2026 Dablin. All rights reserved.</span>
+        <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.25)" }}>Built for the AI search era.</span>
+      </div>
+    </footer>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Usage: <PageLayout activePath="/seo-audit">...</PageLayout>
+// activePath highlights the current page link in the nav.
+// ─────────────────────────────────────────────────────────────
+export default function PageLayout({ children, activePath }) {
+  return (
+    <div style={{ fontFamily:"'Roboto', sans-serif", color:"#2a3d2b", background:"white", minHeight:"100vh", overflowX:"hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
+        :root { --green:#1a7a3a; --green-light:#2d9a4e; --green-pale:#eef8f0; --green-mid:#d0e8d4; --dark:#0d1f0e; --text:#2a3d2b; --muted:#4a6b4c; --border:#eef2ee; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        .pl-hamburger { display:none; background:none; border:1px solid #eef2ee; border-radius:8px; padding:8px 10px; cursor:pointer; flex-direction:column; gap:4px; }
+        .pl-hamburger span { display:block; width:18px; height:2px; background:#2a3d2b; border-radius:2px; }
+        .pl-btn-primary { background:var(--green); color:white; border:none; padding:10px 22px; border-radius:8px; font-family:'Roboto',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+        .pl-btn-primary:hover { background:var(--green-light); }
+        .pl-btn-ghost { background:none; border:1.5px solid var(--border); color:var(--text); padding:10px 22px; border-radius:8px; font-family:'Roboto',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.2s; }
+        .pl-btn-ghost:hover { border-color:var(--green); color:var(--green); }
+        .pl-btn-large { padding:15px 36px; font-size:16px; border-radius:10px; font-weight:600; }
+        .pl-btn-outline { background:none; border:2px solid rgba(255,255,255,0.3); color:white; padding:14px 32px; border-radius:10px; font-family:'Roboto',sans-serif; font-size:15px; font-weight:500; cursor:pointer; }
+        .pl-hero { max-width:860px; margin:0 auto; padding:72px 48px 64px; text-align:center; }
+        .pl-hero-badge { display:inline-block; background:var(--green-pale); color:var(--green); border:1px solid var(--green-mid); padding:6px 16px; border-radius:100px; font-size:13px; font-weight:600; margin-bottom:24px; }
+        .pl-hero-title { font-family:'Roboto Condensed',sans-serif; font-size:clamp(36px,5vw,64px); font-weight:800; line-height:1.05; letter-spacing:-2px; color:var(--dark); margin-bottom:20px; }
+        .pl-hero-accent { color:var(--green); }
+        .pl-hero-sub { font-size:18px; color:var(--muted); max-width:560px; margin:0 auto 36px; line-height:1.6; font-weight:300; }
+        .pl-section { padding:72px 48px; max-width:1100px; margin:0 auto; }
+        .pl-section-dark { background:var(--dark); padding:72px 48px; }
+        .pl-section-green { background:var(--green-pale); border-top:1px solid var(--green-mid); border-bottom:1px solid var(--green-mid); padding:72px 48px; }
+        .pl-section-inner { max-width:1100px; margin:0 auto; }
+        .pl-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--green); margin-bottom:16px; }
+        .pl-label-light { color:#6fcf8a; }
+        .pl-h2 { font-family:'Roboto Condensed',sans-serif; font-size:clamp(26px,3.5vw,40px); font-weight:800; color:var(--dark); margin-bottom:16px; letter-spacing:-1px; }
+        .pl-h2-white { color:white; }
+        .pl-sub { font-size:16px; color:var(--muted); max-width:520px; line-height:1.6; }
+        .pl-sub-white { color:rgba(255,255,255,0.55); max-width:520px; line-height:1.6; font-size:16px; }
+        .pl-center { text-align:center; }
+        .pl-center .pl-sub, .pl-center .pl-sub-white { margin:0 auto; }
+        .pl-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:56px; }
+        .pl-step { text-align:center; }
+        .pl-step-num { width:44px; height:44px; border-radius:50%; background:var(--green); color:white; font-size:18px; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-family:'Roboto Condensed',sans-serif; }
+        .pl-step-title { font-size:16px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+        .pl-step-desc { font-size:14px; color:var(--muted); line-height:1.6; }
+        .pl-checks-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:48px; }
+        .pl-check-item { display:flex; gap:12px; align-items:flex-start; background:white; border:1px solid var(--border); border-radius:10px; padding:16px; }
+        .pl-check-icon { font-size:16px; flex-shrink:0; }
+        .pl-check-title { font-size:14px; font-weight:600; color:var(--dark); margin-bottom:3px; }
+        .pl-check-desc { font-size:13px; color:var(--muted); line-height:1.5; }
+        .pl-features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:48px; }
+        .pl-feature-card { background:white; border:1px solid var(--border); border-radius:12px; padding:28px; }
+        .pl-feature-title { font-family:'Roboto Condensed',sans-serif; font-size:16px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+        .pl-feature-desc { font-size:14px; color:var(--muted); line-height:1.55; }
+        .pl-cta-box { background:var(--dark); border-radius:20px; padding:56px 48px; text-align:center; margin-top:48px; }
+        .pl-cta-title { font-family:'Roboto Condensed',sans-serif; font-size:clamp(24px,3vw,40px); font-weight:800; color:white; margin-bottom:14px; letter-spacing:-1px; }
+        .pl-cta-title span { color:#6fcf8a; }
+        .pl-cta-sub { font-size:16px; color:rgba(255,255,255,0.5); margin-bottom:32px; }
+        .pl-cta-actions { display:flex; gap:14px; justify-content:center; align-items:center; flex-wrap:wrap; }
+        .pl-faq-list { max-width:720px; margin:48px auto 0; }
+        .pl-faq-item { border-bottom:1px solid var(--border); padding:20px 0; cursor:pointer; }
+        .pl-faq-item:first-child { border-top:1px solid var(--border); }
+        .pl-faq-q { display:flex; justify-content:space-between; align-items:center; gap:16px; font-size:15px; font-weight:600; color:var(--dark); }
+        .pl-faq-icon { font-size:20px; color:var(--green); flex-shrink:0; }
+        .pl-faq-a { font-size:14px; color:var(--muted); line-height:1.65; margin-top:10px; padding-right:24px; }
+        .pl-footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; margin-bottom:48px; }
+        @media (max-width:900px) {
+          .pl-nav-links { display:none !important; }
+          .pl-hamburger { display:flex !important; }
+          .pl-footer-grid { grid-template-columns:1fr 1fr; gap:28px; }
+          .pl-steps { grid-template-columns:1fr; }
+          .pl-checks-grid { grid-template-columns:1fr; }
+          .pl-features-grid { grid-template-columns:1fr; }
+        }
+        @media (max-width:600px) {
+          .pl-hero { padding:40px 20px 48px; }
+          .pl-section { padding:48px 20px; }
+          .pl-section-dark, .pl-section-green { padding:48px 20px; }
+          .pl-footer-grid { grid-template-columns:1fr; }
+          .pl-cta-box { padding:40px 20px; }
+          .pl-cta-actions { flex-direction:column; }
+        }
+      `}</style>
+
+      <NavBar activePath={activePath} />
       {children}
-
-      {/* FOOTER */}
-      <footer className="pl-footer">
-        <div className="pl-footer-grid">
-
-          {/* Brand */}
-          <div>
-            <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px' }}>
-              <a href="/" style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:'10px' }}>
-                <img src="/logo.svg" alt="Dablin" height="32" />
-                <span style={{ color:'white', fontSize:'17px', fontWeight:'700', letterSpacing:'-0.3px' }}>dablin</span>
-              </a>
-            </div>
-            <p className="pl-footer-brand-desc">Be visible everywhere search happens. SEO and AI visibility for brands and e-commerce sellers.</p>
-            <div className="pl-footer-socials">
-              <a href="https://www.linkedin.com/company/dablin" target="_blank" rel="noopener noreferrer" className="pl-footer-social-btn" aria-label="LinkedIn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 9h4v12H2z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="4" cy="4" r="2" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8"/></svg>
-              </a>
-              <a href="https://medium.com/dablin" target="_blank" rel="noopener noreferrer" className="pl-footer-social-btn" aria-label="Medium">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
-              </a>
-            </div>
-          </div>
-
-          {/* Tools */}
-          <div>
-            <div className="pl-footer-col-label">Tools</div>
-            <div className="pl-footer-col-links">
-              <a href="/ai-visibility-check">AI Visibility Check</a>
-              <a href="/ai-visibility-audit">AI Visibility Audit</a>
-              <a href="/seo-audit">SEO Audit</a>
-              <a href="/dashboard/query-check">AI Query Check</a>
-            </div>
-          </div>
-
-          {/* Product */}
-          <div>
-            <div className="pl-footer-col-label">Product</div>
-            <div className="pl-footer-col-links">
-              <a href="/dashboard/get-started">Step by Step SEO</a>
-              <a href="/dashboard">SEO/GEO Dashboard</a>
-              <a href="/dashboard/search-console">Google Search Console</a>
-              <a href="/pricing">Pricing</a>
-              <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer">Blog</a>
-            </div>
-          </div>
-
-          {/* Company */}
-          <div>
-            <div className="pl-footer-col-label">Company</div>
-            <div className="pl-footer-col-links">
-              <a href="mailto:hello@dablin.co">Contact us</a>
-              <a href="/legal.html">Privacy Policy</a>
-              <a href="/legal.html">Terms of Service</a>
-            </div>
-          </div>
-
-        </div>
-
-        <div className="pl-footer-bottom">
-          <span className="pl-footer-copy">© 2026 Dablin. All rights reserved.</span>
-          <span className="pl-footer-tagline">Built for the AI search era.</span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
