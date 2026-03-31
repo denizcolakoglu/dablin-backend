@@ -57,7 +57,6 @@ function DropdownMenu({ group, activePath }) {
               onMouseEnter={e => e.currentTarget.style.background="#eef8f0"}
               onMouseLeave={e => e.currentTarget.style.background="transparent"}
             >
-              <span style={{ fontSize:"16px", color:"#1a7a3a", flexShrink:0, width:"20px", textAlign:"center", marginTop:"1px" }}>{item.icon}</span>
               <div>
                 <div style={{ fontSize:"13px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div>
                 <div style={{ fontSize:"12px", color:"#4a6b4c", lineHeight:"1.4" }}>{item.desc}</div>
@@ -99,7 +98,6 @@ function ResourcesMenu() {
               onMouseEnter={e => e.currentTarget.style.background="#eef8f0"}
               onMouseLeave={e => e.currentTarget.style.background="transparent"}
             >
-              <span style={{ fontSize:"14px", fontWeight:"700", color:"#1a7a3a", flexShrink:0, width:"20px", textAlign:"center", marginTop:"1px" }}>{item.icon}</span>
               <div>
                 <div style={{ fontSize:"13px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div>
                 <div style={{ fontSize:"12px", color:"#4a6b4c", lineHeight:"1.4" }}>{item.desc}</div>
@@ -147,7 +145,6 @@ function NavBar({ activePath }) {
           <div style={{ fontSize:"11px", fontWeight:"700", color:"#9ab09c", textTransform:"uppercase", letterSpacing:"1px", padding:"12px 0 8px" }}>AI Visibility</div>
           {NAV_GROUPS[0].items.map(item => (
             <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
-              <span style={{ fontSize:"18px", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>{item.icon}</span>
               <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>{item.desc}</div></div>
             </a>
           ))}
@@ -155,20 +152,17 @@ function NavBar({ activePath }) {
           <div style={{ fontSize:"11px", fontWeight:"700", color:"#9ab09c", textTransform:"uppercase", letterSpacing:"1px", padding:"16px 0 8px" }}>SEO Expert</div>
           {NAV_GROUPS[1].items.map(item => (
             <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
-              <span style={{ fontSize:"18px", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>{item.icon}</span>
               <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>{item.desc}</div></div>
             </a>
           ))}
           {/* Pricing */}
           <a href="/pricing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
-            <span style={{ fontSize:"18px", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>€</span>
-            <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>Pricing</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>Simple monthly plans</div></div>
+                        <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>Pricing</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>Simple monthly plans</div></div>
           </a>
           {/* Resources */}
           <div style={{ fontSize:"11px", fontWeight:"700", color:"#9ab09c", textTransform:"uppercase", letterSpacing:"1px", padding:"16px 0 8px" }}>Resources</div>
           {RESOURCES.map(item => (
             <a key={item.href} href={item.href} target={item.external ? "_blank" : undefined} rel={item.external ? "noopener noreferrer" : undefined} onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"flex-start", gap:"14px", padding:"12px 0", borderBottom:"1px solid #eef2ee", textDecoration:"none" }}>
-              <span style={{ fontSize:"14px", fontWeight:"700", color:"#1a7a3a", flexShrink:0, width:"24px", textAlign:"center" }}>{item.icon}</span>
               <div><div style={{ fontSize:"15px", fontWeight:"600", color:"#0d1f0e", marginBottom:"2px" }}>{item.label}</div><div style={{ fontSize:"12px", color:"#4a6b4c" }}>{item.desc}</div></div>
             </a>
           ))}
