@@ -172,13 +172,13 @@ const STEP_DEFS = [
     id: "aiVisibility",
     priority: "good",
     icon: "✨",
-    label: "AI visibility not checked yet",
-    labelOk: "AI visibility checked",
-    desc: "You haven't checked whether ChatGPT, Gemini or Claude mention your brand. Most brands are invisible to AI engines.",
-    descOk: "You've checked your AI visibility.",
-    fix: "Run the AI Visibility Check to see which AI engines mention your brand.",
-    cta: { label: "Run AI Visibility Check →", page: "visibility" },
-    check: (r) => !r.hasRunVisibilityCheck,
+    label: "AI Visibility Audit not run yet",
+    labelOk: "AI Visibility Audit completed",
+    desc: "You haven't audited whether ChatGPT, Gemini or Claude can find and understand your brand. Most brands are invisible to AI engines.",
+    descOk: "You've run the AI Visibility Audit.",
+    fix: "Run the AI Visibility Audit to check all 12 signals AI engines use to find and cite your brand.",
+    cta: { label: "Run AI Visibility Audit →", page: "ai" },
+    check: (r) => !r.hasRunAiAudit,
   },
 ];
 
@@ -535,8 +535,8 @@ export default function GetStarted({ setPage }) {
         histRes.json(),
       ]);
 
-      const hasRunVisibilityCheck = (histData.urls || []).some(u =>
-        u.audits?.some(a => a.type === "visibility")
+      const hasRunAiAudit = (histData.urls || []).some(u =>
+        u.audits?.some(a => a.type === "ai")
       );
 
       const checks = auditData.checks || {};
@@ -554,7 +554,7 @@ export default function GetStarted({ setPage }) {
         sitemap:              checks.sitemap !== false,
         canonical:            checks.canonical !== false,
         gscConnected:         gscData.connected === true,
-        hasRunVisibilityCheck,
+        hasRunAiAudit,
       };
 
       // Persist to localStorage
