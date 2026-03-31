@@ -342,7 +342,7 @@ export default function Audit({ setPage }) {
           <p>Enter a product URL above and click "Audit SEO" to get your report.</p>
         </div>
       )}
-    </div>)}
+    </div>}
     </div>
   );
 }
