@@ -180,6 +180,57 @@ const STEP_DEFS = [
     cta: { label: "Run AI Visibility Audit →", page: "ai" },
     check: (r) => !r.hasRunAiAudit,
   },
+
+  // ── GSC-DERIVED ───────────────────────────────────────────
+  {
+    id: "gscNotIndexed",
+    priority: "critical",
+    icon: "🚫",
+    label: "Pages discovered but not indexed by Google",
+    labelOk: "No unindexed pages detected",
+    desc: "Google found pages on your site but hasn't added them to its index — they're invisible in search. Common causes: thin content, noindex tags, or crawl budget.",
+    descOk: "All discovered pages appear to be indexed.",
+    fix: "Open Search Console → Indexing to see which pages are affected. Use the URL Inspection tool to request indexing.",
+    cta: { label: "View in Search Console →", page: "searchconsole" },
+    check: (r) => r.gscConnected && r.gscNotIndexed === true,
+  },
+  {
+    id: "gscSitemap",
+    priority: "important",
+    icon: "🗺️",
+    label: "No sitemap submitted to Google Search Console",
+    labelOk: "Sitemap submitted to GSC",
+    desc: "Without a sitemap in GSC, Google discovers your pages by crawling alone — slower and less reliable, especially for new content.",
+    descOk: "Your sitemap is submitted and visible in Google Search Console.",
+    fix: "Go to Google Search Console → Sitemaps and submit your sitemap.xml URL.",
+    cta: { label: "View Sitemaps in GSC →", page: "searchconsole" },
+    ctaExternal: { label: "Open GSC →", url: "https://search.google.com/search-console/sitemaps" },
+    check: (r) => r.gscConnected && r.gscNoSitemap === true,
+  },
+  {
+    id: "gscVitals",
+    priority: "important",
+    icon: "⚡",
+    label: "Core Web Vitals failing",
+    labelOk: "Core Web Vitals passing",
+    desc: "Your site has poor LCP, INP or CLS scores. Core Web Vitals are direct Google ranking signals — failing them hurts your search visibility.",
+    descOk: "Your Core Web Vitals are in good shape.",
+    fix: "Open the Core Web Vitals tab in Search Console to see which pages are failing and what to fix.",
+    cta: { label: "View Core Web Vitals →", page: "searchconsole" },
+    check: (r) => r.gscConnected && r.gscVitalsFailing === true,
+  },
+  {
+    id: "gscSitemapErrors",
+    priority: "important",
+    icon: "⚠️",
+    label: "Sitemap errors in Google Search Console",
+    labelOk: "No sitemap errors in GSC",
+    desc: "Your sitemap has errors or warnings in Google Search Console. This can prevent pages from being discovered and indexed.",
+    descOk: "No sitemap errors found.",
+    fix: "Open Search Console → Sitemaps to see the specific errors and fix them.",
+    cta: { label: "View Sitemaps in GSC →", page: "searchconsole" },
+    check: (r) => r.gscConnected && r.gscSitemapErrors === true,
+  },
 ];
 
 const PRIORITY_CONFIG = {
@@ -531,6 +582,7 @@ export default function GetStarted({ setPage }) {
     "Checking AI crawler access…",
     "Checking meta tags and Open Graph…",
     "Testing Information Gain signals…",
+    "Checking Google Search Console…",
     "Almost done…",
   ];
 
@@ -548,7 +600,7 @@ export default function GetStarted({ setPage }) {
     try {
       const token = await getToken();
 
-      const [auditRes, gscRes, histRes] = await Promise.all([
+      const [auditRes, gscStatusRes, histRes] = await Promise.all([
         fetch(`${API}/api/ai-audit`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -562,9 +614,9 @@ export default function GetStarted({ setPage }) {
         }).catch(() => ({ json: async () => ({ urls: [] }) })),
       ]);
 
-      const [auditData, gscData, histData] = await Promise.all([
+      const [auditData, gscStatus, histData] = await Promise.all([
         auditRes.json(),
-        gscRes.json(),
+        gscStatusRes.json(),
         histRes.json(),
       ]);
 
@@ -572,7 +624,30 @@ export default function GetStarted({ setPage }) {
         u.audits?.some(a => a.type === "ai")
       );
 
+      // If GSC connected, fetch actual data
+      let gscData = null;
+      if (gscStatus.connected && gscStatus.selectedSite) {
+        setScanMsg("Pulling Google Search Console data…");
+        try {
+          const gscRes = await fetch(
+            `${API}/api/gsc/data?site=${encodeURIComponent(gscStatus.selectedSite)}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (gscRes.ok) gscData = await gscRes.json();
+        } catch {}
+      }
+
       const checks = auditData.checks || {};
+
+      // Derive GSC-specific flags
+      const gscConnected      = gscStatus.connected === true;
+      const gscNotIndexed     = gscData ? (gscData.notIndexed?.length > 0) : false;
+      const gscNoSitemap      = gscData ? (gscData.sitemaps?.length === 0) : false;
+      const gscSitemapErrors  = gscData ? gscData.sitemaps?.some(s => s.errors > 0) : false;
+      const gscVitalsFailing  = gscData?.vitals
+        ? (gscData.vitals.lcp > 2.5 || gscData.vitals.inp > 200 || gscData.vitals.cls > 0.1)
+        : false;
+
       const mapped = {
         https:                checks.https !== false,
         robotsBlocked:        checks.robots === false,
@@ -586,8 +661,13 @@ export default function GetStarted({ setPage }) {
         infoGain:             checks.infoGain !== false,
         sitemap:              checks.sitemap !== false,
         canonical:            checks.canonical !== false,
-        gscConnected:         gscData.connected === true,
+        gscConnected,
         hasRunAiAudit,
+        // GSC-derived
+        gscNotIndexed,
+        gscNoSitemap,
+        gscSitemapErrors,
+        gscVitalsFailing,
       };
 
       // Persist to localStorage
