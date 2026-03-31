@@ -101,11 +101,19 @@ export default function PageLayout({ children }) {
         .pl-pricing-credit { font-size: 28px; font-weight: 800; color: var(--green); font-family: 'Roboto Condensed', sans-serif; white-space: nowrap; }
 
         /* FOOTER */
-        .pl-footer { background: var(--dark-mid); padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); }
-        .pl-footer-copy { font-size: 13px; color: rgba(255,255,255,0.3); }
-        .pl-footer-links { display: flex; gap: 24px; }
-        .pl-footer-links a { font-size: 13px; color: rgba(255,255,255,0.3); text-decoration: none; }
-        .pl-footer-links a:hover { color: rgba(255,255,255,0.7); }
+        .pl-footer { background: #0a1a0b; padding: 56px 48px 32px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .pl-footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+        .pl-footer-brand-desc { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.65; max-width: 260px; margin: 0 0 24px; }
+        .pl-footer-socials { display: flex; gap: 10px; }
+        .pl-footer-social-btn { width: 34px; height: 34px; background: rgba(255,255,255,0.08); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: background 0.2s; border: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+        .pl-footer-social-btn:hover { background: rgba(255,255,255,0.15); }
+        .pl-footer-col-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 16px; }
+        .pl-footer-col-links { display: flex; flex-direction: column; gap: 10px; }
+        .pl-footer-col-links a { font-size: 13px; color: rgba(255,255,255,0.55); text-decoration: none; transition: color 0.15s; }
+        .pl-footer-col-links a:hover { color: white; }
+        .pl-footer-bottom { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .pl-footer-copy { font-size: 12px; color: rgba(255,255,255,0.25); }
+        .pl-footer-tagline { font-size: 12px; color: rgba(255,255,255,0.25); }
 
         @media (max-width: 768px) {
           .pl-nav { padding: 14px 20px; }
@@ -122,7 +130,9 @@ export default function PageLayout({ children }) {
           .pl-pricing-callout { flex-direction: column; text-align: center; }
           .pl-cta-box { padding: 40px 20px; }
           .pl-cta-actions { flex-direction: column; }
-          .pl-footer { padding: 24px 20px; flex-direction: column; gap: 16px; text-align: center; }
+          .pl-footer { padding: 40px 20px 24px; }
+          .pl-footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+          .pl-footer-bottom { flex-direction: column; text-align: center; gap: 8px; }
           .pl-btn-large { padding: 14px 28px; font-size: 15px; }
         }
       `}</style>
@@ -137,7 +147,6 @@ export default function PageLayout({ children }) {
             { href: "/ai-visibility-check", label: "AI Visibility Check" },
             { href: "/ai-visibility-audit", label: "AI Visibility Audit" },
             { href: "/seo-audit", label: "SEO Audit" },
-            { href: "/generate-product-description", label: "Generate" },
             { href: "/pricing", label: "Pricing" },
           ].map(item => {
             const isActive = typeof window !== 'undefined' && window.location.pathname === item.href;
@@ -165,11 +174,65 @@ export default function PageLayout({ children }) {
 
       {/* FOOTER */}
       <footer className="pl-footer">
-        <div className="pl-footer-copy">© 2026 Dablin. All rights reserved.</div>
-        <div className="pl-footer-links">
-          <a href="/legal.html">Privacy</a>
-          <a href="/legal.html">Terms</a>
-          <a href="mailto:hello@dablin.co">Contact: hello@dablin.co</a>
+        <div className="pl-footer-grid">
+
+          {/* Brand */}
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px' }}>
+              <a href="/" style={{ textDecoration:'none', display:'flex', alignItems:'center', gap:'10px' }}>
+                <img src="/logo.svg" alt="Dablin" height="32" />
+                <span style={{ color:'white', fontSize:'17px', fontWeight:'700', letterSpacing:'-0.3px' }}>dablin</span>
+              </a>
+            </div>
+            <p className="pl-footer-brand-desc">Be visible everywhere search happens. SEO and AI visibility for brands and e-commerce sellers.</p>
+            <div className="pl-footer-socials">
+              <a href="https://www.linkedin.com/company/dablin" target="_blank" rel="noopener noreferrer" className="pl-footer-social-btn" aria-label="LinkedIn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 9h4v12H2z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="4" cy="4" r="2" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8"/></svg>
+              </a>
+              <a href="https://medium.com/dablin" target="_blank" rel="noopener noreferrer" className="pl-footer-social-btn" aria-label="Medium">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Tools */}
+          <div>
+            <div className="pl-footer-col-label">Tools</div>
+            <div className="pl-footer-col-links">
+              <a href="/ai-visibility-check">AI Visibility Check</a>
+              <a href="/ai-visibility-audit">AI Visibility Audit</a>
+              <a href="/seo-audit">SEO Audit</a>
+              <a href="/dashboard/query-check">AI Query Check</a>
+            </div>
+          </div>
+
+          {/* Product */}
+          <div>
+            <div className="pl-footer-col-label">Product</div>
+            <div className="pl-footer-col-links">
+              <a href="/dashboard/get-started">Step by Step SEO</a>
+              <a href="/dashboard">SEO/GEO Dashboard</a>
+              <a href="/dashboard/search-console">Google Search Console</a>
+              <a href="/pricing">Pricing</a>
+              <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer">Blog</a>
+            </div>
+          </div>
+
+          {/* Company */}
+          <div>
+            <div className="pl-footer-col-label">Company</div>
+            <div className="pl-footer-col-links">
+              <a href="mailto:hello@dablin.co">Contact us</a>
+              <a href="/legal.html">Privacy Policy</a>
+              <a href="/legal.html">Terms of Service</a>
+            </div>
+          </div>
+
+        </div>
+
+        <div className="pl-footer-bottom">
+          <span className="pl-footer-copy">© 2026 Dablin. All rights reserved.</span>
+          <span className="pl-footer-tagline">Built for the AI search era.</span>
         </div>
       </footer>
     </div>
