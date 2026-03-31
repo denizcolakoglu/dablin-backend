@@ -367,8 +367,41 @@ function StepResults({ result, url, setPage, onRescan }) {
       </div>
 
       {/* Progress bar */}
-      <div style={{ background: "#eef2ee", borderRadius: "100px", height: "6px", marginBottom: "28px" }}>
+      <div style={{ background: "#eef2ee", borderRadius: "100px", height: "6px", marginBottom: "20px" }}>
         <div style={{ background: scoreColor, width: `${score}%`, height: "100%", borderRadius: "100px", transition: "width 0.6s ease" }} />
+      </div>
+
+      {/* Summary strip + Dashboard CTA */}
+      <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "12px", padding: "16px 20px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
+          {criticalFailed.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#ef4444" }}>{criticalFailed.length} critical</span>
+            </div>
+          )}
+          {importantFailed.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#f59e0b" }}>{importantFailed.length} important</span>
+            </div>
+          )}
+          {goodFailed.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1a7a3a", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#1a7a3a" }}>{goodFailed.length} good to have</span>
+            </div>
+          )}
+          {failed.length === 0 && (
+            <span style={{ fontSize: "13px", fontWeight: "600", color: "#1a7a3a" }}>🎉 All checks passed</span>
+          )}
+        </div>
+        <button
+          onClick={() => setPage("dashboard")}
+          style={{ background: "#1a7a3a", color: "white", border: "none", borderRadius: "8px", padding: "9px 18px", fontSize: "13px", fontWeight: "600", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+        >
+          View on Dashboard →
+        </button>
       </div>
 
       {/* Critical */}
