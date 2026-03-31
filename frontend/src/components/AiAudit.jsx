@@ -306,7 +306,7 @@ export default function AiAudit({ setPage }) {
           <p>Enter a URL above and click "Run AI Audit" to check your AI engine visibility.</p>
         </div>
       )}
-    </div>}
+    </div>)}
     </div>
   );
 }

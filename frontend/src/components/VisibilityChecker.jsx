@@ -233,7 +233,7 @@ export default function VisibilityChecker({ setPage }) {
           )}
         </>
       )}
-    </div>}
+    </div>)}
     </div>
   );
 }
