@@ -929,6 +929,8 @@ function HeroUrlForm() {
 
 export default function Landing() {
   return (
+    <>
+    <AnnouncementBar />
     <div className="landing">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
@@ -1099,7 +1101,6 @@ export default function Landing() {
       `}</style>
 
       {/* NAV */}
-      <AnnouncementBar />
       <NavBar />
 
       {/* HERO */}
@@ -1476,5 +1477,6 @@ export default function Landing() {
 
       <GoogleUpdatePopup />
     </div>
+    </>
   );
 }
