@@ -25,6 +25,7 @@ const RESOURCES = [
   { href: "https://blog.dablin.co",                       icon: "✍", label: "Blog",            desc: "AI visibility, GEO and SEO guides", external: true },
   { href: "https://www.linkedin.com/company/dablin",      icon: "in", label: "Dablin on LinkedIn", desc: "Follow us for SEO & AI insights",   external: true },
   { href: "https://medium.com/dablin",                    icon: "M",  label: "Dablin on Medium",   desc: "In-depth articles and guides",      external: true },
+  { href: "/whats-new",                                       icon: "🆕", label: "What's New",          desc: "Weekly updates every Friday",       external: false },
 ];
 
 function DropdownMenu({ group, activePath }) {
@@ -235,6 +236,7 @@ function Footer() {
         ])}
 
         {col("Company", [
+          ["What's New",       "/whats-new"],
           ["Contact us",       "mailto:hello@dablin.co"],
           ["Privacy Policy",   "/legal.html"],
           ["Terms of Service", "/legal.html"],
