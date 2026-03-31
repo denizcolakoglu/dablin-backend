@@ -304,6 +304,22 @@ function CheckItem({ item, result, setPage, expanded, onToggle }) {
 function StepResults({ result, url, setPage, onRescan }) {
   const [expanded, setExpanded] = useState({});
 
+  // Get saved timestamp for "last scanned" display
+  let lastScanned = "";
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const { ts } = JSON.parse(raw);
+      const diff = Date.now() - ts;
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      lastScanned = mins < 1 ? "just now"
+        : mins < 60 ? `${mins}m ago`
+        : hours < 24 ? `${hours}h ago`
+        : "today";
+    }
+  } catch {}
+
   const failed = STEP_DEFS.filter(s => s.check(result));
   const passed = STEP_DEFS.filter(s => !s.check(result));
 
@@ -331,7 +347,10 @@ function StepResults({ result, url, setPage, onRescan }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: "24px", fontWeight: "800", color: "#0d1f0e", letterSpacing: "-0.5px", marginBottom: "4px" }}>Setup checklist</h2>
-          <div style={{ fontSize: "13px", color: "#4a6b4c" }}>{url}</div>
+          <div style={{ fontSize: "13px", color: "#4a6b4c" }}>
+            {url}
+            {lastScanned && <span style={{ marginLeft: "10px", background: "#eef8f0", color: "#1a7a3a", border: "1px solid #d0e8d4", borderRadius: "20px", padding: "1px 8px", fontSize: "11px", fontWeight: "600" }}>Scanned {lastScanned}</span>}
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div style={{ textAlign: "center" }}>
@@ -429,13 +448,42 @@ function StepResults({ result, url, setPage, onRescan }) {
   );
 }
 
+const STORAGE_KEY = "dablin_getstarted";
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    // Expire after 24 hours so results stay fresh
+    if (Date.now() - saved.ts > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return saved;
+  } catch { return null; }
+}
+
+function save(url, result) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ url, result, ts: Date.now() }));
+  } catch {}
+}
+
+function clearSaved() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+}
+
 // ── MAIN COMPONENT ────────────────────────────────────────────
 export default function GetStarted({ setPage }) {
   const { getToken } = useAuth();
-  const [step, setStep] = useState("url"); // url | scanning | results
-  const [url, setUrl] = useState("");
-  const [result, setResult] = useState(null);
   const [scanMsg, setScanMsg] = useState("Fetching your page…");
+
+  // Restore from localStorage on mount
+  const saved = loadSaved();
+  const [step, setStep] = useState(saved ? "results" : "url");
+  const [url, setUrl]   = useState(saved?.url || "");
+  const [result, setResult] = useState(saved?.result || null);
 
   const SCAN_MESSAGES = [
     "Fetching your page…",
@@ -452,7 +500,6 @@ export default function GetStarted({ setPage }) {
     setUrl(inputUrl);
     setStep("scanning");
 
-    // Cycle through scan messages
     let msgIdx = 0;
     setScanMsg(SCAN_MESSAGES[0]);
     const msgInterval = setInterval(() => {
@@ -463,47 +510,50 @@ export default function GetStarted({ setPage }) {
     try {
       const token = await getToken();
 
-      // Run AI audit to get the checks
-      const auditRes = await fetch(`${API}/api/ai-audit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ url: inputUrl }),
-      });
-      const auditData = await auditRes.json();
+      const [auditRes, gscRes, histRes] = await Promise.all([
+        fetch(`${API}/api/ai-audit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ url: inputUrl }),
+        }),
+        fetch(`${API}/api/gsc/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => ({ json: async () => ({ connected: false }) })),
+        fetch(`${API}/api/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => ({ json: async () => ({ urls: [] }) })),
+      ]);
 
-      // Check GSC connection status
-      const gscRes = await fetch(`${API}/api/gsc/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => ({ json: async () => ({ connected: false }) }));
-      const gscData = await gscRes.json();
+      const [auditData, gscData, histData] = await Promise.all([
+        auditRes.json(),
+        gscRes.json(),
+        histRes.json(),
+      ]);
 
-      // Check if user has run a visibility check before
-      const histRes = await fetch(`${API}/api/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => ({ json: async () => ({ urls: [] }) }));
-      const histData = await histRes.json();
       const hasRunVisibilityCheck = (histData.urls || []).some(u =>
         u.audits?.some(a => a.type === "visibility")
       );
 
-      // Map audit checks to our result format
       const checks = auditData.checks || {};
       const mapped = {
-        https:               checks.https !== false,
-        robotsBlocked:       checks.robots === false,
-        llmsTxt:             checks.llmsTxt !== false,
-        orgSchema:           checks.orgSchema !== false,
-        aiCrawlers:          checks.aiCrawlers !== false,
-        metaDescription:     checks.metaDescription !== false,
-        productSchema:       checks.productSchema !== false,
-        faqSchema:           checks.faqSchema !== false || checks.aiOverview !== false,
-        openGraph:           checks.openGraph !== false,
-        infoGain:            checks.infoGain !== false,
-        sitemap:             checks.sitemap !== false,
-        canonical:           checks.canonical !== false,
-        gscConnected:        gscData.connected === true,
+        https:                checks.https !== false,
+        robotsBlocked:        checks.robots === false,
+        llmsTxt:              checks.llmsTxt !== false,
+        orgSchema:            checks.orgSchema !== false,
+        aiCrawlers:           checks.aiCrawlers !== false,
+        metaDescription:      checks.metaDescription !== false,
+        productSchema:        checks.productSchema !== false,
+        faqSchema:            checks.faqSchema !== false || checks.aiOverview !== false,
+        openGraph:            checks.openGraph !== false,
+        infoGain:             checks.infoGain !== false,
+        sitemap:              checks.sitemap !== false,
+        canonical:            checks.canonical !== false,
+        gscConnected:         gscData.connected === true,
         hasRunVisibilityCheck,
       };
+
+      // Persist to localStorage
+      save(inputUrl, mapped);
 
       setResult(mapped);
       setStep("results");
@@ -512,6 +562,12 @@ export default function GetStarted({ setPage }) {
     } finally {
       clearInterval(msgInterval);
     }
+  }
+
+  function handleRescan() {
+    clearSaved();
+    setStep("url");
+    setResult(null);
   }
 
   return (
@@ -536,7 +592,7 @@ export default function GetStarted({ setPage }) {
           result={result}
           url={url}
           setPage={setPage}
-          onRescan={() => setStep("url")}
+          onRescan={handleRescan}
         />
       )}
     </div>
