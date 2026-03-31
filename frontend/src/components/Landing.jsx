@@ -1099,9 +1099,6 @@ export default function Landing() {
 
       {/* HERO */}
       <div className="hero">
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid var(--green-mid)', borderRadius: '20px', padding: '6px 16px', fontSize: '13px', fontWeight: '600', color: 'var(--green)', marginBottom: '28px', letterSpacing: '0.02em' }}>
-          ⚡ Now includes Google March 2026 signals
-        </div>
         <h1 className="hero-title">
           Be visible everywhere<br />
           <span className="hero-accent">search happens.</span>
