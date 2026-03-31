@@ -884,7 +884,7 @@ function GoogleUpdatePopup() {
             </button>
           </SignInButton>
           <p style={{ textAlign: "center", fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: 0 }}>
-            Free · No card needed · 7 credits on signup
+            
           </p>
         </div>
       </div>
@@ -1110,7 +1110,7 @@ export default function Landing() {
           Capture visibility across Google and AI — all with one platform built for today's search.
         </p>
         <HeroUrlForm />
-        <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '0' }}>Free to start · No card needed · 7 credits on signup</p>
+        <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '0' }}></p>
       </div>
 
       {/* PRODUCT SECTIONS */}
