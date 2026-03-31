@@ -227,10 +227,10 @@ export default function AiAudit({ setPage }) {
       {noCredits && (
         <div className="no-credits-banner">
           <div className="no-credits-text">
-            <h4>Not enough balance</h4>
-            <p>AI Visibility Audit costs €0.80. Top up your balance to continue.</p>
+            <h4>Plan limit reached</h4>
+            <p>You've reached your monthly audit limit. Upgrade your plan to continue.</p>
           </div>
-          <button className="no-credits-btn" onClick={() => setPage("pricing")}>Buy Credits</button>
+          <button className="no-credits-btn" onClick={() => setPage("pricing")}>Upgrade Plan</button>
         </div>
       )}
 

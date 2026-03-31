@@ -61,7 +61,7 @@ function NavBar() {
           ))}
           <a href="/pricing" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 0', borderBottom: '1px solid #eef2ee', textDecoration: 'none' }}>
             <span style={{ fontSize: '20px', color: '#1a7a3a', flexShrink: 0, marginTop: '2px' }}>€</span>
-            <div><div style={{ fontSize: '16px', fontWeight: '600', color: '#0d1f0e', marginBottom: '3px' }}>Pricing</div><div style={{ fontSize: '13px', color: '#4a6b4c' }}>Pay per use, credits never expire</div></div>
+            <div><div style={{ fontSize: '16px', fontWeight: '600', color: '#0d1f0e', marginBottom: '3px' }}>Pricing</div><div style={{ fontSize: '13px', color: '#4a6b4c' }}>12 checks for AI engine discoverability</div></div>
           </a>
           <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 0', borderBottom: '1px solid #eef2ee', textDecoration: 'none' }}>
             <span style={{ fontSize: '20px', color: '#1a7a3a', flexShrink: 0, marginTop: '2px' }}>✍</span>
@@ -105,7 +105,7 @@ const FAQ = [
   { q: "What is llms.txt?", a: "llms.txt is a simple text file you place at the root of your website (yoursite.com/llms.txt) that tells AI models what your site does, who it's for, and what content they can use. It's similar to robots.txt but for AI crawlers. Dablin generates a ready-to-upload version for you if it's missing." },
   { q: "How is this different from the SEO Audit?", a: "The SEO Audit focuses on Google ranking factors — meta tags, schema, headings, Core Web Vitals, and the new March 2026 signals. The AI Visibility Audit focuses on what AI engines need to find and cite your brand — llms.txt, Organization schema, sameAs links, AI crawler access, and more." },
   { q: "Does this work for any website?", a: "Yes. Any publicly accessible URL can be audited — Shopify stores, WooCommerce, WordPress, or custom sites." },
-  { q: "How much does it cost?", a: "€0.80 per audit. New accounts get 7 free credits with no credit card required. Credits never expire and work across all Dablin tools." },
+  { q: "How much does it cost?", a: "The AI Visibility Audit is included in all Dablin plans. See the Pricing page for plan details." },
   { q: "What are AEO and GEO?", a: "AEO (Answer Engine Optimization) and GEO (Generative Engine Optimization) both refer to optimising content to be found and cited by AI-powered search tools like ChatGPT, Gemini, and Google's AI Overviews. Dablin's AI Visibility Audit covers the technical checks that matter most for both." },
 ];
 
@@ -139,7 +139,7 @@ export default function PageAiAudit() {
       {/* HERO */}
       <div className="pg-section" style={{ background: '#eef8f0', padding: '96px 48px 108px', textAlign: 'center' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid #d0e8d4', borderRadius: '20px', padding: '6px 16px', fontSize: '13px', fontWeight: '600', color: '#1a7a3a', marginBottom: '28px' }}>
-          ◈ AI Visibility Audit · €0.80 per audit
+          ◈ AI Visibility Audit
         </div>
         <h1 className="pg-hero-title" style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(44px,7vw,80px)', fontWeight: '800', lineHeight: '1.0', letterSpacing: '-3px', color: '#0d1f0e', marginBottom: '24px' }}>
           Why can't AI engines<br />
@@ -152,7 +152,7 @@ export default function PageAiAudit() {
           <div onClick={() => trackEvent('sign_up_click', { location: 'ai_audit_page_hero' })}>
             <SignUpButton mode="modal"><button className="pg-btn-primary pg-btn-large">Audit my page free →</button></SignUpButton>
           </div>
-          <span style={{ fontSize: '13px', color: '#4a6b4c' }}>7 free credits · €0.80 per audit · no card needed</span>
+          
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '56px', flexWrap: 'wrap', alignItems: 'center' }}>
           {[['12', 'AI visibility checks'], ['3', 'check categories'], ['AI fix', 'for every issue'], ['Free', 'to start']].map(([val, label]) => (
@@ -240,22 +240,7 @@ export default function PageAiAudit() {
         </div>
       </div>
 
-      {/* PRICING CALLOUT */}
-      <div className="pg-section" style={{ background: '#eef8f0', padding: 'clamp(48px,6vw,80px) 48px', borderTop: '1px solid #eef2ee' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '40px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1 }}>
-            <h3 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: '26px', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-0.5px', marginBottom: '10px' }}>Pay per audit. No subscription.</h3>
-            <p style={{ fontSize: '15px', color: '#4a6b4c', lineHeight: '1.65' }}>Credits work across all Dablin tools. New accounts start with 7 free credits — enough for your first AI Visibility Audit with no card required.</p>
-          </div>
-          <div style={{ textAlign: 'center', flexShrink: 0 }}>
-            <div style={{ fontSize: '40px', fontWeight: '800', color: '#1a7a3a', fontFamily: "'Roboto Condensed', sans-serif", lineHeight: 1 }}>€0.80</div>
-            <div style={{ fontSize: '13px', color: '#4a6b4c', marginTop: '4px' }}>per AI visibility audit</div>
-          </div>
-          <div onClick={() => trackEvent('sign_up_click', { location: 'ai_audit_page_pricing' })}>
-            <SignUpButton mode="modal"><button className="pg-btn-primary pg-btn-large">Start free →</button></SignUpButton>
-          </div>
-        </div>
-      </div>
+      
 
       {/* FAQ */}
       <div className="pg-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
@@ -275,7 +260,7 @@ export default function PageAiAudit() {
         <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(32px,5vw,56px)', fontWeight: '800', color: 'white', letterSpacing: '-1.5px', marginBottom: '16px' }}>
           Make your brand <span style={{ color: '#6fcf8a' }}>visible to AI.</span>
         </h2>
-        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>7 free credits. No credit card. Results in seconds.</p>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>Make your brand visible to AI today.</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div onClick={() => trackEvent('sign_up_click', { location: 'ai_audit_page_cta' })}>
             <SignUpButton mode="modal"><button className="pg-btn-primary pg-btn-large">Audit my page free →</button></SignUpButton>

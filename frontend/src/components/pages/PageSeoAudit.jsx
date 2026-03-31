@@ -75,7 +75,7 @@ function NavBar() {
             <span style={{ fontSize: '20px', color: '#1a7a3a', flexShrink: 0, marginTop: '2px' }}>€</span>
             <div>
               <div style={{ fontSize: '16px', fontWeight: '600', color: '#0d1f0e', marginBottom: '3px' }}>Pricing</div>
-              <div style={{ fontSize: '13px', color: '#4a6b4c' }}>Pay per use, credits never expire</div>
+              <div style={{ fontSize: '13px', color: '#4a6b4c' }}>18-point SEO check with AI fixes</div>
             </div>
           </a>
           <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 0', borderBottom: '1px solid #eef2ee', textDecoration: 'none' }}>
@@ -138,7 +138,7 @@ const FAQ = [
   { q: "What are the AI-generated fixes?", a: "For every failed check, Dablin generates a ready-to-copy fix — the exact HTML tag, JSON-LD schema block, or code snippet you need to paste into your CMS. No developer needed." },
   { q: "Does it work on any website?", a: "Yes. The SEO audit works on any publicly accessible URL — Shopify, WooCommerce, Amazon, WordPress, or any custom store. You can also audit competitor pages." },
   { q: "How long does it take?", a: "The audit typically takes 15–25 seconds depending on page size and the number of failed checks that need AI fixes generated. A PageSpeed Insights score is also included." },
-  { q: "How much does it cost?", a: "€0.50 per audit. New accounts get 7 free credits — enough to run your first check with no credit card required. Credits never expire and work across all Dablin tools." },
+  { q: "How much does it cost?", a: "The SEO Audit is included in all Dablin plans. See the Pricing page for plan details." },
 ];
 
 export default function PageSeoAudit() {
@@ -187,7 +187,7 @@ export default function PageSeoAudit() {
               <button className="seo-btn-primary seo-btn-large">Audit my page free →</button>
             </SignUpButton>
           </div>
-          <span style={{ fontSize: '13px', color: '#4a6b4c' }}>7 free credits · €0.50 per audit · no card needed</span>
+          
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '56px', flexWrap: 'wrap', alignItems: 'center' }}>
           {[['18', 'SEO checks'], ['Google 2026', 'signals included'], ['PageSpeed', 'score included'], ['Free', 'to start']].map(([val, label]) => (
@@ -332,24 +332,7 @@ export default function PageSeoAudit() {
         </div>
       </div>
 
-      {/* PRICING CALLOUT */}
-      <div className="seo-section" style={{ background: '#eef8f0', padding: 'clamp(48px,6vw,80px) 48px', borderTop: '1px solid #eef2ee' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '40px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1 }}>
-            <h3 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: '26px', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-0.5px', marginBottom: '10px' }}>Pay per use. No subscription.</h3>
-            <p style={{ fontSize: '15px', color: '#4a6b4c', lineHeight: '1.65' }}>Buy credits once, use them across all Dablin tools. New accounts start with 7 free credits — enough for your first SEO audit and a description.</p>
-          </div>
-          <div style={{ textAlign: 'center', flexShrink: 0 }}>
-            <div style={{ fontSize: '40px', fontWeight: '800', color: '#1a7a3a', fontFamily: "'Roboto Condensed', sans-serif", lineHeight: 1 }}>€0.50</div>
-            <div style={{ fontSize: '13px', color: '#4a6b4c', marginTop: '4px' }}>per SEO audit</div>
-          </div>
-          <div onClick={() => trackEvent('sign_up_click', { location: 'seo_audit_page_pricing' })}>
-            <SignUpButton mode="modal">
-              <button className="seo-btn-primary seo-btn-large">Start free →</button>
-            </SignUpButton>
-          </div>
-        </div>
-      </div>
+      
 
       {/* FAQ */}
       <div className="seo-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
@@ -369,7 +352,7 @@ export default function PageSeoAudit() {
         <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(32px,5vw,56px)', fontWeight: '800', color: 'white', letterSpacing: '-1.5px', marginBottom: '16px' }}>
           Find out what's <span style={{ color: '#6fcf8a' }}>holding your rankings back.</span>
         </h2>
-        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>7 free credits. No credit card. Results in 20 seconds.</p>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>Fix your SEO issues today. Results in 20 seconds.</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div onClick={() => trackEvent('sign_up_click', { location: 'seo_audit_page_cta' })}>
             <SignUpButton mode="modal">

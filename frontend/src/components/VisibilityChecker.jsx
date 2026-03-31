@@ -122,10 +122,10 @@ export default function VisibilityChecker({ setPage }) {
       {noBalance && (
         <div style={{ background:"#fffbeb", border:"1.5px solid #f59e0b", borderRadius:"12px", padding:"20px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"16px", marginBottom:"24px" }}>
           <div>
-            <div style={{ fontSize:"15px", fontWeight:"700", color:"#92400e", marginBottom:"4px" }}>Not enough balance</div>
-            <div style={{ fontSize:"13px", color:"#b45309" }}>AI Visibility Check costs €1.00. Add balance to continue.</div>
+            <div style={{ fontSize:"15px", fontWeight:"700", color:"#92400e", marginBottom:"4px" }}>Plan limit reached</div>
+            <div style={{ fontSize:"13px", color:"#b45309" }}>You've reached your monthly limit. Upgrade your plan to continue.</div>
           </div>
-          <button className="vc-btn" onClick={() => setPage("pricing")}>Add balance</button>
+          <button className="vc-btn" onClick={() => setPage("pricing")}>Upgrade Plan</button>
         </div>
       )}
 
