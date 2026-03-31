@@ -351,8 +351,7 @@ export default function QueryCheck({ setPage }) {
           </button>
         </>
       )}
-    </div>
-      )}
+    </div>}
     </div>
   );
 }

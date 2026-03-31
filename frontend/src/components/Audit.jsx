@@ -215,6 +215,7 @@ export default function Audit({ setPage }) {
           transition: background 0.2s;
         }
         .fix-copy-btn:hover { background: #3d9e4e; }
+        .no-credits-banner {
           background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 12px;
           padding: 20px 24px; display: flex; align-items: center;
           justify-content: space-between; gap: 16px; margin-bottom: 24px;
@@ -341,8 +342,7 @@ export default function Audit({ setPage }) {
           <p>Enter a product URL above and click "Audit SEO" to get your report.</p>
         </div>
       )}
-    </div>
-      </div>}
+    </div>}
     </div>
   );
 }
