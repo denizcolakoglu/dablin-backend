@@ -243,12 +243,64 @@ export default function PageAiCheck() {
         </div>
       </div>
 
-      <footer style={{ background: '#0a1a0b', padding: '28px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap', gap: '16px' }}>
-        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>© 2026 Dablin. All rights reserved.</span>
-        <div style={{ display: 'flex', gap: '24px' }}>
-          {[['Privacy', '/legal.html'], ['Terms', '/legal.html'], ['hello@dablin.co', 'mailto:hello@dablin.co']].map(([label, href]) => (
-            <a key={label} href={href} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', textDecoration: 'none' }}>{label}</a>
-          ))}
+      <footer style={{ background:"#0a1a0b", padding:"56px 48px 32px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:"48px", marginBottom:"48px" }}>
+
+          {/* Brand */}
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"16px" }}>
+              <a href="/" style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:"10px" }}>
+                <img src="/logo.svg" alt="Dablin" height="32" />
+                <span style={{ color:"white", fontSize:"17px", fontWeight:"700", letterSpacing:"-0.3px" }}>dablin</span>
+              </a>
+            </div>
+            <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.45)", lineHeight:"1.65", maxWidth:"260px", margin:"0 0 24px" }}>Be visible everywhere search happens. SEO and AI visibility for brands and e-commerce sellers.</p>
+            <div style={{ display:"flex", gap:"10px" }}>
+              <a href="https://www.linkedin.com/company/dablin" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
+                style={{ width:"34px", height:"34px", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none", flexShrink:0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 9h4v12H2z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><circle cx="4" cy="4" r="2" stroke="rgba(255,255,255,0.6)" strokeWidth="1.8"/></svg>
+              </a>
+              <a href="https://medium.com/dablin" target="_blank" rel="noopener noreferrer" aria-label="Medium"
+                style={{ width:"34px", height:"34px", background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", textDecoration:"none", flexShrink:0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Tools */}
+          <div>
+            <div style={{ fontSize:"11px", fontWeight:"700", color:"rgba(255,255,255,0.3)", textTransform:"uppercase", letterSpacing:"1.2px", marginBottom:"16px" }}>Tools</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+              {[["AI Visibility Check","/ai-visibility-check"],["AI Visibility Audit","/ai-visibility-audit"],["SEO Audit","/seo-audit"],["AI Query Check","/dashboard/query-check"]].map(([label,href]) => (
+                <a key={href} href={href} style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)", textDecoration:"none" }}>{label}</a>
+              ))}
+            </div>
+          </div>
+
+          {/* Product */}
+          <div>
+            <div style={{ fontSize:"11px", fontWeight:"700", color:"rgba(255,255,255,0.3)", textTransform:"uppercase", letterSpacing:"1.2px", marginBottom:"16px" }}>Product</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+              {[["Step by Step SEO","/dashboard/get-started"],["SEO/GEO Dashboard","/dashboard"],["Google Search Console","/dashboard/search-console"],["Pricing","/pricing"],["Blog","https://blog.dablin.co"]].map(([label,href]) => (
+                <a key={href} href={href} style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)", textDecoration:"none" }}>{label}</a>
+              ))}
+            </div>
+          </div>
+
+          {/* Company */}
+          <div>
+            <div style={{ fontSize:"11px", fontWeight:"700", color:"rgba(255,255,255,0.3)", textTransform:"uppercase", letterSpacing:"1.2px", marginBottom:"16px" }}>Company</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+              {[["Contact us","mailto:hello@dablin.co"],["Privacy Policy","/legal.html"],["Terms of Service","/legal.html"]].map(([label,href]) => (
+                <a key={href} href={href} style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)", textDecoration:"none" }}>{label}</a>
+              ))}
+            </div>
+          </div>
+
+        </div>
+        <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:"24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"12px" }}>
+          <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.25)" }}>© 2026 Dablin. All rights reserved.</span>
+          <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.25)" }}>Built for the AI search era.</span>
         </div>
       </footer>
     </div>
