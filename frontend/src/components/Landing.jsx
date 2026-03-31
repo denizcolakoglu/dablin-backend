@@ -937,10 +937,10 @@ export default function Landing() {
           --white: #ffffff; --off-white: #f8faf8; --mint: #eef8f0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; }
+        .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; padding-top: 112px; }
 
         /* NAV */
-        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: sticky; top: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
+        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
         .nav-brand img { display: block; }
         .landing-nav-links { display: flex; align-items: center; gap: 32px; }
         .nav-text-link { font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; transition: color 0.2s; }
