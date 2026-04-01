@@ -2128,6 +2128,37 @@ app.get("/api/gsc/status", requireAuth(), async (req, res) => {
 });
 
 // ── GSC: Disconnect ───────────────────────────────────────────
+// ── Contact form ──────────────────────────────────────────────
+app.post("/api/contact", async (req, res) => {
+  try {
+    const { firstName, lastName, email, topic, message } = req.body;
+    if (!firstName || !email || !message) return res.status(400).json({ error: "Missing required fields" });
+
+    // Email to Dablin team
+    await sendEmail("hello@dablin.co",
+      `[Contact] ${topic} — ${firstName} ${lastName || ""}`.trim(),
+      `<p><strong>From:</strong> ${firstName} ${lastName || ""} &lt;${email}&gt;</p>
+       <p><strong>Topic:</strong> ${topic}</p>
+       <hr />
+       <p>${message.replace(/\n/g, "<br />")}</p>`
+    );
+
+    // Auto-reply to sender
+    await sendEmail(email,
+      "We got your message — Dablin",
+      `<p>Hi ${firstName},</p>
+       <p>Thanks for reaching out. We've received your message and will get back to you within 1 business day.</p>
+       <p>— The Dablin team</p>
+       <p style="color:#999;font-size:12px">dablin.co · hello@dablin.co</p>`
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Contact form error:", err);
+    res.status(500).json({ error: "Failed to send" });
+  }
+});
+
 app.post("/api/gsc/disconnect", requireAuth(), async (req, res) => {
   try {
     const authObj = getAuth(req); req.auth = authObj;

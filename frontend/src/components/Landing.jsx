@@ -1464,7 +1464,7 @@ export default function Landing() {
           <div>
             <div className="footer-col-label">Company</div>
             <div className="footer-col-links">
-              <a href="mailto:hello@dablin.co">Contact us</a>
+              <a href="/contact">Contact us</a>
               <a href="/legal.html">Privacy Policy</a>
               <a href="/legal.html">Terms of Service</a>
             </div>

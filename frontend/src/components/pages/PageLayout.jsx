@@ -227,7 +227,7 @@ function Footer() {
 
         {col("Company", [
           ["What's New",       "/whats-new"],
-          ["Contact us",       "mailto:hello@dablin.co"],
+          ["Contact us",       "/contact"],
           ["Privacy Policy",   "/legal.html"],
           ["Terms of Service", "/legal.html"],
         ])}
