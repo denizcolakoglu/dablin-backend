@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
 import { trackEvent } from "../../analytics";
@@ -6,9 +6,7 @@ import { trackEvent } from "../../analytics";
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
-    <div onClick={() => setOpen(!open)} style={{
-      borderBottom: '1px solid #eef2ee', padding: '20px 0', cursor: 'pointer',
-    }}>
+    <div onClick={() => setOpen(!open)} style={{ borderBottom: '1px solid #eef2ee', padding: '20px 0', cursor: 'pointer' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', fontSize: '16px', fontWeight: '600', color: '#0d1f0e' }}>
         <span>{q}</span>
         <span style={{ fontSize: '22px', color: '#1a7a3a', flexShrink: 0, fontWeight: '300' }}>{open ? '−' : '+'}</span>
@@ -18,7 +16,99 @@ function FaqItem({ q, a }) {
   );
 }
 
+function typeText(text, setter, onDone, speed = 22) {
+  let i = 0;
+  const iv = setInterval(() => {
+    setter(text.slice(0, ++i));
+    if (i >= text.length) { clearInterval(iv); onDone(); }
+  }, speed);
+  return iv;
+}
 
+function SeoAuditDemo() {
+  const [phase, setPhase] = useState('idle');
+  const [urlVal, setUrlVal] = useState('');
+  const [showScore, setShowScore] = useState(false);
+  const [visibleChecks, setVisibleChecks] = useState(0);
+  const [dots, setDots] = useState('');
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => runDemo(), 600);
+    return () => { clearTimeout(t); clearTimeout(timerRef.current); };
+  }, []);
+
+  function runDemo() {
+    setPhase('typing'); setUrlVal(''); setShowScore(false); setVisibleChecks(0);
+    typeText('https://mystore.com/products/bamboo-set', setUrlVal, () => {
+      setTimeout(() => {
+        setPhase('auditing');
+        let d = 0;
+        const iv = setInterval(() => { d = (d + 1) % 4; setDots('.'.repeat(d)); }, 400);
+        timerRef.current = setTimeout(() => {
+          clearInterval(iv);
+          setPhase('results');
+          setShowScore(true);
+          let c = 0;
+          const civ = setInterval(() => {
+            c++; setVisibleChecks(c);
+            if (c >= 5) { clearInterval(civ); timerRef.current = setTimeout(() => runDemo(), 4000); }
+          }, 400);
+        }, 2200);
+      }, 500);
+    }, 22);
+  }
+
+  const checks = [
+    { label: 'Meta description', pass: true },
+    { label: 'Heading structure (H1)', pass: true },
+    { label: 'Information Gain', pass: false, issue: 'Only 280 words — Google March 2026 requires 600+ with original data' },
+    { label: 'AI Overview eligibility', pass: false, issue: 'No FAQPage schema or question-structured H2s found' },
+    { label: 'Image optimisation', pass: false, issue: '4 images missing width/height and loading=lazy — hurts Core Web Vitals' },
+  ];
+
+  return (
+    <div style={{ borderRadius: '14px', border: '1px solid #d0e8d4', background: '#f8faf8', overflow: 'hidden', boxShadow: '0 8px 40px rgba(26,122,58,0.10)' }}>
+      <div style={{ background: '#e8f5ea', padding: '9px 14px', display: 'flex', alignItems: 'center', gap: '7px', borderBottom: '1px solid #d0e8d4' }}>
+        <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#ff5f57', display: 'inline-block' }} />
+        <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#febc2e', display: 'inline-block' }} />
+        <span style={{ width: 9, height: 9, borderRadius: '50%', background: '#28c840', display: 'inline-block' }} />
+        <span style={{ flex: 1, textAlign: 'center', fontSize: '11px', color: '#4a6b4c' }}>dablin.co · SEO Audit</span>
+      </div>
+      <div style={{ padding: '20px', background: 'white' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <div style={{ flex: 1, background: '#f8faf8', border: '1px solid #eef2ee', borderRadius: '6px', padding: '8px 12px', fontSize: '12px', color: '#0d1f0e', fontFamily: 'monospace', minHeight: '34px' }}>
+            {urlVal}{phase === 'typing' ? <span style={{ borderRight: '2px solid #1a7a3a', animation: 'blink 0.8s infinite' }}>&nbsp;</span> : ''}
+          </div>
+          <button style={{ background: (phase === 'auditing' || phase === 'results') ? '#1a7a3a' : '#b0c9b4', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 14px', fontSize: '12px', fontWeight: '700', cursor: 'default', whiteSpace: 'nowrap' }}>
+            {phase === 'auditing' ? `Auditing${dots}` : 'Audit SEO'}
+          </button>
+        </div>
+        {showScore && (
+          <div style={{ background: '#f8faf8', border: '1px solid #eef2ee', borderRadius: '10px', padding: '14px 16px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '3px solid #d97706', background: '#fff8e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '13px', color: '#d97706', flexShrink: 0 }}>67%</div>
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '13px', color: '#0d1f0e', marginBottom: '2px' }}>Needs improvement</div>
+              <div style={{ fontSize: '12px', color: '#4a6b4c' }}>12 of 18 checks passed</div>
+            </div>
+          </div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+          {checks.slice(0, visibleChecks).map((c, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '9px 11px', background: '#f8faf8', border: '1px solid #eef2ee', borderRadius: '8px' }}>
+              <span style={{ fontSize: '13px', flexShrink: 0 }}>{c.pass ? '✅' : '❌'}</span>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#0d1f0e' }}>{c.label}</div>
+                {!c.pass && <div style={{ fontSize: '11px', color: '#c0392b', marginTop: '2px' }}>{c.issue}</div>}
+                {!c.pass && <div style={{ marginTop: '5px', background: '#f0faf1', border: '1px solid #b7debb', borderRadius: '5px', padding: '4px 8px', fontSize: '10px', color: '#1a7a3a', fontWeight: '700', display: 'inline-block' }}>✦ AI Fix available — copy &amp; paste</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const CHECKS = [
   { group: "Content Quality", items: [
@@ -66,85 +156,58 @@ export default function PageSeoAudit() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .seo-btn-primary { background: #1a7a3a; color: white; border: none; padding: 12px 28px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+        .seo-btn-primary { background: #1a7a3a; color: white; border: none; padding: 14px 32px; border-radius: 10px; font-family: 'Roboto', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-block; }
         .seo-btn-primary:hover { background: #2d9a4e; transform: translateY(-1px); }
-        .seo-btn-large { padding: 15px 36px; font-size: 16px; border-radius: 10px; }
-        .seo-btn-ghost { background: none; border: 1.5px solid #d0e8d4; color: #1a7a3a; padding: 10px 22px; border-radius: 8px; font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .seo-btn-ghost:hover { border-color: #1a7a3a; background: #eef8f0; }
-        .seo-hamburger { display: none; background: none; border: 1px solid #eef2ee; border-radius: 8px; padding: 8px 10px; cursor: pointer; flex-direction: column; gap: 4px; }
-        .seo-hamburger span { display: block; width: 18px; height: 2px; background: #2a3d2b; border-radius: 2px; }
         @media (max-width: 900px) {
-          .seo-nav-links { display: none !important; }
-          .seo-hamburger { display: flex !important; }
-          .seo-grid-2 { grid-template-columns: 1fr !important; }
+          .seo-hero-grid { flex-direction: column !important; }
+          .seo-hero-right { display: none !important; }
+          .seo-checks-grid { grid-template-columns: 1fr !important; }
           .seo-grid-3 { grid-template-columns: 1fr !important; }
+          .seo-march-grid { flex-direction: column !important; }
+          .seo-ba-grid { grid-template-columns: 1fr !important; }
         }
-        @media (max-width: 768px) {
-          .seo-hero-title { font-size: 40px !important; }
+        @media (max-width: 600px) {
           .seo-section { padding-left: 20px !important; padding-right: 20px !important; }
         }
       `}</style>
 
-      {/* HERO */}
-      <div className="seo-section" style={{ background: '#eef8f0', padding: '96px 48px 108px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid #d0e8d4', borderRadius: '20px', padding: '6px 16px', fontSize: '13px', fontWeight: '600', color: '#1a7a3a', marginBottom: '28px' }}>
-          ⚡ Now includes Google March 2026 signals
-        </div>
-        <h1 className="seo-hero-title" style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(44px,7vw,80px)', fontWeight: '800', lineHeight: '1.0', letterSpacing: '-3px', color: '#0d1f0e', marginBottom: '24px' }}>
-          18 SEO checks.<br />
-          <span style={{ color: '#1a7a3a' }}>AI fixes for every issue.</span>
-        </h1>
-        <p style={{ fontSize: '19px', color: '#4a6b4c', maxWidth: '540px', margin: '0 auto 40px', lineHeight: '1.65', fontWeight: '300' }}>
-          Paste any product page URL. Dablin runs 18 SEO checks — including the new Google March 2026 signals — and generates a ready-to-copy fix for every issue it finds.
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-          <div onClick={() => trackEvent('sign_up_click', { location: 'seo_audit_page_hero' })}>
-            <SignUpButton mode="modal">
-              <button className="seo-btn-primary seo-btn-large">Audit my page free →</button>
-            </SignUpButton>
-          </div>
-          
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '56px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {[['18', 'SEO checks'], ['Google 2026', 'signals included'], ['PageSpeed', 'score included'], ['Free', 'to start']].map(([val, label]) => (
-            <div key={label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '22px', fontWeight: '800', color: '#1a7a3a', fontFamily: "'Roboto Condensed', sans-serif" }}>{val}</div>
-              <div style={{ fontSize: '12px', color: '#4a6b4c', marginTop: '2px' }}>{label}</div>
+      {/* ── HERO ── */}
+      <div className="seo-section" style={{ background: '#eef8f0', backgroundImage: 'linear-gradient(rgba(26,122,58,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(26,122,58,0.06) 1px,transparent 1px)', backgroundSize: '36px 36px', padding: 'clamp(56px,7vw,96px) 56px', borderBottom: '1px solid #d0e8d4' }}>
+        <div className="seo-hero-grid" style={{ display: 'flex', alignItems: 'flex-start', gap: '64px', maxWidth: '1200px', margin: '0 auto' }}>
+
+          {/* Left */}
+          <div style={{ flex: '0 0 400px' }}>
+            <h1 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(44px,5vw,64px)', fontWeight: '800', lineHeight: '1.0', letterSpacing: '-2.5px', color: '#0d1f0e', marginBottom: '20px' }}>
+              SEO Audit.<br />
+              <span style={{ color: '#1a7a3a' }}>18 checks.<br />AI fixes.</span>
+            </h1>
+            <p style={{ fontSize: '17px', color: '#4a6b4c', fontWeight: '300', lineHeight: '1.65', marginBottom: '28px' }}>
+              Paste any product page URL. Get a full SEO report with ready-to-copy fixes for every issue — in under 30 seconds.
+            </p>
+            <div onClick={() => trackEvent('sign_up_click', { location: 'seo_audit_page_hero' })}>
+              <SignUpButton mode="modal">
+                <button className="seo-btn-primary">Audit my page</button>
+              </SignUpButton>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* HOW IT WORKS */}
-      <div className="seo-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '14px' }}>How it works</p>
-          <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '56px' }}>Paste a URL. Get a full SEO report.</h2>
-          <div className="seo-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0' }}>
-            {[
-              { n: '1', title: 'Paste your product page URL', desc: 'Any public URL — Shopify, WooCommerce, Amazon, WordPress, or any custom store.' },
-              { n: '2', title: 'Dablin runs 18 checks', desc: 'Content, technical SEO, structured data, March 2026 signals, and performance — all in seconds.' },
-              { n: '3', title: 'Copy the AI fix for each issue', desc: 'Every failed check includes the exact code or tag to fix it. Copy and paste into your CMS.' },
-            ].map((s, i) => (
-              <div key={s.n} style={{ padding: '0 40px', borderRight: i < 2 ? '1px solid #eef2ee' : 'none', textAlign: 'left' }}>
-                <div style={{ width: '44px', height: '44px', background: '#eef8f0', border: '1.5px solid #d0e8d4', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '800', color: '#1a7a3a', marginBottom: '20px' }}>{s.n}</div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0d1f0e', marginBottom: '10px' }}>{s.title}</h3>
-                <p style={{ fontSize: '14px', color: '#4a6b4c', lineHeight: '1.65', fontWeight: '300' }}>{s.desc}</p>
-              </div>
-            ))}
+          {/* Right: animation */}
+          <div className="seo-hero-right" style={{ flex: 1, minWidth: 0 }}>
+            <SeoAuditDemo />
           </div>
         </div>
       </div>
 
-      {/* 18 CHECKS */}
-      <div className="seo-section" style={{ background: '#f8faf8', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
+      {/* ── 18 CHECKS ── */}
+      <div className="seo-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 56px', borderTop: '1px solid #eef2ee' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '14px' }}>What we check</p>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>What we check</p>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '12px' }}>18 checks across 5 categories</h2>
             <p style={{ fontSize: '16px', color: '#4a6b4c', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Every check comes with an AI-generated fix if it fails.</p>
           </div>
-          <div className="seo-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div className="seo-checks-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             {CHECKS.map(group => (
               <div key={group.group} style={{ background: 'white', border: '1px solid #eef2ee', borderRadius: '14px', padding: '28px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#eef8f0', color: '#1a7a3a', borderRadius: '20px', padding: '4px 14px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>
@@ -167,77 +230,70 @@ export default function PageSeoAudit() {
         </div>
       </div>
 
-      {/* MARCH 2026 CALLOUT */}
-      <div className="seo-section" style={{ background: '#0d1f0e', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }} className="seo-grid-2">
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(111,207,138,0.15)', color: '#6fcf8a', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px', border: '1px solid rgba(111,207,138,0.2)' }}>
-              ⚡ Google March 2026
-            </div>
-            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,40px)', fontWeight: '800', color: 'white', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
-              The fastest Google update ever. Is your site ready?
-            </h2>
-            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.7', marginBottom: '28px', fontWeight: '300' }}>
-              The March 2026 core update rolled out in under 20 hours — the fastest ever. It introduced two new ranking signals that most SEO tools don't check yet. Dablin checks both.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[
-                { title: 'Information Gain', desc: 'Does your page add something original? Pages with no unique data, author signal, or structured content are penalised.' },
-                { title: 'AI Overview eligibility', desc: 'Does your page have FAQPage schema or question-structured headings? This determines if Google AI summarises you.' },
-              ].map(item => (
-                <div key={item.title} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '16px 20px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#6fcf8a', marginBottom: '4px' }}>{item.title}</div>
-                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.55' }}>{item.desc}</div>
-                </div>
-              ))}
-            </div>
+      {/* ── MARCH 2026 DARK BAND ── */}
+      <div className="seo-section" style={{ background: '#0d1f0e', padding: 'clamp(48px,6vw,96px) 56px' }}>
+        <div className="seo-march-grid" style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', gap: '64px', alignItems: 'center' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'inline-block', background: '#1a7a3a', color: 'white', borderRadius: '20px', padding: '4px 14px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', marginBottom: '20px' }}>⚡ Google March 2026</div>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(26px,3vw,36px)', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', marginBottom: '14px', lineHeight: '1.1' }}>Two new signals.<br />Most tools miss them.</h2>
+            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.65', fontWeight: '300' }}>The March 2026 update rolled out in under 20 hours — the fastest core update in Google history. Dablin checks both new signals.</p>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '28px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255,255,255,0.4)', marginBottom: '20px' }}>Example audit result</p>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
-              { label: 'Meta description', pass: true },
-              { label: 'Heading structure', pass: true },
-              { label: 'Information Gain', pass: false, issue: 'Only 280 words — needs 600+ with original data' },
-              { label: 'AI Overview eligibility', pass: false, issue: 'No FAQPage schema or question H2s found' },
-              { label: 'Image optimisation', pass: false, issue: '4 images missing width/height and lazy loading' },
-              { label: 'Product schema', pass: true },
-            ].map((c, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '10px 0', borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-                <span style={{ fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>{c.pass ? '✅' : '❌'}</span>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: 'white' }}>{c.label}</div>
-                  {!c.pass && <div style={{ fontSize: '11px', color: '#f87171', marginTop: '2px' }}>{c.issue}</div>}
-                  {!c.pass && <div style={{ marginTop: '6px', background: 'rgba(111,207,138,0.1)', border: '1px solid rgba(111,207,138,0.2)', borderRadius: '5px', padding: '5px 8px', fontSize: '10px', color: '#6fcf8a', fontWeight: '700' }}>✦ AI Fix available — copy & paste</div>}
-                </div>
+              { title: 'Information Gain', desc: 'Checks if your page adds something original — unique data, author signals, structured lists. Pages without it are filtered down.' },
+              { title: 'AI Overview eligibility', desc: 'FAQPage or HowTo schema, or question-structured H2s — needed to appear in Google\'s AI-generated search summaries.' },
+            ].map(item => (
+              <div key={item.title} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '18px 20px' }}>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#6fcf8a', marginBottom: '6px' }}>{item.title}</div>
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.55' }}>{item.desc}</div>
               </div>
             ))}
-            <div style={{ marginTop: '20px', background: 'rgba(111,207,138,0.08)', border: '1px solid rgba(111,207,138,0.15)', borderRadius: '10px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '50%', border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '13px', color: '#f59e0b', flexShrink: 0 }}>67%</div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'white' }}>Needs improvement</div>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>12 of 18 checks passed</div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* WHY IT MATTERS */}
-      <div className="seo-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
+      {/* ── BEFORE / AFTER ── */}
+      <div className="seo-section" style={{ background: '#f8faf8', padding: 'clamp(48px,6vw,96px) 56px', borderTop: '1px solid #eef2ee', borderBottom: '1px solid #eef2ee' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>Before &amp; after</p>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,40px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px' }}>What a typical audit finds</h2>
+          </div>
+          <div className="seo-ba-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {[
+              { bg: '#fef2f2', border: '#fca5a5', labelColor: '#c0392b', label: 'Before Dablin', dot: '#ef4444', items: ['No Product schema — not eligible for Shopping', 'Missing meta description', 'Fails Information Gain — filtered by March 2026', 'No AI Overview eligibility'] },
+              { bg: '#eef8f0', border: '#d0e8d4', labelColor: '#1a7a3a', label: 'After fixing with Dablin', dot: '#1a7a3a', items: ['Product schema added — Google Shopping ready', 'Meta description optimised — CTR improved', 'Passes Information Gain — protected', 'FAQPage schema — eligible for AI Overviews'] },
+            ].map(col => (
+              <div key={col.label} style={{ background: col.bg, border: `1px solid ${col.border}`, borderRadius: '14px', padding: '24px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: col.labelColor, marginBottom: '14px' }}>{col.label}</div>
+                {col.items.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderBottom: i < col.items.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none', fontSize: '13px', color: '#0d1f0e' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: col.dot, flexShrink: 0 }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── WHY IT MATTERS ── */}
+      <div className="seo-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 56px', borderBottom: '1px solid #eef2ee' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '14px' }}>Why it matters</p>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>Why it matters</p>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '12px' }}>Most product pages fail basic SEO checks</h2>
-            <p style={{ fontSize: '16px', color: '#4a6b4c', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>These are not advanced tactics. They are fundamentals Google expects on every page.</p>
+            <p style={{ fontSize: '16px', color: '#4a6b4c', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>These are not advanced tactics — they are fundamentals Google expects on every page.</p>
           </div>
           <div className="seo-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '20px' }}>
             {[
-              { title: 'Missing schema costs you rich results', desc: 'Without Product schema, your listings don\'t qualify for Google Shopping and won\'t show star ratings or price in search results.' },
-              { title: 'Thin content gets filtered', desc: 'Pages under 600 words with no original data are now penalised by Google\'s March 2026 Information Gain filter.' },
-              { title: 'No canonical = duplicate URL penalties', desc: 'Shopify creates multiple URLs per product. A missing canonical splits your ranking signals across duplicates.' },
-              { title: 'Missing meta = auto-generated previews', desc: 'Without a meta description, Google writes its own — and it\'s usually bad. This directly affects click-through rate.' },
-              { title: 'Slow images hurt Core Web Vitals', desc: 'Images without width, height, and lazy loading cause layout shifts and slow LCP — both are direct ranking signals.' },
-              { title: 'No AI Overview eligibility = invisible in SGE', desc: 'Without FAQPage schema or question-structured headings, Google\'s AI won\'t summarise your content in AI Overviews.' },
+              { title: 'Missing schema costs you rich results', desc: "Without Product schema, your listings don't qualify for Google Shopping and won't show star ratings or price." },
+              { title: 'Thin content gets filtered', desc: "Pages under 600 words with no original data are penalised by Google's March 2026 Information Gain filter." },
+              { title: 'No canonical = duplicate URL penalties', desc: "Shopify creates multiple URLs per product. A missing canonical splits your ranking signals across duplicates." },
+              { title: 'Missing meta = auto-generated previews', desc: "Without a meta description, Google writes its own — usually bad. This directly affects click-through rate." },
+              { title: 'Slow images hurt Core Web Vitals', desc: "Images without width, height, and lazy loading cause layout shifts and slow LCP — both direct ranking signals." },
+              { title: 'No AI Overview eligibility = invisible in SGE', desc: "Without FAQPage schema or question-structured headings, Google's AI won't summarise your content." },
             ].map(f => (
               <div key={f.title} style={{ background: '#f8faf8', border: '1px solid #eef2ee', borderRadius: '12px', padding: '24px' }}>
                 <div style={{ fontSize: '15px', fontWeight: '700', color: '#0d1f0e', marginBottom: '8px' }}>{f.title}</div>
@@ -248,13 +304,11 @@ export default function PageSeoAudit() {
         </div>
       </div>
 
-      
-
-      {/* FAQ */}
-      <div className="seo-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
+      {/* ── FAQ ── */}
+      <div className="seo-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 56px', borderBottom: '1px solid #eef2ee' }}>
         <div style={{ maxWidth: '780px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '14px' }}>FAQ</p>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>FAQ</p>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,40px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px' }}>Common questions</h2>
           </div>
           <div style={{ borderTop: '1px solid #eef2ee' }}>
@@ -263,8 +317,8 @@ export default function PageSeoAudit() {
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="seo-section" style={{ background: '#0d1f0e', padding: 'clamp(64px,8vw,120px) 48px', textAlign: 'center' }}>
+      {/* ── CTA ── */}
+      <div className="seo-section" style={{ background: '#0d1f0e', padding: 'clamp(64px,8vw,120px) 56px', textAlign: 'center' }}>
         <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(32px,5vw,56px)', fontWeight: '800', color: 'white', letterSpacing: '-1.5px', marginBottom: '16px' }}>
           Find out what's <span style={{ color: '#6fcf8a' }}>holding your rankings back.</span>
         </h2>
@@ -272,11 +326,11 @@ export default function PageSeoAudit() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div onClick={() => trackEvent('sign_up_click', { location: 'seo_audit_page_cta' })}>
             <SignUpButton mode="modal">
-              <button className="seo-btn-primary seo-btn-large">Audit your first page free →</button>
+              <button className="seo-btn-primary">Audit your first page free →</button>
             </SignUpButton>
           </div>
           <SignInButton mode="modal">
-            <button style={{ background: 'none', border: '2px solid rgba(255,255,255,0.2)', color: 'white', padding: '15px 32px', borderRadius: '10px', fontFamily: "'Roboto', sans-serif", fontSize: '16px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s' }}>Sign in</button>
+            <button style={{ background: 'none', border: '2px solid rgba(255,255,255,0.2)', color: 'white', padding: '14px 32px', borderRadius: '10px', fontFamily: "'Roboto', sans-serif", fontSize: '15px', fontWeight: '500', cursor: 'pointer' }}>Sign in</button>
           </SignInButton>
         </div>
       </div>
