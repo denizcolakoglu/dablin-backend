@@ -2096,17 +2096,33 @@ app.get("/api/gsc/callback", async (req, res) => {
 app.get("/api/gsc/status", requireAuth(), async (req, res) => {
   try {
     const authObj = getAuth(req); req.auth = authObj;
-    const row = await pool.query("SELECT site_url, access_token FROM gsc_tokens WHERE clerk_id=$1", [req.auth.userId]);
+    const row = await pool.query(
+      "SELECT site_url, access_token, refresh_token, expiry FROM gsc_tokens WHERE clerk_id=$1",
+      [req.auth.userId]
+    );
     if (!row.rows.length) return res.json({ connected: false });
-    // Get all sites for the selector
-    const tokenRow = row.rows[0];
+    const t = row.rows[0];
     const oauth2Client = getOAuthClient();
-    oauth2Client.setCredentials({ access_token: tokenRow.access_token });
+    oauth2Client.setCredentials({
+      access_token:  t.access_token,
+      refresh_token: t.refresh_token,
+      expiry_date:   t.expiry ? new Date(t.expiry).getTime() : null,
+    });
+    // Auto-save refreshed token if it changes
+    oauth2Client.on("tokens", async (tokens) => {
+      if (tokens.access_token) {
+        await pool.query(
+          "UPDATE gsc_tokens SET access_token=$1, expiry=$2, updated_at=NOW() WHERE clerk_id=$3",
+          [tokens.access_token, tokens.expiry_date ? new Date(tokens.expiry_date) : null, req.auth.userId]
+        );
+      }
+    });
     const webmasters = google.webmasters({ version: "v3", auth: oauth2Client });
     const sitesRes = await webmasters.sites.list();
     const sites = (sitesRes.data.siteEntry || []).map(s => s.siteUrl);
-    res.json({ connected: true, sites, selectedSite: tokenRow.site_url });
-  } catch {
+    res.json({ connected: true, sites, selectedSite: t.site_url });
+  } catch (err) {
+    console.error("GSC status error:", err.message);
     res.json({ connected: false });
   }
 });
