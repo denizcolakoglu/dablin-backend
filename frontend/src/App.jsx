@@ -154,7 +154,7 @@ function AppShell() {
       ai:             '/dashboard/ai-audit',
       audit:          '/dashboard/seo-audit',
       generate:       '/dashboard/generate',
-      pricing:        '/pricing',
+      pricing:        '/dashboard',
       searchconsole:  '/dashboard/search-console',
     };
     navigate(routes[p] || '/dashboard');
@@ -248,7 +248,7 @@ function AppShell() {
           </div>
           <div className="sidebar-group">
             <div className="sidebar-group-label">Account</div>
-            <button className={`sidebar-link`} onClick={() => window.location.href = '/pricing'}>
+            <button className={`sidebar-link ${page==='pricing'?'active':''}`} onClick={() => setPage('pricing')}>
               <span className="sidebar-link-icon">◑</span>Plan &amp; Pricing
             </button>
           </div>
