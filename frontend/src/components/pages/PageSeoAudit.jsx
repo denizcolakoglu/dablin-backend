@@ -148,6 +148,13 @@ const FAQ = [
   { q: "Does it work on any website?", a: "Yes. The SEO audit works on any publicly accessible URL — Shopify, WooCommerce, Amazon, WordPress, or any custom store. You can also audit competitor pages." },
   { q: "How long does it take?", a: "The audit typically takes 15–25 seconds depending on page size and the number of failed checks that need AI fixes generated. A PageSpeed Insights score is also included." },
   { q: "How much does it cost?", a: "The SEO Audit is included in all Dablin plans. See the Pricing page for plan details." },
+  { q: "Can I audit competitor pages?", a: "Yes. Any public URL can be audited — including competitor product pages. This is a good way to see what they're doing right and identify opportunities." },
+  { q: "What is Information Gain and why does it matter?", a: "Information Gain is one of the two new signals introduced in Google's March 2026 core update. It measures whether your page contributes something original to the internet — unique data, a named author, structured lists, or first-hand experience. Pages that only restate commonly known information are ranked lower. Dablin checks your page for all the signals Google uses to determine Information Gain." },
+  { q: "What is AI Overview eligibility?", a: "AI Overview is Google's AI-generated search summary that appears above regular results. To be eligible, your page needs FAQPage or HowTo schema markup, or question-structured H2 headings. Dablin checks for both and generates the exact schema block you need if it's missing." },
+  { q: "Does the audit include a PageSpeed score?", a: "Yes. Every audit includes a PageSpeed Insights score pulled directly from Google's API, so you can see your Core Web Vitals performance alongside the SEO checks." },
+  { q: "How is Dablin different from Ahrefs or Semrush?", a: "Ahrefs and Semrush are built for keyword research and backlink analysis. Dablin focuses on what's on your page — the technical and content signals that determine whether Google and AI engines can understand and rank it. Dablin also checks the new March 2026 signals and AI engine visibility, which traditional tools don't cover." },
+  { q: "Can I connect Google Search Console?", a: "Yes. Dablin integrates with Google Search Console on the Agency plan. Once connected, you get live data on which pages are indexed, which queries bring traffic, Core Web Vitals status, sitemap errors, and striking distance keywords — all inside Dablin alongside your SEO audit results." },
+  { q: "What platforms does it support?", a: "Any publicly accessible URL. Shopify, WooCommerce, WordPress, Magento, BigCommerce, Amazon, Etsy, custom-built stores — if it has a URL, Dablin can audit it." },
 ];
 
 export default function PageSeoAudit() {
@@ -234,7 +241,7 @@ export default function PageSeoAudit() {
       <div className="seo-section" style={{ background: '#0d1f0e', padding: 'clamp(48px,6vw,96px) 56px' }}>
         <div className="seo-march-grid" style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', gap: '64px', alignItems: 'center' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'inline-block', background: '#1a7a3a', color: 'white', borderRadius: '20px', padding: '4px 14px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', marginBottom: '20px' }}>⚡ Google March 2026</div>
+            <div style={{ display: 'inline-block', background: '#1a7a3a', color: 'white', borderRadius: '20px', padding: '4px 14px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', marginBottom: '20px' }}>Google March 2026</div>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(26px,3vw,36px)', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', marginBottom: '14px', lineHeight: '1.1' }}>Two new signals.<br />Most tools miss them.</h2>
             <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.65', fontWeight: '300' }}>The March 2026 update rolled out in under 20 hours — the fastest core update in Google history. Dablin checks both new signals.</p>
           </div>
