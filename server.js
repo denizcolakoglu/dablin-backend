@@ -1350,10 +1350,10 @@ app.post("/api/generate-queries-from-prompt", requireAuth(), async (req, res) =>
     const authObj = getAuth(req); req.auth = authObj;
     const msg = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 400,
+      max_tokens: 600,
       messages: [{
         role: "user",
-        content: `Based on this description, generate 7 search queries that a potential customer would type into ChatGPT, Gemini, or Claude when looking for this product or service.
+        content: `You are an AI visibility strategist. Based on this brand description, generate 7 search queries that real customers type into ChatGPT, Gemini, or Claude.
 
 Description: ${prompt}
 ${brandHint ? `Brand name: ${brandHint}` : ''}
@@ -1361,15 +1361,22 @@ ${brandHint ? `Brand name: ${brandHint}` : ''}
 Return ONLY valid JSON, no explanation:
 {
   "brand": "BrandName",
-  "queries": ["query 1","query 2","query 3","query 4","query 5","query 6","query 7"]
+  "queries": [
+    { "type": "problem", "query": "..." },
+    { "type": "problem", "query": "..." },
+    { "type": "problem", "query": "..." },
+    { "type": "category", "query": "..." },
+    { "type": "category", "query": "..." },
+    { "type": "comparison", "query": "..." },
+    { "type": "comparison", "query": "..." }
+  ]
 }
 
 Rules:
-- Queries 1-4: natural customer search terms (no brand name)
-- Query 5: "best [category] tools/software/products"
-- Query 6: "[category] reviews" or "[category] alternatives"
-- Query 7: a comparison query like "[category] vs [competitor type]"
-- Brand: extract from description or use provided brand name`
+- PROBLEM queries (3): the pain or goal the customer has BEFORE they know what product they need. Natural language questions like "How do I...", "My X isn't working...", "What's the best way to...". No brand or category names.
+- CATEGORY queries (2): what they search once they know the category exists. e.g. "best [category] for [use case]", "top [category] software". Competitive, generic.
+- COMPARISON queries (2): decision-stage queries. e.g. "[Brand] vs [competitor]", "alternatives to [competitor]", "best [category] alternatives". High buyer intent.
+- Brand: extract from description or use provided brand name.`
       }]
     });
 
@@ -1378,7 +1385,7 @@ Rules:
       const clean = msg.content[0].text.trim().replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       const parsed = JSON.parse(clean);
       brand = parsed.brand || brand;
-      queries = parsed.queries || [];
+      queries = (parsed.queries || []).map(q => typeof q === "string" ? q : q.query);
     } catch(e) {
       return res.status(500).json({ error: "Failed to generate queries." });
     }
@@ -1390,7 +1397,7 @@ Rules:
 });
 
 // ── POST /api/generate-queries ───────────────────────────────
-// Scrapes URL, extracts brand + generates 7 queries. No credits charged.
+// Scrapes URL, extracts brand + generates 7 typed queries. No credits charged.
 app.post("/api/generate-queries", requireAuth(), async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "url is required" });
@@ -1414,10 +1421,11 @@ app.post("/api/generate-queries", requireAuth(), async (req, res) => {
 
     const brandMsg = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 400,
+      max_tokens: 600,
       messages: [{
         role: "user",
-        content: `Extract the brand name and generate 7 search queries for this website.
+        content: `You are an AI visibility strategist. Analyse this website and generate 7 search queries that real customers type into ChatGPT, Gemini, or Claude.
+
 URL: ${url}
 Title: ${pageTitle}
 Meta: ${metaDesc}
@@ -1427,14 +1435,22 @@ Content: ${bodySnippet}
 Return ONLY valid JSON, no explanation:
 {
   "brand": "BrandName",
-  "queries": ["query 1","query 2","query 3","query 4","query 5","query 6","query 7"]
+  "queries": [
+    { "type": "problem", "query": "..." },
+    { "type": "problem", "query": "..." },
+    { "type": "problem", "query": "..." },
+    { "type": "category", "query": "..." },
+    { "type": "category", "query": "..." },
+    { "type": "comparison", "query": "..." },
+    { "type": "comparison", "query": "..." }
+  ]
 }
 
 Rules:
-- Queries 1-4: how a potential customer searches for this product (natural language, no brand name)
-- Query 5: "best [category] tools" or "top [category] software"
-- Query 6: "[category] reviews"
-- Query 7: "[category] alternatives"`
+- PROBLEM queries (3): the pain or goal the customer has BEFORE they know what product they need. Natural language questions. No brand or category names. e.g. "My store isn't getting organic traffic, what am I doing wrong?" or "How do I keep customers coming back?"
+- CATEGORY queries (2): what they search once they know the category. e.g. "best [category] for [use case]", "top [category] software". Generic and competitive.
+- COMPARISON queries (2): decision-stage, high buyer intent. e.g. "alternatives to [known competitor]", "[Brand] vs [competitor]", "best [category] alternatives for small businesses".
+- Brand: extract the real brand name from the page content.`
       }]
     });
 
@@ -1443,7 +1459,7 @@ Rules:
       const clean = brandMsg.content[0].text.trim().replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       const parsed = JSON.parse(clean);
       brand = parsed.brand || domain;
-      queries = parsed.queries || [];
+      queries = (parsed.queries || []).map(q => typeof q === "string" ? q : q.query);
     } catch(e) {
       return res.status(500).json({ error: "Failed to extract brand information." });
     }
@@ -1496,20 +1512,20 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
 
           const brandMsg = await anthropic.messages.create({
             model: "claude-haiku-4-5-20251001",
-            max_tokens: 400,
-            messages: [{ role: "user", content: `Extract the brand name and generate 7 search queries for this website.\nURL: ${url}\nTitle: ${pageTitle}\nMeta: ${metaDesc}\nH1: ${h1}\nContent: ${bodySnippet}\n\nReturn ONLY valid JSON:\n{"brand":"BrandName","queries":["query 1","query 2","query 3","query 4","query 5","query 6","query 7"]}` }]
+            max_tokens: 600,
+            messages: [{ role: "user", content: `You are an AI visibility strategist. Analyse this website and generate 7 search queries that real customers type into ChatGPT, Gemini, or Claude.\n\nURL: ${url}\nTitle: ${pageTitle}\nMeta: ${metaDesc}\nH1: ${h1}\nContent: ${bodySnippet}\n\nReturn ONLY valid JSON:\n{"brand":"BrandName","queries":[{"type":"problem","query":"..."},{"type":"problem","query":"..."},{"type":"problem","query":"..."},{"type":"category","query":"..."},{"type":"category","query":"..."},{"type":"comparison","query":"..."},{"type":"comparison","query":"..."}]}\n\nRules:\n- PROBLEM (3): pain/goal BEFORE they know the product category. Natural questions, no brand or category names.\n- CATEGORY (2): once they know the category. e.g. "best [category] for [use case]".\n- COMPARISON (2): decision-stage. e.g. "alternatives to [competitor]", "[Brand] vs [competitor]".` }]
           });
           const clean = brandMsg.content[0].text.trim().replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
           const parsed = JSON.parse(clean);
           brand = parsed.brand || domain;
-          queriesToRun = parsed.queries || [];
+          queriesToRun = (parsed.queries || []).map(q => typeof q === "string" ? { query: q, type: "category" } : q);
         }
       } catch(e) {
         console.error("Auto-generate queries failed:", e.message);
       }
       if (queriesToRun.length === 0) return res.status(400).json({ error: "Could not generate queries for this URL. Try adding them manually." });
     } else {
-      queriesToRun = savedQueries.slice(0, 7);
+      queriesToRun = savedQueries.slice(0, 7).map(q => typeof q === "string" ? { query: q, type: "category" } : q);
       brand = brandFromClient || domain;
     }
 
@@ -1664,13 +1680,15 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
     }
 
     // Run all queries in parallel (up to 7 queries × 3 AIs = 21 calls, each with 20s timeout)
-    const results = await Promise.all(queriesToRun.slice(0, 7).map(async (query) => {
+    const results = await Promise.all(queriesToRun.slice(0, 7).map(async (queryObj) => {
+      const queryStr = typeof queryObj === "string" ? queryObj : queryObj.query;
+      const queryType = typeof queryObj === "string" ? "category" : (queryObj.type || "category");
       const [claude, gpt, gem] = await Promise.all([
-        queryClause(query),
-        queryGPT(query),
-        queryGemini(query),
+        queryClause(queryStr),
+        queryGPT(queryStr),
+        queryGemini(queryStr),
       ]);
-      return { query, claude, gpt, gemini: gem };
+      return { query: queryStr, type: queryType, claude, gpt, gemini: gem };
     }));
 
     // Aggregate competitor brands (separate from platforms)

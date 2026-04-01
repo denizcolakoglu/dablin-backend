@@ -83,15 +83,32 @@ export default function VisibilityChecker({ setPage }) {
         .vc-chip{display:inline-block;font-size:11px;font-weight:500;padding:2px 10px;border-radius:100px;margin:2px 3px 2px 0;}
         .vc-chip-orange{background:#fff3e0;border:1px solid #ffe0b2;color:#e65100;}
         .vc-chip-blue{background:#e8f0fe;border:1px solid #c5cae9;color:#3949ab;}
+        .vc-type-problem{background:#fef2f2;border:1px solid #fca5a5;color:#c0392b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;}
+        .vc-type-category{background:#fffbeb;border:1px solid #fcd34d;color:#b45309;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;}
+        .vc-type-comparison{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;}
         .vc-competitors{background:#f7fbf7;border:1px solid #d4e8d6;border-radius:12px;padding:20px;margin-bottom:24px;}
         .vc-spinner{width:32px;height:32px;border:3px solid #d4e8d6;border-top-color:#2d7a3a;border-radius:50%;animation:vc-spin 0.9s linear infinite;}
         @keyframes vc-spin{to{transform:rotate(360deg);}}
       `}</style>
 
       {/* Description */}
-      <p style={{ fontSize:'15px', color:'#5a7a5e', marginBottom:'20px' }}>
-        Enter your website URL and Dablin will automatically generate relevant search queries and check if ChatGPT, Gemini, and Claude mention your brand.
+      <p style={{ fontSize:'15px', color:'#5a7a5e', marginBottom:'14px' }}>
+        Enter your website URL. Dablin reads your page, understands your brand, and generates 7 targeted queries — problem queries, category queries, and comparison queries — then checks if ChatGPT, Gemini, and Claude mention you.
       </p>
+
+      {/* Query type legend */}
+      <div style={{ display:'flex', gap:'10px', flexWrap:'wrap', marginBottom:'20px' }}>
+        {[
+          { cls:'vc-type-problem',    label:'Problem',    desc:'Pain/goal before they know the category' },
+          { cls:'vc-type-category',   label:'Category',   desc:'Once they know what they need' },
+          { cls:'vc-type-comparison', label:'Comparison', desc:'Decision-stage, high buyer intent' },
+        ].map(t => (
+          <div key={t.label} style={{ display:'flex', alignItems:'center', gap:'6px', background:'white', border:'1px solid #d4e8d6', borderRadius:'8px', padding:'6px 12px' }}>
+            <span className={t.cls}>{t.label}</span>
+            <span style={{ fontSize:'12px', color:'#5a7a5e' }}>{t.desc}</span>
+          </div>
+        ))}
+      </div>
 
       {/* URL input */}
       <div style={{ display:'flex', gap:'10px', marginBottom:'20px' }}>
@@ -166,7 +183,12 @@ export default function VisibilityChecker({ setPage }) {
                   <>
                     <tr key={i} onClick={() => setExpandedRow(isExpanded ? null : i)}>
                       <td>
-                        <div style={{ fontWeight:'500', color:'#1c2e1e', fontSize:'13px' }}>{row.query}</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:'7px', marginBottom:'3px' }}>
+                          {row.type && (
+                            <span className={`vc-type-${row.type}`}>{row.type}</span>
+                          )}
+                          <div style={{ fontWeight:'500', color:'#1c2e1e', fontSize:'13px' }}>{row.query}</div>
+                        </div>
                         {(allBrands.length > 0 || allPlatforms.length > 0) && (
                           <div style={{ marginTop:'6px' }}>
                             {allBrands.map(b => <span key={b} className="vc-chip vc-chip-orange">{b}</span>)}
