@@ -142,6 +142,7 @@ function AppShell() {
     : path === '/seo-audit'       ? 'audit'
     : path === '/generate'        ? 'generate'
     : path === '/credits'         ? 'pricing'
+    : path === '/pricing'         ? 'pricing'
     : path === '/search-console'  ? 'searchconsole'
     : 'dashboard';
 
@@ -154,7 +155,7 @@ function AppShell() {
       ai:             '/dashboard/ai-audit',
       audit:          '/dashboard/seo-audit',
       generate:       '/dashboard/generate',
-      pricing:        '/dashboard',
+      pricing:        '/dashboard/pricing',
       searchconsole:  '/dashboard/search-console',
     };
     navigate(routes[p] || '/dashboard');
