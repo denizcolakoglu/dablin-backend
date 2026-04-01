@@ -391,20 +391,6 @@ export default function Pricing({ setPage }) {
 
       {showCompare && <CompareTable yearly={yearly} />}
 
-      {/* Balance note for existing pay-per-use users */}
-      {balance !== null && balance > 0 && (
-        <div style={{ marginTop: "40px", background: "#eef8f0", border: "1px solid #d0e8d4", borderRadius: "12px", padding: "16px 20px", display: "flex", alignItems: "center", gap: "14px" }}>
-          <span style={{ fontSize: "20px" }}>💰</span>
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: "700", color: "#0d1f0e", marginBottom: "2px" }}>
-              You have €{balance.toFixed(2)} in pay-per-use credits
-            </div>
-            <div style={{ fontSize: "12px", color: "#4a6b4c" }}>
-              Your existing balance will remain on your account and carry over alongside any subscription.
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
