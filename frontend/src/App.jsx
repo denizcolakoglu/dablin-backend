@@ -246,15 +246,14 @@ function AppShell() {
               <span className="sidebar-link-icon">⊟</span>Description Generator
             </button>
           </div>
+          <div className="sidebar-group">
+            <div className="sidebar-group-label">Account</div>
+            <button className={`sidebar-link ${page==='pricing'?'active':''}`} onClick={() => setPage('pricing')}>
+              <span className="sidebar-link-icon">◑</span>Plan &amp; Pricing
+            </button>
+          </div>
         </nav>
         <div className="sidebar-bottom">
-          <button className={`sidebar-balance-btn ${page==='pricing'?'active':''}`} onClick={() => setPage('pricing')}>
-            <span style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-              <span style={{ fontSize:'13px' }}>◑</span>
-              <span>Balance</span>
-            </span>
-            <span className="sidebar-balance-amount">€—</span>
-          </button>
           <div className="sidebar-account">
             <UserButton afterSignOutUrl="/" />
           </div>
