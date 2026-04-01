@@ -71,11 +71,11 @@ export default function VisibilityChecker({ setPage }) {
         .vc-summary-engine{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;}
         .vc-summary-count{font-size:28px;font-weight:800;font-family:'Roboto Condensed',sans-serif;}
         .vc-summary-label{font-size:12px;color:#5a7a5e;margin-top:2px;}
-        .vc-table{width:100%;border-collapse:collapse;margin-bottom:28px;font-size:13px;}
+        .vc-table{width:100%;border-collapse:collapse;margin-bottom:4px;font-size:13px;}
         .vc-table th{background:#f7fbf7;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#5a7a5e;text-transform:uppercase;letter-spacing:0.8px;border-bottom:2px solid #d4e8d6;}
         .vc-table th.center{text-align:center;}
         .vc-table td{padding:12px 14px;border-bottom:1px solid #eef5ef;vertical-align:middle;}
-        .vc-table tr:hover{background:#f7fbf7;cursor:pointer;}
+        .vc-table tr:hover td{background:#f0faf2;}
         .vc-table td.center{text-align:center;}
         .vc-mention{font-weight:700;font-size:15px;}
         .vc-expand-row td{background:#f7fbf7;padding:12px 16px;}
@@ -172,6 +172,7 @@ export default function VisibilityChecker({ setPage }) {
                 <th className="center">Claude</th>
                 <th className="center">GPT-4o</th>
                 <th className="center">Gemini</th>
+                <th style={{ width:'32px' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -181,7 +182,7 @@ export default function VisibilityChecker({ setPage }) {
                 const isExpanded = expandedRow === i;
                 return (
                   <>
-                    <tr key={i} onClick={() => setExpandedRow(isExpanded ? null : i)}>
+                    <tr key={i} onClick={() => setExpandedRow(isExpanded ? null : i)} style={{ cursor:'pointer' }}>
                       <td>
                         <div style={{ display:'flex', alignItems:'center', gap:'7px', marginBottom:'3px' }}>
                           {row.type && (
@@ -203,10 +204,13 @@ export default function VisibilityChecker({ setPage }) {
                           </span>
                         </td>
                       ))}
+                      <td className="center" style={{ width:'32px', paddingLeft:'4px', paddingRight:'8px' }}>
+                        <span style={{ display:'inline-block', fontSize:'12px', color:'#9ab09c', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>▾</span>
+                      </td>
                     </tr>
                     {isExpanded && (
                       <tr key={`${i}-exp`}>
-                        <td colSpan={4} className="vc-expand-row">
+                        <td colSpan={5} className="vc-expand-row">
                           {[{ label:'Claude', key:'claude', color:'#c67b2f' }, { label:'GPT-4o', key:'gpt', color:'#10a37f' }, { label:'Gemini', key:'gemini', color:'#4285f4' }].map(({ label, key, color }, j) => (
                             <div key={key} style={{ marginTop: j > 0 ? '12px' : 0, paddingTop: j > 0 ? '12px' : 0, borderTop: j > 0 ? '1px solid #e8f5ea' : 'none' }}>
                               <div style={{ fontSize:'11px', fontWeight:'700', color, textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'6px', display:'flex', alignItems:'center', gap:'6px' }}>
@@ -224,6 +228,7 @@ export default function VisibilityChecker({ setPage }) {
               })}
             </tbody>
           </table>
+          <div style={{ fontSize:'12px', color:'#9ab09c', marginBottom:'24px', textAlign:'right' }}>▾ Click any row to see AI responses</div>
 
           {/* Competitors */}
           {result.topCompetitors?.length > 0 && (

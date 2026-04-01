@@ -288,6 +288,7 @@ export default function QueryCheck({ setPage }) {
                 <th className="center">Claude</th>
                 <th className="center">GPT-4o</th>
                 <th className="center">Gemini</th>
+                <th style={{ width:'32px' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -297,7 +298,7 @@ export default function QueryCheck({ setPage }) {
                 const isExpanded = expandedRow === i;
                 return (
                   <>
-                    <tr key={i} onClick={() => setExpandedRow(isExpanded ? null : i)}>
+                    <tr key={i} onClick={() => setExpandedRow(isExpanded ? null : i)} style={{ cursor:'pointer' }}>
                       <td>
                         <div style={{ fontWeight:'500', color:'#1c2e1e', fontSize:'13px' }}>{row.query}</div>
                         {(allBrands.length > 0 || allPlatforms.length > 0) && (
@@ -314,10 +315,13 @@ export default function QueryCheck({ setPage }) {
                           </span>
                         </td>
                       ))}
+                      <td className="center" style={{ width:'32px', paddingLeft:'4px', paddingRight:'8px' }}>
+                        <span style={{ display:'inline-block', fontSize:'12px', color:'#9ab09c', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>▾</span>
+                      </td>
                     </tr>
                     {isExpanded && (
                       <tr key={`${i}-exp`}>
-                        <td colSpan={4} style={{ background:'#f7fbf7', padding:'12px 16px' }}>
+                        <td colSpan={5} style={{ background:'#f7fbf7', padding:'12px 16px' }}>
                           {[{ label:'Claude', key:'claude', color:'#c67b2f' }, { label:'GPT-4o', key:'gpt', color:'#10a37f' }, { label:'Gemini', key:'gemini', color:'#4285f4' }].map(({ label, key, color }, j) => (
                             <div key={key} style={{ marginTop: j > 0 ? '12px' : 0, paddingTop: j > 0 ? '12px' : 0, borderTop: j > 0 ? '1px solid #e8f5ea' : 'none' }}>
                               <div style={{ fontSize:'11px', fontWeight:'700', color, textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'6px' }}>{label}</div>
@@ -332,6 +336,7 @@ export default function QueryCheck({ setPage }) {
               })}
             </tbody>
           </table>
+          <div style={{ fontSize:'12px', color:'#9ab09c', marginBottom:'24px', textAlign:'right' }}>▾ Click any row to see AI responses</div>
 
           {result.topCompetitors?.length > 0 && (
             <div style={{ background:'#f7fbf7', border:'1px solid #d4e8d6', borderRadius:'12px', padding:'20px', marginBottom:'24px' }}>
