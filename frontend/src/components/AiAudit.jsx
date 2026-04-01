@@ -80,7 +80,13 @@ export default function AiAudit({ setPage }) {
         body: JSON.stringify({ url: fullUrl }),
       });
       const data = await res.json();
-      if (res.status === 402) { setNoCredits(true); window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: "credits_depleted" }); return; }
+      if (res.status === 402) {
+        setNoCredits(true);
+        if (data.error) setError(data.error);
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "plan_limit_reached", tool: "ai_audit" });
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Audit failed");
       setResult(data);
       window.dataLayer = window.dataLayer || [];

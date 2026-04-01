@@ -275,21 +275,19 @@ export default function Pricing({ setPage }) {
   const [yearly, setYearly]         = useState(false);
   const [loading, setLoading]       = useState(false);
   const [currentPlan, setCurrentPlan] = useState(null);
-  const [balance, setBalance]       = useState(null);
   const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     trackEvent("pricing_viewed");
-    fetchBalance();
+    fetchPlan();
   }, []);
 
-  async function fetchBalance() {
+  async function fetchPlan() {
     try {
       const token = await getToken();
-      const res = await fetch(`${BASE}/api/balance`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${BASE}/api/plan`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
-      setBalance(parseFloat(data.balance || 0));
-      setCurrentPlan(data.plan || null);
+      setCurrentPlan(data.plan || "free");
     } catch {}
   }
 
@@ -299,13 +297,14 @@ export default function Pricing({ setPage }) {
     setLoading(plan.id);
     try {
       const token = await getToken();
-      const res = await fetch(`${BASE}/api/subscribe`, {
+      const res = await fetch(`${BASE}/api/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ plan: plan.id, billing: yearly ? "yearly" : "monthly" }),
       });
       const data = await res.json();
       if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+      else console.error("No checkoutUrl returned", data);
     } catch (e) {
       console.error("Subscribe failed", e);
     } finally {

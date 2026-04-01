@@ -102,7 +102,13 @@ export default function Audit({ setPage }) {
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
-      if (res.status === 402) { setNoCredits(true); window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: "credits_depleted" }); return; }
+      if (res.status === 402) {
+        setNoCredits(true);
+        if (data.error) setError(data.error);
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "plan_limit_reached", tool: "seo_audit" });
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Audit failed");
       setResult(data);
       window.dataLayer = window.dataLayer || [];

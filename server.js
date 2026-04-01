@@ -14,6 +14,84 @@ const helmet       = require("helmet");
 const rateLimit    = require("express-rate-limit");
 const { requireAuth, clerkMiddleware, getAuth } = require("@clerk/express");
 const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+// ── PLAN CONFIG ───────────────────────────────────────────────────────────────
+const PLANS = {
+  free:    { seo_audit: 0, ai_audit: 0, visibility_check: 0, query_check: 0, description: 0, gsc: false },
+  starter: { seo_audit: 5, ai_audit: 5, visibility_check: 0, query_check: 0, description: 20, gsc: false },
+  pro:     { seo_audit: 10, ai_audit: 10, visibility_check: 10, query_check: 0, description: 100, gsc: false },
+  agency:  { seo_audit: -1, ai_audit: -1, visibility_check: -1, query_check: -1, description: -1, gsc: true },
+};
+
+// -1 = unlimited
+
+async function ensurePlanColumns() {
+  await pool.query(`
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS plan_type VARCHAR(20) DEFAULT 'free',
+      ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS usage_seo_audit INT DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS usage_ai_audit INT DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS usage_visibility_check INT DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS usage_query_check INT DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS usage_description INT DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS usage_reset_at TIMESTAMPTZ DEFAULT NOW()
+  `);
+}
+
+async function resetUsageIfNeeded(clerkId) {
+  const user = await pool.query("SELECT usage_reset_at FROM users WHERE clerk_id=$1", [clerkId]);
+  if (!user.rows[0]) return;
+  const resetAt = new Date(user.rows[0].usage_reset_at);
+  const now = new Date();
+  // Reset if >30 days since last reset
+  if ((now - resetAt) > 30 * 24 * 60 * 60 * 1000) {
+    await pool.query(
+      `UPDATE users SET
+        usage_seo_audit=0, usage_ai_audit=0, usage_visibility_check=0,
+        usage_query_check=0, usage_description=0, usage_reset_at=NOW()
+       WHERE clerk_id=$1`,
+      [clerkId]
+    );
+  }
+}
+
+async function checkPlanLimit(clerkId, tool) {
+  await ensurePlanColumns();
+  await resetUsageIfNeeded(clerkId);
+  const result = await pool.query("SELECT * FROM users WHERE clerk_id=$1", [clerkId]);
+  const user = result.rows[0];
+  if (!user) return { allowed: false, reason: "User not found" };
+
+  const plan = user.plan_type || "free";
+  const limits = PLANS[plan] || PLANS.free;
+
+  // Check plan expiry
+  if (plan !== "free" && user.plan_expires_at && new Date(user.plan_expires_at) < new Date()) {
+    // Downgrade to free
+    await pool.query("UPDATE users SET plan_type='free' WHERE clerk_id=$1", [clerkId]);
+    return { allowed: false, reason: "plan_expired", plan: "free" };
+  }
+
+  const limit = limits[tool];
+  if (limit === 0) return { allowed: false, reason: "plan_upgrade_required", plan };
+  if (limit === -1) return { allowed: true, plan, usage: -1, limit: -1 };
+
+  const usageCol = `usage_${tool}`;
+  const usage = user[usageCol] || 0;
+  if (usage >= limit) return { allowed: false, reason: "monthly_limit_reached", plan, usage, limit };
+  return { allowed: true, plan, usage, limit };
+}
+
+async function incrementUsage(clerkId, tool) {
+  await pool.query(
+    `UPDATE users SET usage_${tool} = usage_${tool} + 1 WHERE clerk_id=$1`,
+    [clerkId]
+  );
+}
+
 const { Pool }     = require("pg");
 
 const { generateWithCategory } = require("./lib/categories");
@@ -358,12 +436,9 @@ req.auth = authObj;
       req.auth.sessionClaims?.email
     );
 
-    if (parseFloat(user.balance || 0) < 0.05) {
-      return res.status(402).json({
-        error: "Insufficient credits",
-        credits: 0,
-        upgradeUrl: "/pricing"
-      });
+    const descAccess = await checkPlanLimit(req.auth?.userId, "description");
+    if (!descAccess.allowed) {
+      return res.status(402).json({ error: descAccess.reason === "plan_upgrade_required" ? "Description Generator is not included in your current plan." : descAccess.reason === "monthly_limit_reached" ? "Monthly description limit reached (" + descAccess.usage + "/" + descAccess.limit + "). Resets next month." : "Plan expired. Please renew.", reason: descAccess.reason, plan: descAccess.plan, upgradeUrl: "/pricing" });
     }
 
     // 2. Generate description
@@ -377,7 +452,7 @@ req.auth = authObj;
     try {
       await client.query("BEGIN");
       await client.query(
-        "UPDATE users SET balance = balance - 0.05 WHERE clerk_id = $1",
+        "UPDATE users SET balance = balance - 0.05, usage_description = usage_description + 1 WHERE clerk_id = $1",
         [req.auth.userId]
       );
       await client.query(
@@ -556,6 +631,50 @@ app.get("/api/balance", requireAuth(), async (req, res) => {
   }
 });
 
+// ── GET /api/plan ─────────────────────────────────────────────
+app.get("/api/plan", requireAuth(), async (req, res) => {
+  try {
+    const authObj = getAuth(req); req.auth = authObj;
+    await ensurePlanColumns();
+    await resetUsageIfNeeded(req.auth?.userId);
+    const result = await pool.query(
+      `SELECT plan_type, plan_expires_at,
+              usage_seo_audit, usage_ai_audit, usage_visibility_check,
+              usage_query_check, usage_description, usage_reset_at
+       FROM users WHERE clerk_id = $1`,
+      [req.auth?.userId]
+    );
+    const row = result.rows[0];
+    if (!row) return res.status(404).json({ error: "User not found" });
+
+    const plan = row.plan_type || "free";
+    // Auto-expire if past end date
+    if (plan !== "free" && row.plan_expires_at && new Date(row.plan_expires_at) < new Date()) {
+      await pool.query("UPDATE users SET plan_type='free' WHERE clerk_id=$1", [req.auth?.userId]);
+      row.plan_type = "free";
+    }
+
+    const limits = PLANS[plan] || PLANS.free;
+
+    res.json({
+      plan,
+      plan_expires_at: row.plan_expires_at,
+      usage_reset_at: row.usage_reset_at,
+      usage: {
+        seo_audit:        row.usage_seo_audit        || 0,
+        ai_audit:         row.usage_ai_audit         || 0,
+        visibility_check: row.usage_visibility_check  || 0,
+        query_check:      row.usage_query_check       || 0,
+        description:      row.usage_description       || 0,
+      },
+      limits,
+    });
+  } catch (err) {
+    console.error("GET /api/plan error:", err);
+    res.status(500).json({ error: "Failed to fetch plan" });
+  }
+});
+
 // ── GET /api/prices ──────────────────────────────────────────
 app.get("/api/prices", (req, res) => {
   res.json(FEATURE_PRICES);
@@ -563,38 +682,41 @@ app.get("/api/prices", (req, res) => {
 
 // ── POST /api/checkout ───────────────────────────────────────
 // Creates a Stripe Checkout session for a balance top-up ($3-$50)
+// ── POST /api/checkout ───────────────────────────────────────
+// Creates a Stripe Checkout session for a subscription plan
 app.post("/api/checkout", requireAuth(), async (req, res) => {
-  const { amount } = req.body; // amount in USD
-  const amountNum = parseFloat(amount);
+  const { plan, billing } = req.body; // plan: starter|pro|agency, billing: monthly|yearly
+  const validPlans = ["starter", "pro", "agency"];
+  if (!validPlans.includes(plan)) return res.status(400).json({ error: "Invalid plan" });
 
-  if (!amountNum || amountNum < 3 || amountNum > 50) {
-    return res.status(400).json({ error: "Amount must be between $3 and $50" });
-  }
-
-  const amountCents = Math.round(amountNum * 100);
+  // Price lookup keys — set these in Stripe Dashboard
+  // e.g. dablin_starter_monthly, dablin_starter_yearly, etc.
+  const priceKey = `dablin_${plan}_${billing === "yearly" ? "yearly" : "monthly"}`;
 
   try {
     const authObj = getAuth(req); req.auth = authObj;
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
+    // Get or create Stripe customer
+    let customerId = user.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email || undefined,
+        metadata: { clerk_id: req.auth?.userId },
+      });
+      customerId = customer.id;
+      await pool.query("UPDATE users SET stripe_customer_id=$1 WHERE clerk_id=$2", [customerId, req.auth?.userId]);
+    }
+
     const session = await stripe.checkout.sessions.create({
+      customer: customerId,
       payment_method_types: ["card"],
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: { name: `Dablin Balance — $${amountNum.toFixed(2)}` },
-          unit_amount: amountCents,
-        },
-        quantity: 1,
-      }],
-      mode: "payment",
-      success_url: `${process.env.FRONTEND_URL}/dashboard/credits?payment=success&amount=${amountNum}`,
-      cancel_url:  `${process.env.FRONTEND_URL}/dashboard/credits`,
-      metadata: {
-        clerk_id: req.auth?.userId,
-        amount_usd: amountNum.toString(),
-      },
-      ...(user.email ? { customer_email: user.email } : {}),
+      line_items: [{ price: priceKey, quantity: 1 }],
+      mode: "subscription",
+      success_url: `${process.env.FRONTEND_URL}/dashboard?subscription=success&plan=${plan}`,
+      cancel_url:  `${process.env.FRONTEND_URL}/pricing`,
+      metadata: { clerk_id: req.auth?.userId, plan, billing: billing || "monthly" },
+      subscription_data: { metadata: { clerk_id: req.auth?.userId, plan } },
     });
 
     res.json({ checkoutUrl: session.url });
@@ -617,37 +739,63 @@ app.post("/api/webhook/stripe", async (req, res) => {
     return res.status(400).json({ error: "Invalid webhook signature" });
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session   = event.data.object;
-    const clerkId   = session.metadata.clerk_id;
-    const amountUsd = parseFloat(session.metadata.amount_usd || 0);
+  try {
+    // ── Subscription created or updated ──
+    if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+      const sub = event.data.object;
+      const clerkId = sub.metadata?.clerk_id;
+      const plan = sub.metadata?.plan || "free";
+      if (!clerkId) { console.warn("No clerk_id in subscription metadata"); return res.json({ received: true }); }
 
-    try {
-      await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS balance DECIMAL(10,4) DEFAULT 0`);
-      const client = await pool.connect();
-      try {
-        await client.query("BEGIN");
-        await client.query(
-          "UPDATE users SET balance = balance + $1 WHERE clerk_id = $2",
-          [amountUsd, clerkId]
-        );
-        await client.query(
-          `INSERT INTO purchases (clerk_id, credits_added, amount_cents, stripe_session)
-           VALUES ($1, $2, $3, $4)`,
-          [clerkId, 0, session.amount_total, session.id]
-        );
-        await client.query("COMMIT");
-        console.log(`Added $${amountUsd} balance to user ${clerkId}`);
-      } catch (err) {
-        await client.query("ROLLBACK");
-        throw err;
-      } finally {
-        client.release();
-      }
-    } catch (err) {
-      console.error("Webhook DB error:", err);
-      return res.status(500).json({ error: "Failed to add balance" });
+      const isActive = ["active", "trialing"].includes(sub.status);
+      const expiresAt = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+
+      await ensurePlanColumns();
+      await pool.query(
+        `UPDATE users SET
+          plan_type = $1,
+          plan_expires_at = $2,
+          stripe_subscription_id = $3,
+          usage_seo_audit = 0, usage_ai_audit = 0,
+          usage_visibility_check = 0, usage_query_check = 0,
+          usage_description = 0, usage_reset_at = NOW()
+         WHERE clerk_id = $4`,
+        [isActive ? plan : "free", expiresAt, sub.id, clerkId]
+      );
+      console.log(`[webhook] Plan set to ${isActive ? plan : "free"} for ${clerkId}`);
     }
+
+    // ── Subscription cancelled / deleted ──
+    if (event.type === "customer.subscription.deleted") {
+      const sub = event.data.object;
+      const clerkId = sub.metadata?.clerk_id;
+      if (!clerkId) return res.json({ received: true });
+      await ensurePlanColumns();
+      await pool.query(
+        "UPDATE users SET plan_type='free', plan_expires_at=NULL, stripe_subscription_id=NULL WHERE clerk_id=$1",
+        [clerkId]
+      );
+      console.log(`[webhook] Plan downgraded to free for ${clerkId}`);
+    }
+
+    // ── Checkout session completed (legacy one-time or new subscription) ──
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      const clerkId = session.metadata?.clerk_id;
+      // For subscription mode, the subscription.created event handles plan activation
+      // For one-time (legacy), add balance
+      if (session.mode === "payment" && clerkId) {
+        const amountUsd = parseFloat(session.metadata?.amount_usd || 0);
+        if (amountUsd > 0) {
+          await pool.query("UPDATE users SET balance = balance + $1 WHERE clerk_id = $2", [amountUsd, clerkId]);
+          console.log(`[webhook] Added $${amountUsd} balance to ${clerkId}`);
+        }
+      }
+    }
+
+  } catch (err) {
+    console.error("[webhook] DB error:", err.message);
+    return res.status(500).json({ error: "Webhook processing failed" });
   }
 
   res.json({ received: true });
@@ -693,12 +841,9 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       req.auth.sessionClaims?.email
     );
 
-    if (parseFloat(user.balance || 0) < 0.10) {
-      return res.status(402).json({
-        error: "Insufficient credits. SEO Audit costs 5 credits.",
-        credits: user.credits,
-        upgradeUrl: "/pricing"
-      });
+    const auditAccess = await checkPlanLimit(req.auth?.userId, "seo_audit");
+    if (!auditAccess.allowed) {
+      return res.status(402).json({ error: auditAccess.reason === "plan_upgrade_required" ? "SEO Audit is not included in your current plan." : auditAccess.reason === "monthly_limit_reached" ? "Monthly SEO Audit limit reached (" + auditAccess.usage + "/" + auditAccess.limit + "). Resets next month." : "Plan expired. Please renew.", reason: auditAccess.reason, plan: auditAccess.plan, upgradeUrl: "/pricing" });
     }
 
     // Fetch the page HTML
@@ -1020,9 +1165,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       console.warn("Audit DB insert skipped:", dbErr.message);
     }
 
-    const updated = await pool.query(
-      "SELECT credits FROM users WHERE clerk_id = $1", [req.auth?.userId]
-    );
+    await incrementUsage(req.auth?.userId, "seo_audit");
 
     res.json({
       url,
@@ -1034,7 +1177,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       images_missing_alt: missingAlt,
       word_count: wordCount,
       pageSpeed,
-      creditsRemaining: updated.rows[0]?.credits ?? null,
     });
 
   } catch (err) {
@@ -1057,7 +1199,10 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
     if (parseFloat(user.balance || 0) < 0.10) {
-      return res.status(402).json({ error: "Insufficient balance. AI Visibility Audit costs $0.20.", balance: user.balance });
+      const aiAuditAccess = await checkPlanLimit(req.auth?.userId, "ai_audit");
+      if (!aiAuditAccess.allowed) {
+        return res.status(402).json({ error: aiAuditAccess.reason === "plan_upgrade_required" ? "AI Visibility Audit is not included in your current plan." : aiAuditAccess.reason === "monthly_limit_reached" ? "Monthly AI Audit limit reached (" + aiAuditAccess.usage + "/" + aiAuditAccess.limit + "). Resets next month." : "Plan expired. Please renew.", reason: aiAuditAccess.reason, plan: aiAuditAccess.plan, upgradeUrl: "/pricing" });
+      }
     }
 
     const fetch = (await import("node-fetch")).default;
@@ -1242,7 +1387,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET balance = balance - 0.10 WHERE clerk_id = $1", [req.auth?.userId]);
+        await client.query("UPDATE users SET balance = balance - 0.10, usage_ai_audit = usage_ai_audit + 1 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO audits (clerk_id, url, checks, issues, created_at) VALUES ($1, $2, $3, $4, NOW())`,
           [req.auth?.userId, url, JSON.stringify(allChecks), JSON.stringify(issues)]
@@ -1258,7 +1403,7 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
       console.warn("AEO audit DB insert skipped:", dbErr.message);
     }
 
-    const updated = await pool.query("SELECT credits FROM users WHERE clerk_id = $1", [req.auth?.userId]);
+    await incrementUsage(req.auth?.userId, "ai_audit");
 
     res.json({
       url,
@@ -1266,7 +1411,6 @@ app.post("/api/ai-audit", requireAuth(), async (req, res) => {
       issues,
       fixes,
       response_time_ms: responseTime,
-      creditsRemaining: updated.rows[0]?.credits ?? null,
     });
 
   } catch (err) {
@@ -1473,7 +1617,7 @@ Rules:
 // ── POST /api/visibility-check ───────────────────────────────
 // Queries Claude, GPT-4o, Gemini with brand queries, returns mention table
 app.post("/api/visibility-check", requireAuth(), async (req, res) => {
-  const { url, savedQueries, brand: brandFromClient } = req.body;
+  const { url, savedQueries, brand: brandFromClient, fromPrompt } = req.body;
   if (!url && (!savedQueries || savedQueries.length === 0)) {
     return res.status(400).json({ error: "Either url or savedQueries is required" });
   }
@@ -1484,8 +1628,23 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
     req.auth = authObj;
     const user = await getOrCreateUser(req.auth?.userId, req.auth.sessionClaims?.email);
 
-    if (parseFloat(user.balance || 0) < 1.00) {
-      return res.status(402).json({ error: "Insufficient balance. AI Visibility Check costs €1.00.", balance: user.balance });
+    // Determine tool type: prompt-based = query_check, url-based = visibility_check
+    const tool = fromPrompt ? "query_check" : "visibility_check";
+    const toolName = fromPrompt ? "AI Query Check" : "AI Visibility Check";
+    const planNames = { query_check: "Agency", visibility_check: "Pro or Agency" };
+
+    const access = await checkPlanLimit(req.auth?.userId, tool);
+    if (!access.allowed) {
+      return res.status(402).json({
+        error: access.reason === "plan_upgrade_required"
+          ? `${toolName} requires the ${planNames[tool]} plan.`
+          : access.reason === "monthly_limit_reached"
+          ? `Monthly ${toolName} limit reached (${access.usage}/${access.limit}). Resets next month.`
+          : "Plan expired. Please renew.",
+        reason: access.reason,
+        plan: access.plan,
+        upgradeUrl: "/pricing"
+      });
     }
 
     const domain = url ? new URL(url).hostname.replace("www.", "") : (brandFromClient || "brand");
@@ -1709,17 +1868,15 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       total: results.filter(r => r.claude.mentioned || r.gpt.mentioned || r.gemini.mentioned).length,
     };
 
-    // Deduct credits
-    // Deduct credits and save result
+    // Save result and increment usage
     try {
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE users SET balance = balance - 1.00 WHERE clerk_id = $1", [req.auth?.userId]);
         await client.query(
           `INSERT INTO visibility_checks (clerk_id, url, brand, queries, results, mention_summary, top_competitors, from_prompt, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
-          [req.auth?.userId, url || '', brand, JSON.stringify(queriesToRun), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors), !url || url === '']
+          [req.auth?.userId, url || '', brand, JSON.stringify(queriesToRun), JSON.stringify(results), JSON.stringify(mentionSummary), JSON.stringify(topCompetitors), fromPrompt]
         );
         await client.query("COMMIT");
         console.log("[visibility-check] saved for", req.auth?.userId, url);
@@ -1733,7 +1890,7 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       console.error("[visibility-check] pool error:", err.message);
     }
 
-    const updated = await pool.query("SELECT credits FROM users WHERE clerk_id = $1", [req.auth?.userId]);
+    await incrementUsage(req.auth?.userId, fromPrompt ? "query_check" : "visibility_check");
 
     res.json({
       url,
@@ -1743,7 +1900,6 @@ app.post("/api/visibility-check", requireAuth(), async (req, res) => {
       results,
       mentionSummary,
       topCompetitors,
-      creditsRemaining: updated.rows[0]?.credits ?? null,
     });
 
   } catch (err) {
