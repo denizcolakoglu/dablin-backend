@@ -19,6 +19,7 @@ import PagePricing from "./components/pages/PagePricing";
 import PageSearchConsole from "./components/pages/PageSearchConsole";
 import PageDashboard from "./components/pages/PageDashboard";
 import PageContact from "./components/pages/PageContact";
+import PageWhatsNew from "./components/pages/PageWhatsNew";
 import SharedResult from "./components/SharedResult";
 
 // ── Google March 2026 Popup ───────────────────────────────────
@@ -284,6 +285,7 @@ export default function App() {
       <Route path="/google-search-console" element={<PageSearchConsole />} />
       <Route path="/seo-geo-dashboard" element={<PageDashboard />} />
       <Route path="/contact" element={<PageContact />} />
+      <Route path="/whats-new" element={<PageWhatsNew />} />
       <Route path="/results/:token" element={<SharedResult />} />
 
       <Route path="/dashboard/*" element={
