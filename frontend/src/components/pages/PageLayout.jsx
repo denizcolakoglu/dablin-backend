@@ -8,7 +8,7 @@ const NAV_GROUPS = [
     items: [
       { href: "/ai-visibility-audit", icon: "⌕", label: "AI Visibility Audit",  desc: "12 checks for AI engine discoverability" },
       { href: "/ai-visibility-check", icon: "◎", label: "AI Visibility Check",  desc: "See if ChatGPT, Gemini & Claude mention you" },
-      { href: "/dashboard/query-check", icon: "↗", label: "AI Query Check",      desc: "Run custom queries across AI engines" },
+      { href: "/ai-query-check", icon: "↗", label: "AI Query Check",      desc: "Run custom queries across AI engines" },
     ],
   },
   {
@@ -214,7 +214,7 @@ function Footer() {
           ["AI Visibility Check", "/ai-visibility-check"],
           ["AI Visibility Audit", "/ai-visibility-audit"],
           ["SEO Audit",           "/seo-audit"],
-          ["AI Query Check",      "/dashboard/query-check"],
+          ["AI Query Check",      "/ai-query-check"],
         ])}
 
         {col("Product", [

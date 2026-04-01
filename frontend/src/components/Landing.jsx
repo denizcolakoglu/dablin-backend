@@ -641,7 +641,7 @@ const NAV_GROUPS = [
     items: [
       { href: "/ai-visibility-audit",       label: "AI Visibility Audit",  desc: "12 checks for AI engine discoverability" },
       { href: "/ai-visibility-check",       label: "AI Visibility Check",  desc: "See if ChatGPT, Gemini & Claude mention you" },
-      { href: "/dashboard/query-check",     label: "AI Query Check",       desc: "Run custom queries across AI engines" },
+      { href: "/ai-query-check",     label: "AI Query Check",       desc: "Run custom queries across AI engines" },
     ],
   },
   {
@@ -1444,7 +1444,7 @@ export default function Landing() {
               <a href="/ai-visibility-check">AI Visibility Check</a>
               <a href="/ai-visibility-audit">AI Visibility Audit</a>
               <a href="/seo-audit">SEO Audit</a>
-              <a href="/dashboard/query-check">AI Query Check</a>
+              <a href="/ai-query-check">AI Query Check</a>
             </div>
           </div>
 
