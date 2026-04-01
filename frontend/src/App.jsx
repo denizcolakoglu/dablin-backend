@@ -16,6 +16,7 @@ import PageSeoAudit from "./components/pages/PageSeoAudit";
 import PageAiAudit from "./components/pages/PageAiAudit";
 import PageAiCheck from "./components/pages/PageAiCheck";
 import PagePricing from "./components/pages/PagePricing";
+import PageSearchConsole from "./components/pages/PageSearchConsole";
 import SharedResult from "./components/SharedResult";
 
 // ── Google March 2026 Popup ───────────────────────────────────
@@ -278,6 +279,7 @@ export default function App() {
       <Route path="/ai-visibility-audit" element={<PageAiAudit />} />
       <Route path="/ai-visibility-check" element={<PageAiCheck />} />
       <Route path="/pricing" element={<PagePricing />} />
+      <Route path="/google-search-console" element={<PageSearchConsole />} />
       <Route path="/results/:token" element={<SharedResult />} />
 
       <Route path="/dashboard/*" element={
