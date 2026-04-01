@@ -648,7 +648,7 @@ const NAV_GROUPS = [
     label: "SEO Expert",
     items: [
       { href: "/seo-audit",                 label: "SEO Audit",              desc: "18-point SEO check with AI fixes" },
-      { href: "/dashboard/search-console",  label: "Google Search Console",  desc: "Index status, vitals and query data" },
+      { href: "/google-search-console",  label: "Google Search Console",  desc: "Index status, vitals and query data" },
       { href: "/dashboard",                 label: "SEO/GEO Dashboard",      desc: "Your full visibility kanban board" },
     ],
   },
@@ -1454,7 +1454,7 @@ export default function Landing() {
             <div className="footer-col-links">
               <a href="/dashboard/get-started">Step by Step SEO</a>
               <a href="/dashboard">SEO/GEO Dashboard</a>
-              <a href="/dashboard/search-console">Google Search Console</a>
+              <a href="/google-search-console">Google Search Console</a>
               <a href="/pricing">Pricing</a>
               <a href="https://blog.dablin.co" target="_blank" rel="noopener noreferrer">Blog</a>
             </div>

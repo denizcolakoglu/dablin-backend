@@ -15,7 +15,7 @@ const NAV_GROUPS = [
     label: "SEO Expert",
     items: [
       { href: "/seo-audit",                    icon: "✓", label: "SEO Audit",               desc: "18-point SEO check with AI fixes" },
-      { href: "/dashboard/search-console",     icon: "📊", label: "Google Search Console",   desc: "Index status, vitals and query data" },
+      { href: "/google-search-console",     icon: "📊", label: "Google Search Console",   desc: "Index status, vitals and query data" },
       { href: "/dashboard",                    icon: "⊞", label: "SEO/GEO Dashboard",        desc: "Your full visibility kanban board" },
     ],
   },
@@ -220,7 +220,7 @@ function Footer() {
         {col("Product", [
           ["Step by Step SEO",      "/dashboard/get-started"],
           ["SEO/GEO Dashboard",     "/dashboard"],
-          ["Google Search Console", "/dashboard/search-console"],
+          ["Google Search Console", "/google-search-console"],
           ["Pricing",               "/pricing"],
           ["Blog",                  "https://blog.dablin.co"],
         ])}
