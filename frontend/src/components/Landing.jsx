@@ -717,24 +717,22 @@ function ResourcesDropdown() {
   );
 }
 
-function AnnouncementBar() {
-  const [visible, setVisible] = useState(true);
-  if (!visible) return null;
+function AnnouncementBar({ onDismiss }) {
   return (
-    <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 48px", fontSize: "13px", fontWeight: "500", position: "relative", lineHeight: "1.4", zIndex: 99 }}>
+    <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 48px", fontSize: "13px", fontWeight: "500", position: "fixed", top: 0, left: 0, right: 0, lineHeight: "1.4", zIndex: 200, height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <span style={{ fontWeight: "700", marginRight: "8px" }}>⚡ New</span>
       Now includes Google March 2026 signals — Information Gain &amp; AI Overview eligibility checks
       <a href="/seo-audit" style={{ marginLeft: "12px", color: "white", fontWeight: "700", textDecoration: "underline", textUnderlineOffset: "3px" }}>Try the SEO Audit →</a>
-      <button onClick={() => setVisible(false)} style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
+      <button onClick={onDismiss} style={{ position: "absolute", right: "16px", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
     </div>
   );
 }
 
-function NavBar() {
+function NavBar({ topOffset }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <>
-      <nav className="landing-nav">
+      <nav className="landing-nav" style={{ top: topOffset + "px" }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="nav-hamburger" onClick={() => setMenuOpen(true)} aria-label="Open menu">
             <span /><span /><span />
@@ -928,10 +926,15 @@ function HeroUrlForm() {
 }
 
 export default function Landing() {
+  const [barVisible, setBarVisible] = useState(true);
+  const BAR_H = 40;
+  const NAV_H = 72;
+  const totalOffset = barVisible ? BAR_H + NAV_H : NAV_H;
+
   return (
     <>
-    <AnnouncementBar />
-    <div className="landing">
+    {barVisible && <AnnouncementBar onDismiss={() => setBarVisible(false)} />}
+    <div className="landing" style={{ paddingTop: totalOffset + "px" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
 
@@ -942,10 +945,10 @@ export default function Landing() {
           --white: #ffffff; --off-white: #f8faf8; --mint: #eef8f0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; padding-top: 72px; }
+        .landing { font-family: 'Roboto', sans-serif; color: var(--text); background: var(--white); min-height: 100vh; overflow-x: hidden; }
 
         /* NAV */
-        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: fixed; top: 0; left: 0; right: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
+        .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; position: fixed; left: 0; right: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; }
         .nav-brand img { display: block; }
         .landing-nav-links { display: flex; align-items: center; gap: 32px; }
         .nav-text-link { font-size: 15px; font-weight: 500; color: var(--text); text-decoration: none; transition: color 0.2s; }
@@ -1101,7 +1104,7 @@ export default function Landing() {
       `}</style>
 
       {/* NAV */}
-      <NavBar />
+      <NavBar topOffset={barVisible ? BAR_H : 0} />
 
       {/* HERO */}
       <div className="hero">
