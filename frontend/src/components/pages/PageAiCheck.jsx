@@ -16,88 +16,215 @@ function FaqItem({ q, a }) {
   );
 }
 
+const MOCK_ROWS = [
+  { type: 'problem',    query: "My store isn't getting organic traffic. What am I doing wrong?", claude: true,  gpt: false, gemini: true },
+  { type: 'problem',    query: "How do I get my product page to rank on Google?",                  claude: true,  gpt: false, gemini: true },
+  { type: 'problem',    query: "Why aren't AI tools recommending my brand?",                       claude: false, gpt: false, gemini: false },
+  { type: 'category',   query: "Best SEO audit tool for e-commerce stores",                        claude: false, gpt: false, gemini: true },
+  { type: 'category',   query: "Top AI visibility tools for Shopify",                              claude: true,  gpt: true,  gemini: true },
+  { type: 'comparison', query: "Alternatives to Semrush for small stores",                         claude: true,  gpt: true,  gemini: true },
+  { type: 'comparison', query: "Ahrefs vs Dablin for product page SEO",                            claude: true,  gpt: false, gemini: true },
+];
 
+const TYPE_STYLES = {
+  problem:    { bg: '#fef2f2', color: '#c0392b', border: '#fca5a5' },
+  category:   { bg: '#fffbeb', color: '#b45309', border: '#fcd34d' },
+  comparison: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+};
+
+const TYPE_LABELS = { problem: 'Problem', category: 'Category', comparison: 'Comparison' };
+
+const QUERY_TYPES = [
+  {
+    type: 'problem',
+    count: '3 queries',
+    title: 'Before they know the category',
+    desc: 'Natural pain-point questions a buyer asks before they know what product type they need. Highest value — if AI recommends you here, you reach buyers before any competitor.',
+    examples: [
+      '"My store isn\'t getting organic traffic. What am I doing wrong?"',
+      '"How do I get ChatGPT to recommend my brand?"',
+    ],
+  },
+  {
+    type: 'category',
+    count: '2 queries',
+    title: 'Once they know what they need',
+    desc: 'Generic category searches used once the buyer knows the type of tool or service they want. Competitive — everyone in your space optimises for these.',
+    examples: [
+      '"Best SEO audit tool for e-commerce stores"',
+      '"Top AI visibility tools for Shopify"',
+    ],
+  },
+  {
+    type: 'comparison',
+    count: '2 queries',
+    title: 'Decision stage — high buyer intent',
+    desc: 'Comparison and alternatives queries. Someone asking "alternatives to X" is ready to switch — and ready to buy. The most overlooked query type by brands.',
+    examples: [
+      '"Alternatives to Semrush for small teams"',
+      '"Best Ahrefs alternative for product pages"',
+    ],
+  },
+];
+
+const FEATURES = [
+  { title: 'Mention table',           desc: 'Query × AI engine grid — 21 data points per check. Expand any row to read the actual AI response.' },
+  { title: 'Query type breakdown',    desc: 'See where you\'re mentioned by intent stage — problem, category, comparison. Know which buyer stage you\'re winning or losing.' },
+  { title: 'Competitor brands',       desc: 'Which competitors appeared in AI responses and how often. Know exactly who you\'re up against per AI engine.' },
+  { title: 'Per-engine scores',       desc: 'X/7 mentions per AI engine at a glance. See if Claude knows you but GPT-4o doesn\'t — and focus there.' },
+  { title: 'AI-generated queries',    desc: 'Dablin reads your page and auto-generates all 7 queries across all 3 intent types. Edit any before running.' },
+  { title: 'Full response snippets',  desc: 'Read the actual text each AI returned — see the context of your mention or understand why you were skipped.' },
+];
 
 const FAQ = [
-  { q: "What is the AI Visibility Check?", a: "The AI Visibility Check queries Claude, GPT-4o, and Gemini with 7 variations of search queries related to your brand. It tells you which AI engines mention your brand, which queries trigger a mention, and which competitor brands appear in the responses." },
-  { q: "How are the queries generated?", a: "Dablin scrapes your URL, extracts your brand name and product category, then uses AI to generate 7 natural search queries that a potential customer would use — without including your brand name. You can also edit them before running." },
-  { q: "What if my brand isn't mentioned?", a: "That's exactly what this tool helps you understand. If you're not mentioned, you know there's a gap. The AI Visibility Audit can then help you fix the technical reasons why AI engines aren't picking up your brand." },
-  { q: "How accurate is competitor detection?", a: "The tool extracts brand names from AI responses. It gives a reliable signal of which brands AI engines associate with your category when buyers search for your type of product." },
+  { q: "What is the AI Visibility Check?", a: "The AI Visibility Check queries Claude, GPT-4o, and Gemini with 7 brand-specific queries generated from your URL. It tells you which AI engines mention your brand per query, which competitors they recommend instead, and where you have gaps across the three buyer intent stages." },
+  { q: "How are the queries generated?", a: "Dablin scrapes your URL, reads your brand name, product category, and content, then generates 7 queries across 3 intent types: 3 problem queries (pain points before they know the category), 2 category queries (once they know what they need), and 2 comparison queries (decision stage, high buyer intent). You can edit any of them before running." },
+  { q: "Why 3 query types?", a: "Different query types represent different stages of the buyer journey — and AI engines behave differently for each. Problem queries are the highest value: if you appear here, you reach buyers before they even know your category exists. Category queries are competitive but important. Comparison queries have the highest buyer intent. Tracking all three gives you a complete picture of your AI visibility." },
+  { q: "What if my brand isn't mentioned?", a: "That's exactly what this tool helps you understand. If you're not mentioned on problem queries, your brand isn't being surfaced at the awareness stage. If you're missing from comparison queries, you're losing buyers who are ready to switch. The AI Visibility Audit can then help you fix the technical reasons why AI engines aren't picking up your brand." },
+  { q: "How accurate is competitor detection?", a: "The tool extracts brand names directly from AI responses. It gives a reliable signal of which brands AI engines associate with your category and buyer queries — though results can vary between runs as AI models are non-deterministic." },
+  { q: "How often should I run this?", a: "Monthly is a good cadence. AI model training and knowledge cutoffs mean results change over time. Tracking your mentions over time shows whether your content and technical improvements are working." },
   { q: "How much does it cost?", a: "The AI Visibility Check is included in Pro and Agency plans. See the Pricing page for plan details." },
-  { q: "How often should I run this?", a: "Monthly is a good cadence. AI model training and knowledge cutoffs mean results can change over time. Tracking your mentions over time shows whether your content and technical improvements are working." },
 ];
+
+function TypePill({ type }) {
+  const s = TYPE_STYLES[type];
+  return (
+    <span style={{ fontSize: '9px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '1px 6px', borderRadius: '20px', background: s.bg, color: s.color, border: `1px solid ${s.border}`, display: 'inline-block', marginBottom: '3px' }}>
+      {TYPE_LABELS[type]}
+    </span>
+  );
+}
+
+function MockTable() {
+  const claudeCount = MOCK_ROWS.filter(r => r.claude).length;
+  const gptCount    = MOCK_ROWS.filter(r => r.gpt).length;
+  const geminiCount = MOCK_ROWS.filter(r => r.gemini).length;
+
+  return (
+    <div style={{ borderRadius: '14px', border: '1px solid #d0e8d4', overflow: 'hidden', boxShadow: '0 8px 32px rgba(26,122,58,0.10)', background: 'white' }}>
+      {/* Browser bar */}
+      <div style={{ background: '#e8f5ea', padding: '9px 14px', display: 'flex', alignItems: 'center', gap: '7px', borderBottom: '1px solid #d0e8d4' }}>
+        {['#ff5f57','#febc2e','#28c840'].map(c => <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, display: 'inline-block' }} />)}
+        <span style={{ flex: 1, textAlign: 'center', fontSize: '11px', color: '#4a6b4c' }}>dablin.co · AI Visibility Check</span>
+      </div>
+
+      {/* Score strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', padding: '14px', borderBottom: '1px solid #eef2ee' }}>
+        {[{ label:'Claude', val: claudeCount, color:'#c67b2f' }, { label:'GPT-4o', val: gptCount, color:'#10a37f' }, { label:'Gemini', val: geminiCount, color:'#4285f4' }].map(e => (
+          <div key={e.label} style={{ background: '#f8faf8', border: '1px solid #eef2ee', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: e.color, textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>{e.label}</div>
+            <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: '20px', fontWeight: '800', color: e.val >= 4 ? '#1a7a3a' : '#c0392b' }}>{e.val}/7</div>
+            <div style={{ fontSize: '10px', color: '#4a6b4c' }}>mentioned</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table header */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 52px 52px 52px 24px', background: '#f8faf8', borderBottom: '1px solid #eef2ee', padding: '8px 12px', fontSize: '10px', fontWeight: '700', color: '#4a6b4c', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        <span>Query</span>
+        {['Claude','GPT-4o','Gemini'].map(e => <span key={e} style={{ textAlign: 'center' }}>{e}</span>)}
+        <span />
+      </div>
+
+      {/* Rows */}
+      {MOCK_ROWS.map((row, i) => (
+        <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 52px 52px 52px 24px', padding: '8px 12px', borderBottom: i < MOCK_ROWS.length - 1 ? '1px solid #f0f7f0' : 'none', alignItems: 'center' }}>
+          <div>
+            <TypePill type={row.type} />
+            <div style={{ fontSize: '11px', fontWeight: '500', color: '#0d1f0e', lineHeight: '1.3' }}>{row.query}</div>
+          </div>
+          {[row.claude, row.gpt, row.gemini].map((v, j) => (
+            <div key={j} style={{ textAlign: 'center', fontWeight: '700', fontSize: '13px', color: v ? '#1a7a3a' : '#c0392b' }}>{v ? '✓' : '✗'}</div>
+          ))}
+          <div style={{ textAlign: 'center', fontSize: '11px', color: '#9ab09c' }}>▾</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function PageAiCheck() {
   return (
     <PageLayout activePath="/ai-visibility-check">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .ac-btn { background: #1a7a3a; color: white; border: none; padding: 14px 32px; border-radius: 10px; font-family: 'Roboto', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-block; }
+        .ac-btn:hover { background: #2d9a4e; transform: translateY(-1px); }
+        @media (max-width: 960px) {
+          .ac-hero-grid { flex-direction: column !important; }
+          .ac-hero-right { display: none !important; }
+          .ac-qt-grid { grid-template-columns: 1fr !important; }
+          .ac-feat-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 600px) {
+          .ac-section { padding-left: 20px !important; padding-right: 20px !important; }
+          .ac-feat-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
-      {/* HERO */}
-      <div className="pg-section" style={{ background: '#eef8f0', padding: '96px 48px 108px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid #d0e8d4', borderRadius: '20px', padding: '6px 16px', fontSize: '13px', fontWeight: '600', color: '#1a7a3a', marginBottom: '28px' }}>
-          ◎ AI Visibility Check
-        </div>
-        <h1 className="pg-hero-title" style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(44px,7vw,80px)', fontWeight: '800', lineHeight: '1.0', letterSpacing: '-3px', color: '#0d1f0e', marginBottom: '24px' }}>
-          Does ChatGPT mention<br />
-          <span style={{ color: '#1a7a3a' }}>your brand?</span>
-        </h1>
-        <p style={{ fontSize: '19px', color: '#4a6b4c', maxWidth: '540px', margin: '0 auto 40px', lineHeight: '1.65', fontWeight: '300' }}>
-          Enter your URL and Dablin sends 7 real customer queries to Claude, GPT-4o, and Gemini — showing you exactly who mentions your brand and which competitors they recommend instead.
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-          <div onClick={() => trackEvent('sign_up_click', { location: 'ai_check_page_hero' })}>
-            <SignUpButton mode="modal"><button className="pg-btn-primary pg-btn-large">Check my brand free →</button></SignUpButton>
-          </div>
-          
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', marginTop: '56px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {[['7', 'queries per check'], ['3', 'AI engines queried'], ['21', 'total data points'], ['Free', 'to start']].map(([val, label]) => (
-            <div key={label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '22px', fontWeight: '800', color: '#1a7a3a', fontFamily: "'Roboto Condensed', sans-serif" }}>{val}</div>
-              <div style={{ fontSize: '12px', color: '#4a6b4c', marginTop: '2px' }}>{label}</div>
+      {/* ── HERO ── */}
+      <div className="ac-section" style={{ background: '#eef8f0', backgroundImage: 'linear-gradient(rgba(26,122,58,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(26,122,58,0.06) 1px,transparent 1px)', backgroundSize: '36px 36px', padding: 'clamp(56px,7vw,96px) 56px', borderBottom: '1px solid #d0e8d4' }}>
+        <div className="ac-hero-grid" style={{ display: 'flex', alignItems: 'flex-start', gap: '56px', maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ flex: '0 0 380px' }}>
+            <h1 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(40px,5vw,60px)', fontWeight: '800', lineHeight: '1.0', letterSpacing: '-2.5px', color: '#0d1f0e', marginBottom: '20px' }}>
+              AI Visibility<br /><span style={{ color: '#1a7a3a' }}>Check.</span>
+            </h1>
+            <p style={{ fontSize: '17px', color: '#4a6b4c', fontWeight: '300', lineHeight: '1.65', marginBottom: '28px' }}>
+              Enter your URL. Dablin reads your brand, generates 7 targeted queries across 3 intent types, then checks if ChatGPT, Gemini, and Claude mention you in each one.
+            </p>
+            <div onClick={() => trackEvent('sign_up_click', { location: 'ai_check_page_hero' })}>
+              <SignUpButton mode="modal">
+                <button className="ac-btn">Check my brand</button>
+              </SignUpButton>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* HOW IT WORKS */}
-      <div className="pg-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '14px' }}>How it works</p>
-          <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '56px' }}>Paste a URL. See who mentions you.</h2>
-          <div className="pg-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0' }}>
-            {[
-              { n: '1', title: 'Paste your website URL', desc: 'Dablin scrapes your page and automatically extracts your brand name and product category.' },
-              { n: '2', title: '21 queries across 3 AI engines', desc: '7 natural customer queries sent to Claude, GPT-4o, and Gemini simultaneously — no brand name included.' },
-              { n: '3', title: 'Get your full mention report', desc: 'See which AI engines mention you per query, read the actual responses, and spot competitor brands.' },
-            ].map((s, i) => (
-              <div key={s.n} style={{ padding: '0 40px', borderRight: i < 2 ? '1px solid #eef2ee' : 'none', textAlign: 'left' }}>
-                <div style={{ width: '44px', height: '44px', background: '#eef8f0', border: '1.5px solid #d0e8d4', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '800', color: '#1a7a3a', marginBottom: '20px' }}>{s.n}</div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0d1f0e', marginBottom: '10px' }}>{s.title}</h3>
-                <p style={{ fontSize: '14px', color: '#4a6b4c', lineHeight: '1.65', fontWeight: '300' }}>{s.desc}</p>
-              </div>
-            ))}
+          </div>
+          <div className="ac-hero-right" style={{ flex: 1, minWidth: 0 }}>
+            <MockTable />
           </div>
         </div>
       </div>
 
-      {/* WHAT YOU GET */}
-      <div className="pg-section" style={{ background: '#f8faf8', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
+      {/* ── 3 QUERY TYPES ── */}
+      <div className="ac-section" style={{ background: 'white', padding: 'clamp(48px,6vw,96px) 56px', borderBottom: '1px solid #eef2ee' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '14px' }}>What you get</p>
-            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '12px' }}>A complete AI mention report</h2>
-            <p style={{ fontSize: '16px', color: '#4a6b4c', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Not just a yes/no — a full breakdown per query and per AI engine.</p>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>How queries are generated</p>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '12px' }}>3 query types. 7 targeted checks.</h2>
+            <p style={{ fontSize: '16px', color: '#4a6b4c', maxWidth: '520px', margin: '0 auto', lineHeight: '1.6' }}>Dablin reads your page and generates queries across 3 buyer intent stages — the same way real customers search.</p>
           </div>
-          <div className="pg-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '20px' }}>
-            {[
-              { title: 'Mention table', desc: 'Query × AI engine grid showing ✓ or ✗ for every combination — 21 data points per check.' },
-              { title: 'Per-query competitor names', desc: 'See which brands appeared in each AI response, so you know exactly who you\'re competing against.' },
-              { title: 'Top competitors summary', desc: 'Aggregated list of brands mentioned most often across all queries and all 3 AI engines.' },
-              { title: 'AI response snippets', desc: 'Expand any row to read the actual text Claude, GPT-4o, or Gemini returned — see the full context.' },
-              { title: 'Summary scores per engine', desc: 'X/7 mentions per AI engine at a glance — instantly see where you\'re strongest and weakest.' },
-              { title: 'Auto-generated queries', desc: 'Dablin generates 7 queries from your URL automatically. Edit them before running for best results.' },
-            ].map(f => (
-              <div key={f.title} style={{ background: 'white', border: '1px solid #eef2ee', borderRadius: '12px', padding: '24px' }}>
+          <div className="ac-qt-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '20px' }}>
+            {QUERY_TYPES.map(qt => {
+              const s = TYPE_STYLES[qt.type];
+              return (
+                <div key={qt.type} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: '14px', padding: '28px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 10px', borderRadius: '20px', background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>{TYPE_LABELS[qt.type]}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: s.color }}>{qt.count}</span>
+                  </div>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: '#0d1f0e', marginBottom: '10px' }}>{qt.title}</div>
+                  <p style={{ fontSize: '13px', color: '#4a6b4c', lineHeight: '1.65', marginBottom: '16px' }}>{qt.desc}</p>
+                  {qt.examples.map((ex, i) => (
+                    <div key={i} style={{ background: 'white', borderRadius: '8px', padding: '9px 12px', fontSize: '12px', fontStyle: 'italic', color: '#0d1f0e', marginBottom: i < qt.examples.length - 1 ? '6px' : 0 }}>{ex}</div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── WHAT YOU GET ── */}
+      <div className="ac-section" style={{ background: '#f8faf8', padding: 'clamp(48px,6vw,96px) 56px', borderBottom: '1px solid #eef2ee' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>What you get</p>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '12px' }}>A complete AI mention report</h2>
+            <p style={{ fontSize: '16px', color: '#4a6b4c', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Not just a yes/no — a full breakdown per query type, per AI engine.</p>
+          </div>
+          <div className="ac-feat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '20px' }}>
+            {FEATURES.map(f => (
+              <div key={f.title} style={{ background: 'white', border: '1px solid #eef2ee', borderRadius: '14px', padding: '24px' }}>
                 <div style={{ fontSize: '15px', fontWeight: '700', color: '#0d1f0e', marginBottom: '8px' }}>{f.title}</div>
                 <div style={{ fontSize: '13px', color: '#4a6b4c', lineHeight: '1.6' }}>{f.desc}</div>
               </div>
@@ -106,37 +233,11 @@ export default function PageAiCheck() {
         </div>
       </div>
 
-      {/* WHY IT MATTERS */}
-      <div className="pg-section" style={{ background: '#0d1f0e', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#6fcf8a', marginBottom: '14px' }}>Why it matters</p>
-            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'white', letterSpacing: '-1px', marginBottom: '12px' }}>AI engines are the new front page</h2>
-            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.5)', maxWidth: '520px', margin: '0 auto', lineHeight: '1.6' }}>Millions of people use ChatGPT, Gemini, and Claude to research products before buying. If you're not in their answers, you're missing buyers who never reach your site.</p>
-          </div>
-          <div className="pg-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '20px' }}>
-            {[
-              { title: 'Know your current baseline', desc: 'Before you can improve your AI visibility, you need to know where you stand. This check gives you that baseline in 20 seconds.' },
-              { title: 'Identify competitor gaps', desc: 'If competitors are being recommended and you\'re not, you can study what they\'re doing and fix your own content strategy.' },
-              { title: 'Track progress over time', desc: 'Run the check monthly to see if your content and technical improvements are moving the needle on AI mentions.' },
-              { title: 'Prioritise by AI engine', desc: 'If Claude mentions you but GPT-4o doesn\'t, you know exactly where to focus — different engines weight different signals.' },
-            ].map(f => (
-              <div key={f.title} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
-                <div style={{ fontSize: '15px', fontWeight: '700', color: 'white', marginBottom: '8px' }}>{f.title}</div>
-                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      
-
-      {/* FAQ */}
-      <div className="pg-section" style={{ background: '#ffffff', padding: 'clamp(48px,6vw,96px) 48px', borderTop: '1px solid #eef2ee' }}>
+      {/* ── FAQ ── */}
+      <div className="ac-section" style={{ background: 'white', padding: 'clamp(48px,6vw,96px) 56px', borderBottom: '1px solid #eef2ee' }}>
         <div style={{ maxWidth: '780px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '14px' }}>FAQ</p>
+            <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>FAQ</p>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,40px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px' }}>Common questions</h2>
           </div>
           <div style={{ borderTop: '1px solid #eef2ee' }}>
@@ -145,17 +246,21 @@ export default function PageAiCheck() {
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="pg-section" style={{ background: '#0d1f0e', padding: 'clamp(64px,8vw,120px) 48px', textAlign: 'center' }}>
+      {/* ── CTA ── */}
+      <div className="ac-section" style={{ background: '#0d1f0e', padding: 'clamp(64px,8vw,120px) 56px', textAlign: 'center' }}>
         <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(32px,5vw,56px)', fontWeight: '800', color: 'white', letterSpacing: '-1.5px', marginBottom: '16px' }}>
-          Find out if AI engines <span style={{ color: '#6fcf8a' }}>know you exist.</span>
+          Find out if AI engines<br /><span style={{ color: '#6fcf8a' }}>know you exist.</span>
         </h2>
-        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>Find out if AI engines know you exist today.</p>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>Results in 20 seconds. 7 queries. 3 AI engines.</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div onClick={() => trackEvent('sign_up_click', { location: 'ai_check_page_cta' })}>
-            <SignUpButton mode="modal"><button className="pg-btn-primary pg-btn-large">Check my brand free →</button></SignUpButton>
+            <SignUpButton mode="modal">
+              <button className="ac-btn">Check my brand →</button>
+            </SignUpButton>
           </div>
-          <SignInButton mode="modal"><button style={{ background: 'none', border: '2px solid rgba(255,255,255,0.2)', color: 'white', padding: '15px 32px', borderRadius: '10px', fontFamily: "'Roboto', sans-serif", fontSize: '16px', fontWeight: '500', cursor: 'pointer' }}>Sign in</button></SignInButton>
+          <SignInButton mode="modal">
+            <button style={{ background: 'none', border: '2px solid rgba(255,255,255,0.2)', color: 'white', padding: '14px 32px', borderRadius: '10px', fontFamily: "'Roboto', sans-serif", fontSize: '15px', fontWeight: '500', cursor: 'pointer' }}>Sign in</button>
+          </SignInButton>
         </div>
       </div>
     </PageLayout>
