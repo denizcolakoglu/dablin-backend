@@ -1452,7 +1452,7 @@ export default function Landing() {
           <div>
             <div className="footer-col-label">Product</div>
             <div className="footer-col-links">
-              <a href="/dashboard/get-started">Step by Step SEO</a>
+              <a href="/seo-audit">Step by Step SEO</a>
               <a href="/seo-geo-dashboard">SEO/GEO Dashboard</a>
               <a href="/google-search-console">Google Search Console</a>
               <a href="/pricing">Pricing</a>

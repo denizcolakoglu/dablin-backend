@@ -218,7 +218,7 @@ function Footer() {
         ])}
 
         {col("Product", [
-          ["Step by Step SEO",      "/dashboard/get-started"],
+          ["Step by Step SEO",      "/seo-audit"],
           ["SEO/GEO Dashboard",     "/seo-geo-dashboard"],
           ["Google Search Console", "/google-search-console"],
           ["Pricing",               "/pricing"],
