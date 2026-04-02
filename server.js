@@ -691,8 +691,18 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
 
   // Price lookup keys — set these in Stripe Dashboard
   // e.g. dablin_starter_monthly, dablin_starter_yearly, etc.
+  // Price IDs (live mode)
+  const PRICE_IDS = {
+    starter_monthly: "price_1THVdmALkl0Rg374ipuoS3bS",
+    starter_yearly:  "price_1THW0vALkl0Rg374mrvH8Bkw",
+    pro_monthly:     "price_1THW3jALkl0Rg374w9UwB0KM",
+    pro_yearly:      "price_1THW6OALkl0Rg374vX9lBxHy",
+    agency_monthly:  "price_1THW84ALkl0Rg3743CtrHwO6",
+    agency_yearly:   "price_1THWACALkl0Rg374TBko0H3k",
+  };
   const priceKey = `dablin_${plan}_${billing === "yearly" ? "yearly" : "monthly"}`;
-  console.log(`[checkout] plan=${plan} billing=${billing} priceKey=${priceKey}`);
+  const priceId = PRICE_IDS[`${plan}_${billing === "yearly" ? "yearly" : "monthly"}`];
+  console.log(`[checkout] plan=${plan} billing=${billing} priceKey=${priceKey} priceId=${priceId} keyPrefix=${(process.env.STRIPE_SECRET_KEY||'').substring(0,14)}`);
 
   try {
     const authObj = getAuth(req); req.auth = authObj;
@@ -712,7 +722,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [{ price: priceKey, quantity: 1 }],
+      line_items: [{ price: priceId || priceKey, quantity: 1 }],
       mode: "subscription",
       success_url: `${process.env.FRONTEND_URL}/dashboard?subscription=success&plan=${plan}`,
       cancel_url:  `${process.env.FRONTEND_URL}/pricing`,
