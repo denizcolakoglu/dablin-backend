@@ -276,6 +276,7 @@ export default function Pricing({ setPage }) {
   const [loading, setLoading]       = useState(false);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [showCompare, setShowCompare] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(null);
 
   useEffect(() => {
     trackEvent("pricing_viewed");
@@ -293,6 +294,7 @@ export default function Pricing({ setPage }) {
 
   async function handleSelect(plan) {
     if (currentPlan === plan.id) return;
+    setCheckoutError(null);
     trackEvent("subscription_click", { plan: plan.id, billing: yearly ? "yearly" : "monthly" });
     setLoading(plan.id);
     try {
@@ -303,10 +305,15 @@ export default function Pricing({ setPage }) {
         body: JSON.stringify({ plan: plan.id, billing: yearly ? "yearly" : "monthly" }),
       });
       const data = await res.json();
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-      else console.error("No checkoutUrl returned", data);
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        console.error("Checkout error:", data);
+        setCheckoutError(data.error || "Checkout failed. Please try again.");
+      }
     } catch (e) {
       console.error("Subscribe failed", e);
+      setCheckoutError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -390,6 +397,12 @@ export default function Pricing({ setPage }) {
       </div>
 
       {showCompare && <CompareTable yearly={yearly} />}
+
+      {checkoutError && (
+        <div style={{ marginTop: "20px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "14px 18px", fontSize: "13px", color: "#c0392b" }}>
+          {checkoutError}
+        </div>
+      )}
 
     </div>
   );
