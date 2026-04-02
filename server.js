@@ -725,7 +725,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
       line_items: [{ price: priceId || priceKey, quantity: 1 }],
       mode: "subscription",
       success_url: `${process.env.FRONTEND_URL}/dashboard?subscription=success&plan=${plan}`,
-      cancel_url:  `${process.env.FRONTEND_URL}/pricing`,
+      cancel_url:  `${process.env.FRONTEND_URL}/dashboard/pricing`,
       metadata: { clerk_id: req.auth?.userId, plan, billing: billing || "monthly" },
       subscription_data: { metadata: { clerk_id: req.auth?.userId, plan } },
     });
