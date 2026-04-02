@@ -692,6 +692,7 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
   // Price lookup keys — set these in Stripe Dashboard
   // e.g. dablin_starter_monthly, dablin_starter_yearly, etc.
   const priceKey = `dablin_${plan}_${billing === "yearly" ? "yearly" : "monthly"}`;
+  console.log(`[checkout] plan=${plan} billing=${billing} priceKey=${priceKey}`);
 
   try {
     const authObj = getAuth(req); req.auth = authObj;
@@ -721,8 +722,8 @@ app.post("/api/checkout", requireAuth(), async (req, res) => {
 
     res.json({ checkoutUrl: session.url });
   } catch (err) {
-    console.error("POST /api/checkout error:", err);
-    res.status(500).json({ error: "Failed to create checkout session" });
+    console.error("POST /api/checkout error:", err.message, err.type, err.code);
+    res.status(500).json({ error: err.message || "Failed to create checkout session" });
   }
 });
 
