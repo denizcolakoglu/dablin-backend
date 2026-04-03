@@ -585,7 +585,7 @@ function ToolTabs() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px', alignItems: 'center' }}>
           <div style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--green-mid)', boxShadow: '0 8px 40px rgba(45,122,58,0.12)' }}>
-            <img src={tab.screenshot} alt={tab.label} style={{ width: '100%', display: 'block' }} />
+            <img src={tab.screenshot} alt={tab.label} width="600" height="400" loading="lazy" style={{ width: '100%', display: 'block' }} />
           </div>
           <div>
             <div style={{ display: 'inline-block', background: 'var(--green)', color: 'white', fontSize: '12px', fontWeight: '700', padding: '4px 14px', borderRadius: '100px', marginBottom: '20px', letterSpacing: '0.5px' }}>
@@ -714,14 +714,14 @@ function NavBar({ topOffset }) {
           </button>
           <div className="nav-left-logo">
             <a href="/" style={{ textDecoration: 'none' }}>
-              <img src="/logo.svg" alt="Dablin" height="44" />
+              <img src="/logo.svg" alt="Dablin" width="44" height="44" loading="lazy" />
             </a>
           </div>
         </div>
 
         <div className="nav-center-logo">
           <a href="/" style={{ textDecoration: 'none' }}>
-            <img src="/logo.svg" alt="Dablin" height="40" />
+            <img src="/logo.svg" alt="Dablin" width="40" height="40" loading="lazy" />
           </a>
         </div>
 
@@ -749,7 +749,7 @@ function NavBar({ topOffset }) {
       {/* Mobile full-screen menu */}
       <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
         <div className="mobile-menu-header">
-          <img src="/logo.svg" alt="Dablin" height="40" />
+          <img src="/logo.svg" alt="Dablin" width="40" height="40" loading="lazy" />
           <button className="mobile-menu-close" onClick={() => setMenuOpen(false)}>×</button>
         </div>
         <div className="mobile-menu-group-label">AI Visibility</div>
@@ -1504,7 +1504,7 @@ export default function Landing() {
                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'none'}
               >
-                <img src={post.img} alt={post.title} style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }} />
+                <img src={post.img} alt={post.title} width="400" height="225" loading="lazy" style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }} />
                 <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>{post.tag}</div>
                   <h3 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--dark)', lineHeight: '1.35', marginBottom: '10px', flex: 1 }}>{post.title}</h3>
@@ -1554,7 +1554,7 @@ export default function Landing() {
           <div>
             <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"16px" }}>
               <a href="/" style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:"10px" }}>
-                <img src="/logo.svg" alt="Dablin" height="32" />
+                <img src="/logo.svg" alt="Dablin" width="32" height="32" loading="lazy" />
                 <span style={{ color:"white", fontSize:"17px", fontWeight:"700", letterSpacing:"-0.3px" }}>dablin</span>
               </a>
             </div>
