@@ -1083,12 +1083,15 @@ export default function Landing() {
           .blog-grid { grid-template-columns: 1fr !important; }
           /* Before/after — stack */
           .before-after-grid { grid-template-columns: 1fr !important; }
-          /* Comparison table — smaller text */
-          .compare-table { font-size: 12px !important; }
+          /* Comparison table */
+          .compare-table { font-size: 12px !important; overflow-x: auto !important; display: block !important; }
           /* Announcement bar */
           .announcement-bar-inner { font-size: 12px !important; padding: 8px 40px 8px 12px !important; }
-          /* Section padding */
-          .landing > div { padding-left: 20px !important; padding-right: 20px !important; }
+          /* Global overflow fix */
+          body { overflow-x: hidden; }
+          /* Product section text full width */
+          .product-section-grid > div:first-child { min-width: 0; width: 100%; }
+          p, h2, h3 { word-wrap: break-word; overflow-wrap: break-word; }
         }
       `}</style>
 
@@ -1111,7 +1114,7 @@ export default function Landing() {
       {/* PRODUCT SECTIONS */}
 
       {/* 1: AI Visibility Check — text left, demo right */}
-      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>◎ AI Visibility Check</div>
@@ -1137,14 +1140,14 @@ export default function Landing() {
               
             </div>
           </div>
-          <div><AiCheckDemo /></div>
+          <div className='product-section-demo'><AiCheckDemo /></div>
         </div>
       </div>
 
       {/* 2: AI Visibility Audit — demo left, text right */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
-          <div><AiVisibilityDemo /></div>
+          <div className='product-section-demo'><AiVisibilityDemo /></div>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>◈ AI Visibility Audit</div>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
@@ -1173,7 +1176,7 @@ export default function Landing() {
       </div>
 
       {/* 3: SEO Audit — text left, demo right */}
-      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>⊕ SEO Audit</div>
@@ -1199,14 +1202,14 @@ export default function Landing() {
               
             </div>
           </div>
-          <div><SeoAuditDemo /></div>
+          <div className='product-section-demo'><SeoAuditDemo /></div>
         </div>
       </div>
 
       {/* 4: AI Query Check — text right, mockup left */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
-          <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '14px', padding: '28px', boxShadow: '0 4px 24px rgba(26,122,58,0.08)' }}>
+          <div className='product-section-demo' style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '14px', padding: '28px', boxShadow: '0 4px 24px rgba(26,122,58,0.08)' }}>
             <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '16px' }}>Describe your brand</div>
             <div style={{ background: 'var(--off-white)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px 14px', fontSize: '13px', color: 'var(--text)', lineHeight: '1.5', marginBottom: '16px', fontStyle: 'italic' }}>"Dablin is an AI visibility and SEO toolkit for e-commerce brands and Shopify sellers."</div>
             <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px' }}>Generated queries</div>
@@ -1247,7 +1250,7 @@ export default function Landing() {
       </div>
 
       {/* 5: Search Console — demo left, text right */}
-      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(26,122,58,0.08)' }}>
             <div style={{ background: 'var(--off-white)', padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1297,7 +1300,7 @@ export default function Landing() {
       </div>
 
       {/* 6: Dashboard — text left, kanban right */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>⊞ SEO/GEO Dashboard</div>
@@ -1362,7 +1365,7 @@ export default function Landing() {
       </div>
 
       {/* BEFORE / AFTER */}
-      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
             <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>The difference</p>
@@ -1411,15 +1414,15 @@ export default function Landing() {
       </div>
 
       {/* COMPETITOR COMPARISON */}
-      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
             <p style={{ fontSize: '12px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>Why Dablin</p>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', marginBottom: '12px' }}>Built for the new era of search</h2>
             <p style={{ fontSize: '16px', color: 'var(--muted)', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Traditional SEO tools were built for Google blue links. Dablin is built for AI search too.</p>
           </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+          <div className='compare-table' style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', minWidth: '400px' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border)' }}>
                   <th style={{ textAlign: 'left', padding: '14px 16px', color: 'var(--muted)', fontWeight: '600', fontSize: '13px' }}>Feature</th>
@@ -1458,7 +1461,7 @@ export default function Landing() {
       </div>
 
       {/* BLOG POSTS */}
-      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
+      <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)', overflow: 'hidden' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
