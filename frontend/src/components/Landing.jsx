@@ -856,7 +856,7 @@ function GoogleUpdatePopup() {
               fontSize: "15px", fontWeight: "700", cursor: "pointer",
               marginBottom: "10px", letterSpacing: "-0.2px",
             }}>
-              Run free SEO Audit →
+              Run SEO Audit →
             </button>
           </SignInButton>
           <p style={{ textAlign: "center", fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: 0 }}>
@@ -1533,11 +1533,11 @@ export default function Landing() {
       {/* CTA */}
       <div className="cta-section">
         <h2 className="cta-title">Generate. Audit. <span>Get found.</span></h2>
-        <p className="cta-sub">The only e-commerce tool that writes copy, fixes SEO, and optimises for AI engines — no subscription, no monthly fees.</p>
+        <p className="cta-sub">The only toolkit that checks your SEO and AI visibility in one place — Starter from €9/mo.</p>
         <div className="cta-actions">
           <div onClick={() => trackEvent('sign_up_modal_opened', { location: 'cta_bottom' })}>
             <SignUpButton mode="modal">
-              <button className="btn-primary btn-large">Start free — no card needed</button>
+              <button className="btn-primary btn-large">Get started →</button>
             </SignUpButton>
           </div>
           <SignInButton mode="modal">

@@ -333,7 +333,7 @@ export default function PageSeoAudit() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div onClick={() => trackEvent('sign_up_click', { location: 'seo_audit_page_cta' })}>
             <SignUpButton mode="modal">
-              <button className="seo-btn-primary">Audit your first page free →</button>
+              <button className="seo-btn-primary">Run SEO Audit →</button>
             </SignUpButton>
           </div>
           <SignInButton mode="modal">

@@ -381,7 +381,7 @@ export default function Pricing({ setPage }) {
 
       {/* Money back + FAQ strip */}
       <div style={{ display: "flex", justifyContent: "center", gap: "32px", marginTop: "28px", flexWrap: "wrap" }}>
-        {["✓ Cancel anytime", "✓ 14-day money-back guarantee", "✓ No setup fees", "✓ Secured by Stripe"].map(item => (
+        {["✓ Cancel anytime", "✓ No setup fees", "✓ Secured by Stripe", "✓ Switch plans anytime"].map(item => (
           <span key={item} style={{ fontSize: "13px", color: "#4a6b4c", fontWeight: "500" }}>{item}</span>
         ))}
       </div>

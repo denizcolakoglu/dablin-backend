@@ -283,11 +283,11 @@ export default function PageAiAudit() {
         <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(32px,5vw,56px)', fontWeight: '800', color: 'white', letterSpacing: '-1.5px', marginBottom: '16px' }}>
           Find out if AI engines<br /><span style={{ color: '#6fcf8a' }}>know your brand.</span>
         </h2>
-        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>Free audit. Results in 20 seconds. AI fixes included.</p>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>12 checks. AI fix for every issue. Results in 20 seconds.</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div onClick={() => trackEvent('sign_up_click', { location: 'ai_audit_page_cta' })}>
             <SignUpButton mode="modal">
-              <button className="ai-btn-primary">Audit your page free →</button>
+              <button className="ai-btn-primary">Run AI Visibility Audit →</button>
             </SignUpButton>
           </div>
           <SignInButton mode="modal">
