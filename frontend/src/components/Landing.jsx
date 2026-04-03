@@ -691,7 +691,7 @@ function ResourcesDropdown() {
 
 function AnnouncementBar({ onDismiss }) {
   return (
-    <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 48px", fontSize: "13px", fontWeight: "500", position: "fixed", top: 0, left: 0, right: 0, lineHeight: "1.4", zIndex: 200, height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 40px 10px 12px", fontSize: "13px", fontWeight: "500", position: "fixed", top: 0, left: 0, right: 0, lineHeight: "1.4", zIndex: 200, height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <span style={{ fontWeight: "700", marginRight: "8px" }}>⚡ New</span>
       Now includes Google March 2026 signals — Information Gain &amp; AI Overview eligibility checks
       <a href="/seo-audit" style={{ marginLeft: "12px", color: "white", fontWeight: "700", textDecoration: "underline", textUnderlineOffset: "3px" }}>Try the SEO Audit →</a>
@@ -963,7 +963,7 @@ export default function Landing() {
         .mobile-menu-group-label { font-size: 11px; font-weight: 700; color: #9ab09c; text-transform: uppercase; letter-spacing: 1px; padding: 14px 0 6px; }
 
         /* HERO */
-        .hero { background: #eef8f0; background-image: linear-gradient(rgba(26,122,58,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(26,122,58,0.06) 1px, transparent 1px); background-size: 36px 36px; max-width: 100%; padding: 96px 48px 108px; text-align: center; position: relative; }
+        .hero { background: #eef8f0; background-image: linear-gradient(rgba(26,122,58,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(26,122,58,0.06) 1px, transparent 1px); background-size: 36px 36px; max-width: 100%; padding: clamp(40px,8vw,96px) clamp(20px,4vw,48px) clamp(48px,8vw,108px); text-align: center; position: relative; }
         .hero-title { font-family: 'Roboto Condensed', sans-serif; font-size: clamp(48px, 7vw, 84px); font-weight: 300; line-height: 1.0; letter-spacing: -3px; color: var(--dark); margin-bottom: 24px; }
         .hero-accent { color: var(--green); }
         .hero-sub { font-size: 19px; color: var(--muted); max-width: 540px; margin: 0 auto 12px; line-height: 1.65; font-weight: 300; }
@@ -1061,7 +1061,8 @@ export default function Landing() {
           .nav-hamburger { display: flex; }
           .nav-left-logo { display: none; }
           .nav-center-logo { display: block; position: absolute; left: 50%; transform: translateX(-50%); }
-          .hero { padding: 56px 20px 64px; }
+          .hero { padding: 40px 20px 48px; }
+          .hero-title { font-size: clamp(36px,8vw,56px) !important; letter-spacing: -2px !important; }
           .hero-sub { font-size: 16px; }
           .hero-url-form { margin: 32px 0 12px; flex-direction: column; border-radius: 14px; padding: 12px; gap: 8px; }
           .hero-url-input { font-size: 14px; }
@@ -1072,6 +1073,22 @@ export default function Landing() {
           .screenshot-section { padding: 48px 20px; }
           .cta-actions { flex-direction: column; }
           .faq-answer { padding-right: 0; }
+          /* Product sections — stack on mobile */
+          .product-section-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .product-section-demo { display: none !important; }
+          /* How it works — stack */
+          .how-it-works-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .how-it-works-step { padding: 0 0 32px 0 !important; border-right: none !important; border-bottom: 1px solid var(--green-mid); margin-bottom: 32px; }
+          /* Blog — single column */
+          .blog-grid { grid-template-columns: 1fr !important; }
+          /* Before/after — stack */
+          .before-after-grid { grid-template-columns: 1fr !important; }
+          /* Comparison table — smaller text */
+          .compare-table { font-size: 12px !important; }
+          /* Announcement bar */
+          .announcement-bar-inner { font-size: 12px !important; padding: 8px 40px 8px 12px !important; }
+          /* Section padding */
+          .landing > div { padding-left: 20px !important; padding-right: 20px !important; }
         }
       `}</style>
 
@@ -1095,7 +1112,7 @@ export default function Landing() {
 
       {/* 1: AI Visibility Check — text left, demo right */}
       <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+        <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>◎ AI Visibility Check</div>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
@@ -1126,7 +1143,7 @@ export default function Landing() {
 
       {/* 2: AI Visibility Audit — demo left, text right */}
       <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+        <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div><AiVisibilityDemo /></div>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>◈ AI Visibility Audit</div>
@@ -1157,7 +1174,7 @@ export default function Landing() {
 
       {/* 3: SEO Audit — text left, demo right */}
       <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+        <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>⊕ SEO Audit</div>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
@@ -1188,7 +1205,7 @@ export default function Landing() {
 
       {/* 4: AI Query Check — text right, mockup left */}
       <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+        <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '14px', padding: '28px', boxShadow: '0 4px 24px rgba(26,122,58,0.08)' }}>
             <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '16px' }}>Describe your brand</div>
             <div style={{ background: 'var(--off-white)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px 14px', fontSize: '13px', color: 'var(--text)', lineHeight: '1.5', marginBottom: '16px', fontStyle: 'italic' }}>"Dablin is an AI visibility and SEO toolkit for e-commerce brands and Shopify sellers."</div>
@@ -1231,7 +1248,7 @@ export default function Landing() {
 
       {/* 5: Search Console — demo left, text right */}
       <div style={{ background: 'var(--white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+        <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(26,122,58,0.08)' }}>
             <div style={{ background: 'var(--off-white)', padding: '14px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff5f57' }} />
@@ -1281,7 +1298,7 @@ export default function Landing() {
 
       {/* 6: Dashboard — text left, kanban right */}
       <div style={{ background: 'var(--off-white)', borderTop: '1px solid var(--border)', padding: 'clamp(48px,6vw,96px) clamp(20px,4vw,80px)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
+        <div className='product-section-grid' style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '64px', alignItems: 'center' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--green-pale)', color: 'var(--green)', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>⊞ SEO/GEO Dashboard</div>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', lineHeight: '1.1', marginBottom: '16px' }}>
@@ -1328,13 +1345,13 @@ export default function Landing() {
         <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
           <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--green)', marginBottom: '14px' }}>How it works</p>
           <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', marginBottom: '56px' }}>From URL to actionable fixes in 30 seconds</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', position: 'relative' }}>
+          <div className='blog-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', position: 'relative' }}>
             {[
               { step: '1', title: 'Enter your URL', desc: 'Paste any product page or homepage URL. Dablin fetches and analyses your page automatically.' },
               { step: '2', title: 'Get your results', desc: 'See your AI visibility score, SEO health, and which AI engines mention your brand — all in under 30 seconds.' },
               { step: '3', title: 'Copy the fixes', desc: 'Every failed check comes with a ready-to-copy AI-generated fix. No developer, no guesswork.' },
             ].map((s, i) => (
-              <div key={s.step} style={{ padding: '0 40px', borderRight: i < 2 ? '1px solid var(--green-mid)' : 'none', textAlign: 'left' }}>
+              <div key={s.step} className='how-it-works-step' style={{ padding: '0 40px', borderRight: i < 2 ? '1px solid var(--green-mid)' : 'none', textAlign: 'left' }}>
                 <div style={{ width: '44px', height: '44px', background: 'white', border: '1.5px solid var(--green-mid)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '800', color: 'var(--green)', marginBottom: '20px' }}>{s.step}</div>
                 <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--dark)', marginBottom: '12px', letterSpacing: '-0.3px' }}>{s.title}</h3>
                 <p style={{ fontSize: '15px', color: 'var(--muted)', lineHeight: '1.65', fontWeight: '300' }}>{s.desc}</p>
@@ -1352,7 +1369,7 @@ export default function Landing() {
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: 'var(--dark)', letterSpacing: '-1px', marginBottom: '12px' }}>Invisible vs found</h2>
             <p style={{ fontSize: '16px', color: 'var(--muted)', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Most brands are invisible to AI engines and have no idea. Here's what changes when you fix it.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div className='before-after-grid' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
             {/* BEFORE */}
             <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '16px', padding: '32px' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fee2e2', color: '#c0392b', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '24px' }}>✗ Before Dablin</div>
@@ -1450,7 +1467,7 @@ export default function Landing() {
             </div>
             <a href="https://blog.dablin.co" target="_blank" rel="noreferrer" style={{ fontSize: '14px', color: 'var(--green)', fontWeight: '600', textDecoration: 'none' }}>View all posts →</a>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+          <div className='blog-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
             {[
               {
                 tag: 'SEO · Google',
