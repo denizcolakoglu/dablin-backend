@@ -691,11 +691,14 @@ function ResourcesDropdown() {
 
 function AnnouncementBar({ onDismiss }) {
   return (
-    <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "10px 40px 10px 12px", fontSize: "13px", fontWeight: "500", position: "fixed", top: 0, left: 0, right: 0, lineHeight: "1.4", zIndex: 200, height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span style={{ fontWeight: "700", marginRight: "8px" }}>⚡ New</span>
-      Now includes Google March 2026 signals — Information Gain &amp; AI Overview eligibility checks
-      <a href="/seo-audit" style={{ marginLeft: "12px", color: "white", fontWeight: "700", textDecoration: "underline", textUnderlineOffset: "3px" }}>Try the SEO Audit →</a>
-      <button onClick={onDismiss} style={{ position: "absolute", right: "16px", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
+    <div style={{ background: "#1a7a3a", color: "white", textAlign: "center", padding: "0 40px 0 12px", fontSize: "13px", fontWeight: "500", position: "fixed", top: 0, left: 0, right: 0, lineHeight: "1.3", zIndex: 200, height: "40px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+      <span style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "nowrap", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <span style={{ fontWeight: "700", flexShrink: 0 }}>⚡ New</span>
+        <span className="bar-text-full">Now includes Google March 2026 signals — Information Gain &amp; AI Overview</span>
+        <span className="bar-text-short" style={{ display: "none" }}>Google March 2026 signals added</span>
+        <a href="/seo-audit" style={{ color: "white", fontWeight: "700", textDecoration: "underline", textUnderlineOffset: "3px", flexShrink: 0 }}>SEO Audit →</a>
+      </span>
+      <button onClick={onDismiss} style={{ position: "absolute", right: "12px", background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer", lineHeight: 1, padding: "0 4px", flexShrink: 0 }}>×</button>
     </div>
   );
 }
@@ -1086,8 +1089,8 @@ export default function Landing() {
           /* Comparison table */
           .compare-table { font-size: 12px !important; overflow-x: auto !important; display: block !important; }
           /* Announcement bar */
-          .announcement-bar-inner { font-size: 12px !important; padding: 8px 40px 8px 12px !important; }
-          /* Global overflow fix */
+          .bar-text-full { display: none !important; }
+          .bar-text-short { display: inline !important; }
           body { overflow-x: hidden; }
           /* Product section text full width */
           .product-section-grid > div:first-child { min-width: 0; width: 100%; }
