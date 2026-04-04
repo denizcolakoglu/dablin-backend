@@ -21,6 +21,7 @@ import PageDashboard from "./components/pages/PageDashboard";
 import PageContact from "./components/pages/PageContact";
 import PageWhatsNew from "./components/pages/PageWhatsNew";
 import PageQueryCheck from "./components/pages/PageQueryCheck";
+import PageGoogleAds from "./components/pages/PageGoogleAds";
 import SharedResult from "./components/SharedResult";
 
 // ── Google March 2026 Popup ───────────────────────────────────
@@ -288,6 +289,7 @@ export default function App() {
       <Route path="/contact" element={<PageContact />} />
       <Route path="/whats-new" element={<PageWhatsNew />} />
       <Route path="/ai-query-check" element={<PageQueryCheck />} />
+      <Route path="/google-ads" element={<PageGoogleAds />} />
       <Route path="/results/:token" element={<SharedResult />} />
 
       <Route path="/dashboard/*" element={
