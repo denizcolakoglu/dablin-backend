@@ -197,6 +197,9 @@ export default function PageSeoAudit() {
                 <button className="seo-btn-primary">Audit my page</button>
               </SignUpButton>
             </div>
+            <a href="/seo-audit-sample-report" style={{ display: 'inline-block', marginTop: '14px', fontSize: '14px', color: '#1a7a3a', fontWeight: '600', textDecoration: 'none', borderBottom: '1.5px solid #d0e8d4', paddingBottom: '1px' }}>
+              See a real report →
+            </a>
           </div>
 
           {/* Right: animation */}
