@@ -41,7 +41,7 @@ const CHECK_GROUPS = [
     key: "march2026",
     label: "⚡ Google March 2026",
     checks: [
-      { key: "infoGain",   label: "Information Gain",          desc: "600+ words with original signals: author, date, data or structured lists" },
+      { key: "informationGain", label: "Information Gain",          desc: "600+ words with original signals: author, date, data or structured lists" },
       { key: "aiOverview", label: "AI Overview eligibility",   desc: "FAQPage or HowTo schema, or question-structured H2s for Google SGE" },
     ],
   },
@@ -49,7 +49,7 @@ const CHECK_GROUPS = [
     key: "performance",
     label: "Performance",
     checks: [
-      { key: "imageOptimisation", label: "Image optimisation",  desc: "All images have width, height and loading=lazy for Core Web Vitals" },
+      { key: "imageOpt", label: "Image optimisation",  desc: "All images have width, height and loading=lazy for Core Web Vitals" },
       { key: "internalLinks",     label: "Internal links",      desc: "At least 3 internal links for crawlability and topical authority" },
     ],
   },
