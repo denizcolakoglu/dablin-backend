@@ -906,8 +906,22 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     const wordCountOk = wordCount >= 300;
 
     // ── CHECK 6: Canonical tag ───────────────────────────────
-    const canonical = $('link[rel="canonical"]').attr("href") || "";
+    const canonical = $('link[rel="canonical"]').last().attr("href") || "";
     const canonicalOk = canonical.length > 0;
+    // Detect canonical pointing to a different page (e.g. homepage set globally)
+    let canonicalIssue = null;
+    if (canonical.length > 0) {
+      try {
+        const canonicalUrl = new URL(canonical);
+        const pageUrl = new URL(url);
+        // Normalize: remove trailing slashes for comparison
+        const canonicalPath = canonicalUrl.pathname.replace(/\/$/, "") || "/";
+        const pagePath = pageUrl.pathname.replace(/\/$/, "") || "/";
+        if (canonicalUrl.hostname === pageUrl.hostname && canonicalPath !== pagePath) {
+          canonicalIssue = `Canonical points to ${canonicalUrl.pathname} instead of ${pageUrl.pathname} — Google will not index this page`;
+        }
+      } catch {}
+    }
 
     // ── CHECK 7: Robots noindex ──────────────────────────────
     const robotsMeta = $('meta[name="robots"]').attr("content") || "";
@@ -1073,6 +1087,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     }
     if (!wordCountOk) issues.wordCount = `Only ${wordCount} words — thin content (min 300 recommended)`;
     if (!canonicalOk) issues.canonical = "No canonical tag found — risk of duplicate content penalties";
+    else if (canonicalIssue) issues.canonical = canonicalIssue;
     if (!robotsOk) issues.robots = `Page is set to noindex — won't appear in search results`;
     if (!ogOk) {
       const missing = [!ogTitle && "og:title", !ogDesc && "og:description", !ogImage && "og:image"].filter(Boolean);
@@ -1095,7 +1110,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
 
     const allChecks = {
       meta: metaOk, schema: schemaOk, alt: altOk, headings: headingsOk,
-      wordCount: wordCountOk, canonical: canonicalOk, robots: robotsOk,
+      wordCount: wordCountOk, canonical: canonicalOk && !canonicalIssue, robots: robotsOk,
       og: ogOk, viewport: viewportOk, productSchema: productSchemaOk,
       breadcrumb: breadcrumbOk, reviewSchema: reviewSchemaOk, internalLinks: internalLinksOk,
       informationGain: informationGainOk, aiOverview: aiOverviewOk,
@@ -1130,7 +1145,9 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
           productSchema: `Write a complete JSON-LD Product schema with name, description, url, and offers. Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
           breadcrumb: `Write a JSON-LD BreadcrumbList schema for this page. Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
           reviewSchema: `Add aggregateRating to a Product schema (ratingValue: 4.5, reviewCount: 12). Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
-          canonical: `Return ONLY this HTML tag:\n<link rel="canonical" href="${url}" />`,
+          canonical: canonicalIssue
+            ? `Return ONLY this corrected canonical tag:\n<link rel="canonical" href="${url}" />\n\nExplanation: The current canonical (${canonical}) points to a different page, telling Google not to index ${url}.`
+            : `Return ONLY this HTML tag:\n<link rel="canonical" href="${url}" />`,
           viewport: `Return ONLY this HTML tag:\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
           robots: `The robots meta tag is set to noindex. Return ONLY the corrected tag:\n<meta name="robots" content="index, follow">`,
           headings: `The page has this heading issue: ${issues.headings}. Suggest the corrected heading structure as HTML (h1/h2/h3 tags with placeholder text). Keep it concise.\n${contentContext}`,
