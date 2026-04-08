@@ -965,11 +965,15 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
 
     // ── CHECK 14: Information Gain (Google March 2026) ────────
     const hasAuthor =
-      $('[rel="author"], [itemprop="author"], .author, .byline').length > 0 ||
-      /"author"\s*:/.test(html);
+      $('[rel="author"], [itemprop="author"], .author, .byline, [class*="author"], [class*="byline"]').length > 0 ||
+      /"author"\s*:/.test(html) ||
+      $('meta[name="author"]').length > 0 ||
+      $('meta[name="byl"]').length > 0;
     const hasDate =
-      $('time, [itemprop="datePublished"], [itemprop="dateModified"], meta[property="article:published_time"]').length > 0;
-    const hasStats = /\d+\s*[\%\+x]|\$\d+|€\d+|\d+\s*times\b/i.test(bodyText);
+      $('time, [itemprop="datePublished"], [itemprop="dateModified"], meta[property="article:published_time"], meta[property="article:modified_time"]').length > 0 ||
+      $('meta[name="date"], meta[name="revised"], meta[name="last-modified"]').length > 0 ||
+      /"datePublished"|"dateModified"|"uploadDate"/.test(html);
+    const hasStats = /\d+\s*[\%\+x]|\$\d+|€\d+|\d+\s*times\b|\d+\s*users|\d+\s*tests|\d+\s*checks|\d+\s*hours|\d+\s*minutes|\d+\s*seconds/i.test(bodyText);
     const hasStructuredList = $("ul li, ol li").length >= 3;
     const uniqueSignals =
       (hasAuthor ? 1 : 0) + (hasDate ? 1 : 0) + (hasStats ? 1 : 0) + (hasStructuredList ? 1 : 0);
@@ -991,17 +995,24 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     const aiOverviewOk = faqSchemaOk || questionH2Count >= 2;
 
     // ── CHECK 16: Image optimisation ─────────────────────────
+    // Only check meaningful images — skip tracking pixels and tiny images
     let unoptimisedImages = 0;
     images.each((_, el) => {
+      const src = $(el).attr("src") || "";
+      const w = parseInt($(el).attr("width") || "0");
+      const h = parseInt($(el).attr("height") || "0");
+      // Skip tracking pixels, base64 data URIs, and tiny images (<=4px)
+      if (src.startsWith("data:") || (w > 0 && w <= 4) || (h > 0 && h <= 4)) return;
       const hasWidth = $(el).attr("width");
       const hasHeight = $(el).attr("height");
-      const hasLazy = $(el).attr("loading") === "lazy";
+      const hasLazy = $(el).attr("loading") === "lazy" || $(el).attr("loading") === "eager";
       if (!hasWidth || !hasHeight || !hasLazy) unoptimisedImages++;
     });
     const imageOptOk = images.length === 0 || unoptimisedImages === 0;
 
     // ── CHECK 17: Render-blocking resources ──────────────────
-    const renderBlockingScripts = $('head script:not([async]):not([defer]):not([type="application/ld+json"])').length;
+    // Exclude: JSON-LD, module scripts, inline scripts (no src), noscript content
+    const renderBlockingScripts = $('head script[src]:not([async]):not([defer]):not([type="application/ld+json"]):not([type="module"])').length;
     const renderBlockingOk = renderBlockingScripts === 0;
 
     // ── CHECK 18: Sitemap reference ───────────────────────────
