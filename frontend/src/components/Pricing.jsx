@@ -277,6 +277,14 @@ export default function Pricing({ setPage }) {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [showCompare, setShowCompare] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
+  const [isMobile, setIsMobile]     = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     trackEvent("pricing_viewed");
@@ -324,10 +332,6 @@ export default function Pricing({ setPage }) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; }
-        .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; align-items: start; }
-        @media (max-width: 768px) {
-          .pricing-grid { grid-template-columns: 1fr !important; max-width: 420px; margin: 0 auto; }
-        }
       `}</style>
 
       {/* Header */}
@@ -371,7 +375,14 @@ export default function Pricing({ setPage }) {
       </div>
 
       {/* Plan cards */}
-      <div className="pricing-grid">
+      <div className="pricing-grid" style={{
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+        gap: "20px",
+        alignItems: "start",
+        maxWidth: isMobile ? "420px" : "none",
+        margin: isMobile ? "0 auto" : undefined,
+      }}>
         {PLANS.map(plan => (
           <PlanCard
             key={plan.id}
