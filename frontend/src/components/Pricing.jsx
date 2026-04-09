@@ -328,7 +328,7 @@ export default function Pricing({ setPage }) {
   }
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "40px clamp(16px,4vw,24px)", fontFamily: "'Roboto', sans-serif" }}>
+    <div style={{ margin: "0 auto", padding: "40px 0", fontFamily: "'Roboto', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; }
@@ -375,13 +375,11 @@ export default function Pricing({ setPage }) {
       </div>
 
       {/* Plan cards */}
-      <div className="pricing-grid" style={{
+      <div style={{
         display: "grid",
-        gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
         gap: "20px",
         alignItems: "start",
-        maxWidth: isMobile ? "420px" : "none",
-        margin: isMobile ? "0 auto" : undefined,
       }}>
         {PLANS.map(plan => (
           <PlanCard
