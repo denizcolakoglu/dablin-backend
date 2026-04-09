@@ -320,10 +320,14 @@ export default function Pricing({ setPage }) {
   }
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "40px 24px", fontFamily: "'Roboto', sans-serif" }}>
+    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "40px clamp(16px,4vw,24px)", fontFamily: "'Roboto', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; align-items: start; }
+        @media (max-width: 768px) {
+          .pricing-grid { grid-template-columns: 1fr !important; max-width: 420px; margin: 0 auto; }
+        }
       `}</style>
 
       {/* Header */}
@@ -367,7 +371,7 @@ export default function Pricing({ setPage }) {
       </div>
 
       {/* Plan cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "20px", alignItems: "start" }}>
+      <div className="pricing-grid">
         {PLANS.map(plan => (
           <PlanCard
             key={plan.id}
