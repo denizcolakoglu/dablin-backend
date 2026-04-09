@@ -575,3 +575,8 @@ body {
   .sidebar-bottom { display: none; }
   .main-content { padding-bottom: 72px; }
 }
+
+/* ── PRICING MOBILE FIX ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .main-content { padding: 16px 12px; }
+}
