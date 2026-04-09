@@ -117,7 +117,7 @@ export default function PagePricing() {
       {/* PLAN CARDS */}
       <div className="pp-section" style={{ background: "#ffffff", padding: "clamp(48px,6vw,80px) 48px", borderTop: "1px solid #eef2ee" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div className="pp-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "24px", alignItems: "start" }}>
+          <div className="pp-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "24px", alignItems: "start" }}>
             {PLANS.map(plan => {
               const price = yearly ? plan.yearlyMonthly : plan.monthlyPrice;
               const saving = yearly ? Math.round((plan.monthlyPrice * 12 - plan.yearlyMonthly * 12)) : 0;
