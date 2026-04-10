@@ -38,6 +38,7 @@ const TABS = [
   { id: "offpage",   label: "Off-Page SEO", free: false },
   { id: "technical", label: "Technical SEO",free: false },
   { id: "algorithm", label: "Algorithm",    free: false },
+  { id: "history",   label: "History",      free: true  },
 ];
 
 // ── CHECK ROW ──────────────────────────────────────────────────
@@ -277,8 +278,49 @@ export default function Audit({ setPage }) {
   const [activeTab, setActiveTab] = useState("onpage");
   const [currentPlan, setCurrentPlan] = useState("free");
   const [noCredits, setNoCredits] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [expandedHistory, setExpandedHistory] = useState({});
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareMsg, setShareMsg] = useState(null);
 
   useEffect(() => { fetchPlan(); }, []);
+
+  useEffect(() => {
+    if (activeTab === "history") fetchHistory();
+  }, [activeTab]);
+
+  async function fetchHistory() {
+    setHistoryLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${BASE}/api/audit-history?limit=30`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      setHistory(data.items || []);
+    } catch {}
+    finally { setHistoryLoading(false); }
+  }
+
+  async function shareResult() {
+    if (!result) return;
+    setShareLoading(true);
+    setShareMsg(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${BASE}/api/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ type: "seo-audit", data: { url: result.url, checks: result.checks, issues: result.issues, plan: currentPlan } }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        await navigator.clipboard?.writeText(data.url);
+        setShareMsg("Link copied!");
+        setTimeout(() => setShareMsg(null), 3000);
+      }
+    } catch { setShareMsg("Failed to create link"); }
+    finally { setShareLoading(false); }
+  }
 
   async function fetchPlan() {
     try {
@@ -604,18 +646,116 @@ export default function Audit({ setPage }) {
           )}
         </div>
 
+          {/* HISTORY */}
+          {activeTab === "history" && (
+            <div style={{ paddingTop: "20px" }}>
+              {historyLoading && <div style={{ fontSize: "13px", color: "#9ab09c", padding: "24px 0", textAlign: "center" }}>Loading history…</div>}
+              {!historyLoading && history.length === 0 && (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: "32px", marginBottom: "12px" }}>📋</div>
+                  <div style={{ fontSize: "14px", fontWeight: "600", color: "#0d1f0e", marginBottom: "6px" }}>No audits yet</div>
+                  <div style={{ fontSize: "13px", color: "#9ab09c" }}>Run your first audit above and it will appear here.</div>
+                </div>
+              )}
+              {!historyLoading && history.map((item) => {
+                const checks = item.checks || {};
+                const issues = item.issues || {};
+                const keys = Object.keys(checks);
+                const passed = keys.filter(k => checks[k]).length;
+                const total = keys.length || 1;
+                const score = Math.round((passed / total) * 100);
+                const scoreColor = score >= 80 ? "#1a7a3a" : score >= 60 ? "#b45309" : "#c0392b";
+                const scoreBg = score >= 80 ? "#eef8f0" : score >= 60 ? "#fffbeb" : "#fef2f2";
+                const scoreBorder = score >= 80 ? "#d0e8d4" : score >= 60 ? "#fcd34d" : "#fca5a5";
+                const isExpanded = expandedHistory[item.id];
+                const date = new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+                const time = new Date(item.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+                const onpageP = ONPAGE_CHECKS.filter(c => checks[c.key]).length;
+                const techP   = TECHNICAL_CHECKS.filter(c => checks[c.key]).length;
+                const algoP   = ALGORITHM_CHECKS.filter(c => checks[c.key]).length;
+                const failedIssues = Object.entries(issues).filter(([,v]) => v);
+                return (
+                  <div key={item.id} style={{ border: "1px solid #eef2ee", borderRadius: "10px", marginBottom: "10px", overflow: "hidden" }}>
+                    {/* Row header */}
+                    <div onClick={() => setExpandedHistory(e => ({ ...e, [item.id]: !e[item.id] }))} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", cursor: "pointer", background: isExpanded ? "#f8faf8" : "white" }}>
+                      <div style={{ background: scoreBg, border: `1px solid ${scoreBorder}`, borderRadius: "8px", padding: "4px 10px", textAlign: "center", minWidth: "50px", flexShrink: 0 }}>
+                        <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: "18px", fontWeight: "800", color: scoreColor, lineHeight: 1 }}>{score}</div>
+                        <div style={{ fontSize: "9px", color: scoreColor, fontWeight: "600" }}>/100</div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#0d1f0e", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.url}</div>
+                        <div style={{ fontSize: "11px", color: "#9ab09c" }}>{date} · {time} · {passed}/{total} checks passed</div>
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                        {[{ l: "On-Page", v: `${onpageP}/${ONPAGE_CHECKS.length}` }, { l: "Tech", v: `${techP}/${TECHNICAL_CHECKS.length}` }, { l: "Algo", v: `${algoP}/${ALGORITHM_CHECKS.length}` }].map(s => (
+                          <div key={s.l} style={{ textAlign: "center", background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "6px", padding: "3px 8px" }}>
+                            <div style={{ fontSize: "11px", fontWeight: "700", color: "#1a7a3a" }}>{s.v}</div>
+                            <div style={{ fontSize: "9px", color: "#9ab09c" }}>{s.l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <span style={{ fontSize: "11px", color: "#9ab09c" }}>{isExpanded ? "▲" : "▼"}</span>
+                    </div>
+                    {/* Expanded detail */}
+                    {isExpanded && (
+                      <div style={{ borderTop: "1px solid #eef2ee", padding: "16px", background: "#f8faf8" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                          {/* Failed checks */}
+                          <div>
+                            <div style={{ fontSize: "11px", fontWeight: "700", color: "#c0392b", textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "8px" }}>Failed checks</div>
+                            {ALL_CHECKS.filter(c => !checks[c.key]).length === 0 ? (
+                              <div style={{ fontSize: "12px", color: "#1a7a3a" }}>All checks passed ✓</div>
+                            ) : ALL_CHECKS.filter(c => !checks[c.key]).map(c => (
+                              <div key={c.key} style={{ display: "flex", gap: "6px", marginBottom: "6px", fontSize: "12px", color: "#0d1f0e", alignItems: "flex-start" }}>
+                                <span style={{ color: "#c0392b", flexShrink: 0 }}>✗</span>
+                                <div>
+                                  <div style={{ fontWeight: "600" }}>{c.label}</div>
+                                  {issues[c.key] && <div style={{ fontSize: "11px", color: "#c0392b" }}>{issues[c.key]}</div>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {/* Passed checks */}
+                          <div>
+                            <div style={{ fontSize: "11px", fontWeight: "700", color: "#1a7a3a", textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "8px" }}>Passed checks</div>
+                            {ALL_CHECKS.filter(c => checks[c.key]).map(c => (
+                              <div key={c.key} style={{ display: "flex", gap: "6px", marginBottom: "4px", fontSize: "12px", color: "#4a6b4c", alignItems: "center" }}>
+                                <span style={{ color: "#1a7a3a", flexShrink: 0 }}>✓</span>
+                                <span>{c.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #eef2ee", display: "flex", gap: "8px" }}>
+                          <button onClick={() => { setUrl(item.url); setActiveTab("onpage"); window.scrollTo(0,0); }}
+                            style={{ background: "#1a7a3a", color: "white", border: "none", borderRadius: "7px", padding: "7px 14px", fontSize: "12px", fontWeight: "700", cursor: "pointer", fontFamily: "'Roboto',sans-serif" }}>
+                            Re-run audit
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
         {/* Footer */}
         {result && (
           <div style={{ borderTop: "1px solid #eef2ee", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
             <div style={{ fontSize: "12px", color: "#9ab09c" }}>
               {totalChecks - totalPassed} issue{totalChecks - totalPassed !== 1 ? "s" : ""} found · click any failed check to see the AI fix
             </div>
-            <button
-              onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/seo-audit-sample-report`)}
-              style={{ background: "none", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "6px 14px", fontSize: "12px", fontWeight: "600", color: "#1a7a3a", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}
-            >
-              ↗ Share results
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {shareMsg && <span style={{ fontSize: "11px", color: "#1a7a3a", fontWeight: "600" }}>{shareMsg}</span>}
+              <button
+                onClick={shareResult}
+                disabled={shareLoading}
+                style={{ background: "none", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "6px 14px", fontSize: "12px", fontWeight: "600", color: "#1a7a3a", cursor: shareLoading ? "not-allowed" : "pointer", fontFamily: "'Roboto', sans-serif", opacity: shareLoading ? 0.6 : 1 }}
+              >
+                {shareLoading ? "Creating link…" : "↗ Share results"}
+              </button>
+            </div>
           </div>
         )}
       </div>
