@@ -392,33 +392,46 @@ export default function Audit({ setPage }) {
       <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "14px", overflow: "hidden" }}>
 
         {/* Score header — only when result */}
-        {result && (
-          <div style={{ background: "#0d1f0e", padding: "20px 24px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
-            <ScoreCircle score={overallScore} />
-            <div>
-              <div style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: "22px", fontWeight: "800", color: "white", marginBottom: "4px" }}>
-                {overallScore >= 80 ? "Good SEO health" : overallScore >= 60 ? "Needs improvement" : "Critical issues found"}
-              </div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "6px", fontFamily: "'Roboto Mono', monospace" }}>{result.url}</div>
-              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{totalPassed}/{totalChecks} checks passed</span>
-                {result.pageSpeed && <span style={{ fontSize: "12px", color: result.pageSpeed >= 70 ? "#6fcf8a" : "#f09595" }}>PageSpeed: {result.pageSpeed}/100</span>}
-              </div>
-            </div>
-            <div style={{ marginLeft: "auto", display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {[
-                { label: "On-Page", val: `${onpagePassed}/${ONPAGE_CHECKS.length}`, ok: true },
-                { label: "Technical", val: canAccessTab(TABS[2]) ? `${techPassed}/${TECHNICAL_CHECKS.length}` : "🔒", ok: canAccessTab(TABS[2]) },
-                { label: "Algorithm", val: canAccessTab(TABS[3]) ? `${algoPassed}/${ALGORITHM_CHECKS.length}` : "🔒", ok: canAccessTab(TABS[3]) },
-              ].map(s => (
-                <div key={s.label} style={{ textAlign: "center", background: "rgba(255,255,255,0.07)", borderRadius: "8px", padding: "8px 14px", minWidth: "64px" }}>
-                  <div style={{ fontSize: "17px", fontWeight: "800", color: s.ok ? "#6fcf8a" : "rgba(255,255,255,0.2)", fontFamily: "'Roboto Condensed', sans-serif" }}>{s.val}</div>
-                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{s.label}</div>
+        {result && (() => {
+          const scoreColor = overallScore >= 80 ? "#1a7a3a" : overallScore >= 60 ? "#b45309" : "#c0392b";
+          const scoreBg    = overallScore >= 80 ? "#eef8f0" : overallScore >= 60 ? "#fffbeb" : "#fef2f2";
+          const scoreBorder= overallScore >= 80 ? "#d0e8d4" : overallScore >= 60 ? "#fcd34d" : "#fca5a5";
+          const scoreLabel = overallScore >= 80 ? "Good SEO health" : overallScore >= 60 ? "Needs improvement" : "Critical issues found";
+          return (
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid #eef2ee", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+              {/* Score badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ background: scoreBg, border: `1px solid ${scoreBorder}`, borderRadius: "10px", padding: "8px 14px", textAlign: "center", minWidth: "68px" }}>
+                  <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: "28px", fontWeight: "800", color: scoreColor, lineHeight: 1 }}>{overallScore}</div>
+                  <div style={{ fontSize: "10px", color: scoreColor, fontWeight: "600", marginTop: "2px" }}>/ 100</div>
                 </div>
-              ))}
+                <div>
+                  <div style={{ fontSize: "15px", fontWeight: "700", color: "#0d1f0e", marginBottom: "3px" }}>{scoreLabel}</div>
+                  <div style={{ fontSize: "11px", color: "#9ab09c", fontFamily: "'Roboto Mono',monospace", marginBottom: "4px", maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{result.url}</div>
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "11px", color: "#4a6b4c" }}>{totalPassed}/{totalChecks} checks passed</span>
+                    {result.pageSpeed && <span style={{ fontSize: "11px", color: result.pageSpeed >= 70 ? "#1a7a3a" : "#c0392b", fontWeight: "600" }}>PageSpeed: {result.pageSpeed}/100</span>}
+                  </div>
+                </div>
+              </div>
+              {/* Mini scores */}
+              <div style={{ marginLeft: "auto", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {[
+                  { label: "On-Page",   val: `${onpagePassed}/${ONPAGE_CHECKS.length}`,   locked: false },
+                  { label: "Technical", val: canAccessTab(TABS[2]) ? `${techPassed}/${TECHNICAL_CHECKS.length}` : null, locked: !canAccessTab(TABS[2]) },
+                  { label: "Algorithm", val: canAccessTab(TABS[3]) ? `${algoPassed}/${ALGORITHM_CHECKS.length}` : null, locked: !canAccessTab(TABS[3]) },
+                ].map(s => (
+                  <div key={s.label} style={{ textAlign: "center", background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "8px", padding: "6px 12px", minWidth: "60px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: "800", color: s.locked ? "#d0e8d4" : "#1a7a3a", fontFamily: "'Roboto Condensed',sans-serif" }}>
+                      {s.locked ? "—" : s.val}
+                    </div>
+                    <div style={{ fontSize: "10px", color: "#9ab09c", marginTop: "1px" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Tabs */}
         <div style={{ display: "flex", borderBottom: "1px solid #eef2ee", overflowX: "auto" }}>
