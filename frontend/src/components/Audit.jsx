@@ -116,26 +116,151 @@ function LockedTab({ tab, onUpgrade, checks }) {
   );
 }
 
-// ── ON-PAGE EMPTY STATE ────────────────────────────────────────
-function OnPageEmptyState() {
-  return (
-    <div style={{ paddingTop: "20px" }}>
-      <p style={{ fontSize: "13px", color: "#4a6b4c", marginBottom: "20px", lineHeight: "1.6" }}>
-        We'll check these 11 on-page signals and show you exactly what's passing, what's failing, and the AI-generated fix for each issue.
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-        {ONPAGE_CHECKS.map(check => (
-          <div key={check.key} style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "14px 16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <span style={{ width: "18px", height: "18px", borderRadius: "50%", border: "1.5px solid #d0e8d4", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#d0e8d4" }} />
-              </span>
-              <span style={{ fontSize: "13px", fontWeight: "600", color: "#0d1f0e" }}>{check.label}</span>
+// ── ON-PAGE LAYOUT (empty + results) ─────────────────────────
+function OnPageLayout({ result, fixes, expanded, onToggle }) {
+  const G = "#1a7a3a";
+  const statusPill = (check) => {
+    if (!result) return null;
+    const passed = result.checks[check.key];
+    const issue = result.issues[check.key];
+    return (
+      <span style={{
+        fontSize: "11px", fontWeight: "700", padding: "2px 9px", borderRadius: "20px",
+        background: passed ? "#eef8f0" : "#fef2f2",
+        color: passed ? "#1a7a3a" : "#c0392b",
+        border: `1px solid ${passed ? "#d0e8d4" : "#fca5a5"}`,
+        whiteSpace: "nowrap",
+      }}>
+        {passed ? (check.resultLabel ? check.resultLabel(result) : "Passed") : (issue ? issue.split(" — ")[0] : "Missing")}
+      </span>
+    );
+  };
+
+  // Group checks for left column display
+  const META_CHECKS = ONPAGE_CHECKS.filter(c => ["meta","headings","wordCount","alt"].includes(c.key));
+  const OG_CHECKS   = ONPAGE_CHECKS.filter(c => ["og"].includes(c.key));
+  const SCHEMA_CHECKS = ONPAGE_CHECKS.filter(c => ["schema","productSchema","breadcrumb","reviewSchema"].includes(c.key));
+  const TECH_CHECKS = ONPAGE_CHECKS.filter(c => ["canonical","internalLinks"].includes(c.key));
+
+  const scoreColor = !result ? "#d0e8d4" : (() => {
+    const p = ONPAGE_CHECKS.filter(c => result.checks[c.key]).length;
+    const pct = Math.round(p / ONPAGE_CHECKS.length * 100);
+    return pct >= 80 ? "#1a7a3a" : pct >= 60 ? "#b45309" : "#c0392b";
+  })();
+  const scoreVal = result ? Math.round(ONPAGE_CHECKS.filter(c => result.checks[c.key]).length / ONPAGE_CHECKS.length * 100) : null;
+  const onpagePassed = result ? ONPAGE_CHECKS.filter(c => result.checks[c.key]).length : 0;
+
+  const SectionCard = ({ title, checks }) => (
+    <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "14px 16px", marginBottom: "10px" }}>
+      <div style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.8px", color: "#9ab09c", marginBottom: "10px" }}>{title}</div>
+      {checks.map((check, i) => (
+        <div key={check.key} style={{ borderTop: i > 0 ? "1px solid #eef2ee" : "none", paddingTop: i > 0 ? "10px" : 0, marginTop: i > 0 ? "10px" : 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#0d1f0e", marginBottom: "2px" }}>{check.label}</div>
+              <div style={{ fontSize: "11px", color: "#9ab09c", lineHeight: "1.4" }}>{check.desc}</div>
+              {!result && <div style={{ fontSize: "11px", color: "#b8c8b9", lineHeight: "1.4", marginTop: "3px", fontStyle: "italic" }}>{check.what}</div>}
             </div>
-            <p style={{ fontSize: "11px", color: "#9ab09c", lineHeight: "1.5", margin: "0 0 0 26px" }}>{check.desc}</p>
-            <p style={{ fontSize: "11px", color: "#b8c8b9", lineHeight: "1.4", margin: "6px 0 0 26px", fontStyle: "italic" }}>{check.what}</p>
+            {result ? statusPill(check) : (
+              <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: "1.5px solid #d0e8d4", flexShrink: 0, display: "inline-block", marginTop: "2px" }} />
+            )}
           </div>
-        ))}
+          {/* AI fix */}
+          {result && result.issues[check.key] && (
+            <div>
+              <div onClick={() => onToggle(check.key)} style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "6px", cursor: "pointer", width: "fit-content" }}>
+                <span style={{ fontSize: "11px", color: G, fontWeight: "600" }}>✦ See AI fix</span>
+                <span style={{ fontSize: "10px", color: G }}>{expanded[check.key] ? "▲" : "▼"}</span>
+              </div>
+              {expanded[check.key] && fixes[check.key] && (
+                <div style={{ background: "#f0f7f0", border: "1px solid #d0e8d4", borderRadius: "7px", padding: "10px 12px", marginTop: "6px" }}>
+                  <pre style={{ fontSize: "11px", color: "#0d1f0e", whiteSpace: "pre-wrap", fontFamily: "'Roboto Mono',monospace", lineHeight: "1.6", margin: 0 }}>{fixes[check.key]}</pre>
+                </div>
+              )}
+              {check.key === "productSchema" && (
+                <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "7px", padding: "7px 10px", marginTop: "6px", fontSize: "11px", color: "#6b7280", display: "flex", gap: "5px" }}>
+                  <span style={{ color: "#b45309", flexShrink: 0 }}>ℹ</span>
+                  <span><strong style={{ color: "#4a6b4c" }}>Not an e-commerce page?</strong> You can safely skip this — Product schema is only needed for product pages.</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div style={{ paddingTop: "20px", display: "grid", gridTemplateColumns: "1fr 280px", gap: "20px", alignItems: "start" }}>
+      {/* LEFT: grouped check details */}
+      <div>
+        <SectionCard title="Page metadata" checks={META_CHECKS} />
+        <SectionCard title="Open Graph tags" checks={OG_CHECKS} />
+        <SectionCard title="Schema markup" checks={SCHEMA_CHECKS} />
+        <SectionCard title="Canonical & links" checks={TECH_CHECKS} />
+      </div>
+
+      {/* RIGHT: score + check list */}
+      <div>
+        {/* Score card */}
+        <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "16px", marginBottom: "10px", textAlign: "center" }}>
+          <div style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.8px", color: "#9ab09c", marginBottom: "10px" }}>On-page score</div>
+          {result ? (
+            <>
+              <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: "52px", fontWeight: "800", color: scoreColor, lineHeight: 1 }}>{scoreVal}</div>
+              <div style={{ fontSize: "11px", color: "#9ab09c", marginTop: "4px", marginBottom: "12px" }}>out of 100</div>
+              <div style={{ height: "4px", background: "#eef2ee", borderRadius: "2px", overflow: "hidden", marginBottom: "12px" }}>
+                <div style={{ height: "100%", width: `${scoreVal}%`, background: scoreColor, borderRadius: "2px", transition: "width 0.6s" }} />
+              </div>
+            </>
+          ) : (
+            <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: "52px", fontWeight: "800", color: "#d0e8d4", lineHeight: 1, marginBottom: "4px" }}>—</div>
+          )}
+          <div style={{ fontSize: "11px", color: "#9ab09c" }}>
+            {result ? `${onpagePassed} of ${ONPAGE_CHECKS.length} checks passed` : "Run audit to see score"}
+          </div>
+        </div>
+
+        {/* Google search preview — only when result */}
+        {result && result.meta_description && (
+          <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "14px 16px", marginBottom: "10px" }}>
+            <div style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.8px", color: "#9ab09c", marginBottom: "10px" }}>Google search preview</div>
+            <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "8px", padding: "10px 12px" }}>
+              <div style={{ fontSize: "14px", color: "#1a0dab", fontWeight: "500", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {result.url?.replace(/https?:\/\//, "").replace(/\/$/, "")}
+              </div>
+              <div style={{ fontSize: "11px", color: "#006621", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {result.url}
+              </div>
+              <div style={{ fontSize: "12px", color: "#545454", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                {result.meta_description}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Check list */}
+        <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", overflow: "hidden" }}>
+          <div style={{ padding: "10px 14px", borderBottom: "1px solid #eef2ee", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.8px", color: "#9ab09c" }}>All checks</div>
+          {ONPAGE_CHECKS.map((check, i) => {
+            const passed = result ? result.checks[check.key] : null;
+            return (
+              <div key={check.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", borderBottom: i < ONPAGE_CHECKS.length - 1 ? "1px solid #eef2ee" : "none", gap: "8px", background: "white" }}>
+                <span style={{ fontSize: "12px", color: "#0d1f0e", fontWeight: "500" }}>{check.label}</span>
+                {result ? (
+                  <span style={{ fontSize: "11px", fontWeight: "700", padding: "1px 7px", borderRadius: "20px", flexShrink: 0,
+                    background: passed ? "#eef8f0" : "#fef2f2",
+                    color: passed ? "#1a7a3a" : "#c0392b",
+                    border: `1px solid ${passed ? "#d0e8d4" : "#fca5a5"}` }}>
+                    {passed ? "✓" : "✗"}
+                  </span>
+                ) : (
+                  <span style={{ width: "12px", height: "12px", borderRadius: "50%", border: "1.5px solid #d0e8d4", display: "inline-block", flexShrink: 0 }} />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -323,27 +448,12 @@ export default function Audit({ setPage }) {
 
           {/* ON-PAGE */}
           {!loading && activeTab === "onpage" && (
-            result ? (
-              <div>
-                <div style={{ padding: "16px 0 8px", fontSize: "12px", color: "#4a6b4c", borderBottom: "1px solid #eef2ee", marginBottom: "4px", fontWeight: "600" }}>
-                  {onpagePassed}/{ONPAGE_CHECKS.length} on-page checks passed
-                </div>
-                {ONPAGE_CHECKS.map(check => (
-                  <div key={check.key}>
-                    <CheckRow check={check} result={result} fix={result.fixes?.[check.key]}
-                      expanded={expanded[check.key]} onToggle={() => result.issues?.[check.key] && toggleExpanded(check.key)} />
-                    {check.key === "productSchema" && !result.checks["productSchema"] && (
-                      <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "8px", padding: "8px 12px", marginBottom: "8px", fontSize: "11px", color: "#6b7280", display: "flex", alignItems: "flex-start", gap: "6px" }}>
-                        <span style={{ color: "#b45309", flexShrink: 0 }}>ℹ</span>
-                        <span><strong style={{ color: "#4a6b4c" }}>Not selling products?</strong> If this is a blog, SaaS, or service site you can safely ignore this check — Product schema is only needed for e-commerce pages.</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <OnPageEmptyState />
-            )
+            <OnPageLayout
+              result={result}
+              fixes={result?.fixes || {}}
+              expanded={expanded}
+              onToggle={(key) => result?.issues?.[key] && toggleExpanded(key)}
+            />
           )}
 
           {/* OFF-PAGE */}
