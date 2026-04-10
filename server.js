@@ -992,7 +992,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     const uniqueSignals =
       (hasAuthor ? 1 : 0) + (hasDate ? 1 : 0) + (hasStats ? 1 : 0) + (hasStructuredList ? 1 : 0);
     const informationGainOk = wordCount >= 600 && uniqueSignals >= 2;
-    console.log(`[audit] info-gain: words=${wordCount} author=${hasAuthor} date=${hasDate} stats=${hasStats} list=${hasStructuredList} signals=${uniqueSignals} ok=${informationGainOk}`);
 
     // ── CHECK 15: AI Overview eligibility (Google March 2026) ─
     let faqSchemaOk = false;
@@ -1024,7 +1023,6 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       if (!hasWidth || !hasHeight || !hasLazy) unoptimisedImages++;
     });
     const imageOptOk = images.length === 0 || unoptimisedImages === 0;
-    console.log(`[audit] image-opt: total=${images.length} unoptimised=${unoptimisedImages} ok=${imageOptOk}`);
 
     // ── CHECK 17: Render-blocking resources ──────────────────
     // Exclude: JSON-LD, module scripts, inline scripts (no src), noscript content
