@@ -1,6 +1,31 @@
 import PageLayout from "./PageLayout";
 
 const ENTRIES = [
+
+{
+  date: "April 10, 2026",
+  version: "v1.0",
+  title: "4-tab SEO Audit, History, Share results & KPI tracker",
+  desc: "The SEO Audit is now a full 4-tab analysis tool. On-Page is free, Off-Page, Technical and Algorithm are Pro. History tab shows all past audits. Share results creates a 30-day public link.",
+  items: [
+    { tag: "new",     text: "SEO Audit rebuilt as 4-tab tool — On-Page SEO, Off-Page SEO, Technical SEO, Algorithm" },
+    { tag: "new",     text: "On-Page tab: 2-column layout — grouped checks on left, score + Google search preview on right" },
+    { tag: "new",     text: "Technical SEO tab (Pro) — render-blocking scripts, image optimisation, sitemap, robots, viewport" },
+    { tag: "new",     text: "Algorithm tab (Pro) — Google March 2026 signals: Information Gain and AI Overview eligibility" },
+    { tag: "new",     text: "Off-Page SEO tab (Pro) — blurred mock data teaser with domain authority, backlinks, referring domains" },
+    { tag: "new",     text: "History tab — all past audits with expandable details, failed/passed checks, re-run button" },
+    { tag: "new",     text: "Share results — creates a real 30-day public link via /results/:token, copies to clipboard" },
+    { tag: "improve", text: "Product schema failure now shows a note: non-ecommerce pages can safely skip this check" },
+    { tag: "improve", text: "Algorithm tab info box reframed as opportunity — green styling instead of amber warning" },
+    { tag: "new",     text: "Sample report pages linked from hero: See a real report → on SEO Audit and AI Visibility Check pages" },
+    { tag: "fix",     text: "Canonical check now detects wrong canonical (e.g. homepage set globally) — shows exact issue message" },
+    { tag: "fix",     text: "Information Gain, Image optimisation, Render-blocking — 3 false positives fixed" },
+    { tag: "fix",     text: "Audit.jsx check keys fixed — infoGain→informationGain, imageOptimisation→imageOpt" },
+    { tag: "new",     text: "Dablin sitemap.xml added — all public pages included, /google-ads excluded" },
+    { tag: "new",     text: "KPI tracker spreadsheet — 3-tab Excel file tracking MRR, SEO acquisition, conversion, engagement" },
+  ],
+},
+
   {
     date: "April 1, 2026",
     version: "v0.9",
