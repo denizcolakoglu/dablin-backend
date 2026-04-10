@@ -329,8 +329,16 @@ export default function Audit({ setPage }) {
                   {onpagePassed}/{ONPAGE_CHECKS.length} on-page checks passed
                 </div>
                 {ONPAGE_CHECKS.map(check => (
-                  <CheckRow key={check.key} check={check} result={result} fix={result.fixes?.[check.key]}
-                    expanded={expanded[check.key]} onToggle={() => result.issues?.[check.key] && toggleExpanded(check.key)} />
+                  <div key={check.key}>
+                    <CheckRow check={check} result={result} fix={result.fixes?.[check.key]}
+                      expanded={expanded[check.key]} onToggle={() => result.issues?.[check.key] && toggleExpanded(check.key)} />
+                    {check.key === "productSchema" && !result.checks["productSchema"] && (
+                      <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "8px", padding: "8px 12px", marginBottom: "8px", fontSize: "11px", color: "#6b7280", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                        <span style={{ color: "#b45309", flexShrink: 0 }}>ℹ</span>
+                        <span><strong style={{ color: "#4a6b4c" }}>Not selling products?</strong> If this is a blog, SaaS, or service site you can safely ignore this check — Product schema is only needed for e-commerce pages.</span>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -393,8 +401,8 @@ export default function Audit({ setPage }) {
                   <div style={{ padding: "16px 0 8px", fontSize: "12px", color: "#4a6b4c", borderBottom: "1px solid #eef2ee", marginBottom: "4px", fontWeight: "600" }}>
                     {algoPassed}/{ALGORITHM_CHECKS.length} Google March 2026 signals passing
                   </div>
-                  <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: "8px", padding: "10px 14px", margin: "12px 0", fontSize: "12px", color: "#b45309" }}>
-                    ⚡ Google's March 2026 core update. Failing these signals can significantly reduce your ranking potential.
+                  <div style={{ background: "#eef8f0", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "10px 14px", margin: "12px 0", fontSize: "12px", color: "#1a7a3a" }}>
+                    ⚡ Google's March 2026 core update introduced 2 new ranking signals. These are opportunities — passing them can significantly boost your ranking potential.
                   </div>
                   {ALGORITHM_CHECKS.map(check => (
                     <CheckRow key={check.key} check={check} result={result} fix={result.fixes?.[check.key]}
