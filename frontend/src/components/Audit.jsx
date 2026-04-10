@@ -349,10 +349,51 @@ export default function Audit({ setPage }) {
           {/* OFF-PAGE */}
           {!loading && activeTab === "offpage" && (
             canAccessTab(TABS[1]) ? (
-              <div style={{ padding: "24px 0", textAlign: "center", color: "#4a6b4c" }}>
-                <div style={{ fontSize: "24px", marginBottom: "12px" }}>🚧</div>
-                <div style={{ fontSize: "15px", fontWeight: "600", color: "#0d1f0e", marginBottom: "6px" }}>Off-Page analysis coming soon</div>
-                <div style={{ fontSize: "13px" }}>Domain authority, backlink tracking and referring domain analysis will be in the next release.</div>
+              <div style={{ paddingTop: "24px" }}>
+                <p style={{ fontSize: "13px", color: "#4a6b4c", marginBottom: "20px", lineHeight: "1.6" }}>
+                  Here is what your Off-Page SEO data will look like once this feature launches. Real data for your domain is coming soon.
+                </p>
+                <div style={{ position: "relative" }}>
+                  {/* Blurred mock data */}
+                  <div style={{ filter: "blur(4px)", pointerEvents: "none", userSelect: "none" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px", marginBottom: "20px" }}>
+                      {[{ label: "Domain Authority", val: "34", sub: "out of 100" }, { label: "Total Backlinks", val: "1,247", sub: "external links" }, { label: "Referring Domains", val: "89", sub: "unique domains" }].map(m => (
+                        <div key={m.label} style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "16px", textAlign: "center" }}>
+                          <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: "28px", fontWeight: "800", color: "#0d1f0e", marginBottom: "2px" }}>{m.val}</div>
+                          <div style={{ fontSize: "11px", fontWeight: "700", color: "#4a6b4c", marginBottom: "2px" }}>{m.label}</div>
+                          <div style={{ fontSize: "10px", color: "#9ab09c" }}>{m.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ border: "1px solid #eef2ee", borderRadius: "10px", overflow: "hidden" }}>
+                      <div style={{ padding: "10px 16px", background: "#f8faf8", borderBottom: "1px solid #eef2ee", display: "grid", gridTemplateColumns: "1fr 120px 80px", fontSize: "11px", fontWeight: "700", color: "#9ab09c", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        <span>Referring domain</span><span>Target page</span><span style={{ textAlign: "center" }}>Authority</span>
+                      </div>
+                      {[
+                        { domain: "productreview.com.au", page: "/products/...", auth: "72" },
+                        { domain: "techcrunch.com", page: "/blog/...", auth: "91" },
+                        { domain: "shopify.com", page: "/home", auth: "88" },
+                        { domain: "g2.com", page: "/products/...", auth: "79" },
+                        { domain: "capterra.com", page: "/blog/...", auth: "75" },
+                      ].map((r, i) => (
+                        <div key={i} style={{ padding: "10px 16px", borderBottom: i < 4 ? "1px solid #eef2ee" : "none", display: "grid", gridTemplateColumns: "1fr 120px 80px", alignItems: "center", background: "white" }}>
+                          <span style={{ fontSize: "13px", color: "#0d1f0e", fontWeight: "500" }}>{r.domain}</span>
+                          <span style={{ fontSize: "12px", color: "#9ab09c", fontFamily: "'Roboto Mono',monospace" }}>{r.page}</span>
+                          <span style={{ textAlign: "center" }}>
+                            <span style={{ fontSize: "11px", fontWeight: "700", background: "#eef8f0", color: "#1a7a3a", borderRadius: "20px", padding: "2px 8px" }}>{r.auth}/100</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Overlay */}
+                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                    <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "12px", padding: "16px 24px", textAlign: "center", boxShadow: "0 2px 16px rgba(0,0,0,0.08)" }}>
+                      <div style={{ fontSize: "13px", fontWeight: "700", color: "#0d1f0e", marginBottom: "4px" }}>Coming soon for Pro users</div>
+                      <div style={{ fontSize: "12px", color: "#4a6b4c" }}>Real domain authority, backlinks and referring domain data for your URL</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <LockedTab tab={TABS[1]} onUpgrade={() => setPage?.("pricing")} />
