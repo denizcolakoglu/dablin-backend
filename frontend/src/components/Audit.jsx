@@ -1,88 +1,171 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import ShareButton from "./ShareButton";
-import ToolHistory from "./ToolHistory";
+import { trackEvent } from "../analytics";
 
+const BASE = "https://dablin-backend-production.up.railway.app";
 
-const CHECK_GROUPS = [
-  {
-    key: "content",
-    label: "Content Quality",
-    checks: [
-      { key: "meta",      label: "Meta description",  desc: "Present, unique and between 120–155 characters" },
-      { key: "headings",  label: "Heading structure",  desc: "Single H1, no skipped heading levels" },
-      { key: "wordCount", label: "Word count",         desc: "At least 300 words for meaningful content" },
-      { key: "alt",       label: "Image alt text",     desc: "All images have descriptive alt attributes" },
-    ],
-  },
-  {
-    key: "technical",
-    label: "Technical SEO",
-    checks: [
-      { key: "canonical",        label: "Canonical tag",              desc: "Prevents duplicate content penalties" },
-      { key: "robots",           label: "Robots tag",                 desc: "Page is not accidentally set to noindex" },
-      { key: "viewport",         label: "Mobile viewport",            desc: "Viewport meta tag present for mobile-first indexing" },
-      { key: "og",               label: "Open Graph tags",            desc: "og:title, og:description, og:image all present" },
-      { key: "renderBlocking",   label: "Render-blocking scripts",    desc: "No synchronous scripts in <head> slowing page load" },
-      { key: "sitemap",          label: "Sitemap",                    desc: "sitemap.xml accessible for Google to discover pages" },
-    ],
-  },
-  {
-    key: "schema",
-    label: "Structured Data",
-    checks: [
-      { key: "schema",       label: "Schema markup",          desc: "At least one JSON-LD structured data block" },
-      { key: "productSchema",label: "Product schema",         desc: "Product type schema for Google Shopping eligibility" },
-      { key: "breadcrumb",   label: "Breadcrumb schema",      desc: "BreadcrumbList for navigation context" },
-      { key: "reviewSchema", label: "Review / rating schema", desc: "Star ratings eligible in search results" },
-    ],
-  },
-  {
-    key: "march2026",
-    label: "⚡ Google March 2026",
-    checks: [
-      { key: "informationGain", label: "Information Gain",          desc: "600+ words with original signals: author, date, data or structured lists" },
-      { key: "aiOverview", label: "AI Overview eligibility",   desc: "FAQPage or HowTo schema, or question-structured H2s for Google SGE" },
-    ],
-  },
-  {
-    key: "performance",
-    label: "Performance",
-    checks: [
-      { key: "imageOpt", label: "Image optimisation",  desc: "All images have width, height and loading=lazy for Core Web Vitals" },
-      { key: "internalLinks",     label: "Internal links",      desc: "At least 3 internal links for crawlability and topical authority" },
-    ],
-  },
+const ONPAGE_CHECKS = [
+  { key: "meta",         label: "Meta description",       desc: "Present, unique and between 120–155 characters",                    what: "We read the <meta name=\"description\"> tag and check length and uniqueness." },
+  { key: "headings",     label: "Heading structure",      desc: "Single H1, no skipped heading levels",                             what: "We check for exactly one H1 and verify no heading levels are skipped (e.g. H1 → H3)." },
+  { key: "wordCount",    label: "Word count",             desc: "At least 300 words for meaningful content",                        what: "We count visible text on the page. Thin pages rank poorly — 300+ words is the baseline." },
+  { key: "alt",          label: "Image alt text",         desc: "All images have descriptive alt attributes",                       what: "We scan every <img> tag and check that none are missing the alt attribute." },
+  { key: "og",           label: "Open Graph tags",        desc: "og:title, og:description, og:image all present",                  what: "We check for og:title, og:description, and og:image in the <head> — required for social sharing previews." },
+  { key: "schema",       label: "Schema markup",          desc: "At least one JSON-LD structured data block",                      what: "We look for at least one <script type=\"application/ld+json\"> block in the page HTML." },
+  { key: "productSchema",label: "Product schema",         desc: "Product type schema for Google Shopping eligibility",             what: "We check for @type: Product in JSON-LD — required to appear in Google Shopping results." },
+  { key: "breadcrumb",   label: "Breadcrumb schema",      desc: "BreadcrumbList for navigation context",                          what: "We look for @type: BreadcrumbList schema — helps Google understand your site structure." },
+  { key: "reviewSchema", label: "Review / rating schema", desc: "Star ratings eligible in search results",                        what: "We check for AggregateRating in your schema — enables star ratings to show in search snippets." },
+  { key: "canonical",    label: "Canonical URL",          desc: "Self-referencing canonical — AI engines index the correct version", what: "We read <link rel=\"canonical\"> and verify it points to the current page, not a different URL." },
+  { key: "internalLinks",label: "Internal links",         desc: "At least 3 internal links for crawlability and topical authority", what: "We count links pointing to other pages on the same domain. 3+ is the minimum for good crawlability." },
 ];
 
-const ALL_CHECKS = CHECK_GROUPS.flatMap(g => g.checks);
+const TECHNICAL_CHECKS = [
+  { key: "renderBlocking", label: "Render-blocking scripts", desc: "No synchronous scripts in <head> slowing page load",               what: "We check for <script src=...> in <head> without async or defer attributes." },
+  { key: "imageOpt",       label: "Image optimisation",      desc: "All images have width, height and loading=lazy for Core Web Vitals", what: "We scan every <img> for width, height, and loading attributes — missing these causes layout shift (CLS)." },
+  { key: "sitemap",        label: "Sitemap",                 desc: "sitemap.xml accessible for Google to discover pages",               what: "We fetch /sitemap.xml and check it returns a valid response." },
+  { key: "robots",         label: "Robots tag",              desc: "Page is not accidentally set to noindex",                           what: "We read the <meta name=\"robots\"> tag and check it doesn't contain noindex." },
+  { key: "viewport",       label: "Mobile viewport",         desc: "Viewport meta tag present for mobile-first indexing",               what: "We check for <meta name=\"viewport\"> — required for Google's mobile-first indexing." },
+];
 
+const ALGORITHM_CHECKS = [
+  { key: "informationGain", label: "Information Gain",        desc: "600+ words with original signals: author, date, data or structured lists", what: "Google's March 2026 update. We check word count (600+) plus at least 2 signals: author byline, publish date, stats, or structured lists." },
+  { key: "aiOverview",      label: "AI Overview eligibility", desc: "FAQPage or HowTo schema, or question-structured H2s for Google SGE",       what: "We check for FAQPage/HowTo schema or H2s phrased as questions — both make your page eligible for Google's AI Overviews." },
+];
+
+const ALL_CHECKS = [...ONPAGE_CHECKS, ...TECHNICAL_CHECKS, ...ALGORITHM_CHECKS];
+
+const TABS = [
+  { id: "onpage",    label: "On-Page SEO",  free: true  },
+  { id: "offpage",   label: "Off-Page SEO", free: false },
+  { id: "technical", label: "Technical SEO",free: false },
+  { id: "algorithm", label: "Algorithm",    free: false },
+];
+
+// ── CHECK ROW ──────────────────────────────────────────────────
+function CheckRow({ check, result, fix, expanded, onToggle }) {
+  const passed = result?.checks?.[check.key];
+  const issueMsg = result?.issues?.[check.key];
+  return (
+    <div style={{ borderBottom: "1px solid #eef2ee" }}>
+      <div onClick={onToggle} style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 0", cursor: issueMsg ? "pointer" : "default" }}>
+        <span style={{ fontSize: "15px", flexShrink: 0, marginTop: "1px" }}>{passed ? "✅" : "❌"}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "14px", fontWeight: "600", color: "#0d1f0e", marginBottom: "2px" }}>{check.label}</div>
+          <div style={{ fontSize: "12px", color: passed ? "#4a6b4c" : "#c0392b", lineHeight: "1.5" }}>{issueMsg || check.desc}</div>
+        </div>
+        {issueMsg && <span style={{ fontSize: "11px", color: "#1a7a3a", flexShrink: 0, marginTop: "3px" }}>{expanded ? "▲" : "▼"}</span>}
+      </div>
+      {expanded && fix && (
+        <div style={{ background: "#f0f7f0", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "12px 14px", marginBottom: "14px" }}>
+          <div style={{ fontSize: "10px", fontWeight: "700", color: "#1a7a3a", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>✦ AI Fix</div>
+          <pre style={{ fontSize: "12px", color: "#0d1f0e", whiteSpace: "pre-wrap", fontFamily: "'Roboto Mono', monospace", lineHeight: "1.6", margin: 0 }}>{fix}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SCORE CIRCLE ───────────────────────────────────────────────
+function ScoreCircle({ score, size = 80 }) {
+  const color = score >= 80 ? "#1a7a3a" : score >= 60 ? "#b45309" : "#c0392b";
+  const r = (size / 2) - 6;
+  const circ = 2 * Math.PI * r;
+  const dash = (score / 100) * circ;
+  return (
+    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#eef2ee" strokeWidth="5" />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="5" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
+      <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle"
+        style={{ transform: `rotate(90deg) translate(0px, -${size}px)`, transformOrigin: `${size/2}px ${size/2}px` }}
+        fill={color} fontSize={size === 80 ? "18" : "14"} fontWeight="700" fontFamily="Roboto Condensed">{score}</text>
+    </svg>
+  );
+}
+
+// ── LOCKED TAB ─────────────────────────────────────────────────
+function LockedTab({ tab, onUpgrade, checks }) {
+  const descriptions = {
+    offpage: {
+      intro: "Domain authority, backlink analysis, and referring domain tracking — the signals that tell Google how trusted your site is.",
+      items: ["Domain Authority score out of 100", "Total backlinks count", "Referring domains analysis", "Social signals and brand mentions"],
+    },
+    technical: {
+      intro: "Under-the-hood checks that affect how fast Google crawls and renders your page — and how well it scores on Core Web Vitals.",
+      items: TECHNICAL_CHECKS.map(c => `${c.label} — ${c.desc}`),
+    },
+    algorithm: {
+      intro: "Google's March 2026 core update introduced two new ranking signals. Failing them pushes pages out of top positions.",
+      items: ALGORITHM_CHECKS.map(c => `${c.label} — ${c.desc}`),
+    },
+  };
+  const d = descriptions[tab.id];
+  return (
+    <div style={{ padding: "32px 0" }}>
+      <p style={{ fontSize: "14px", color: "#4a6b4c", marginBottom: "20px", lineHeight: "1.65", maxWidth: "520px" }}>{d.intro}</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0" , border: "1px solid #eef2ee", borderRadius: "10px", overflow: "hidden", marginBottom: "24px", maxWidth: "520px" }}>
+        {d.items.map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "12px 16px", borderBottom: i < d.items.length - 1 ? "1px solid #eef2ee" : "none", background: "white" }}>
+            <span style={{ color: "#d0e8d4", fontSize: "14px", flexShrink: 0, marginTop: "1px" }}>○</span>
+            <span style={{ fontSize: "13px", color: "#4a6b4c", lineHeight: "1.5", filter: "blur(3.5px)", userSelect: "none" }}>{item}</span>
+          </div>
+        ))}
+      </div>
+      <button onClick={onUpgrade} style={{ background: "#1a7a3a", color: "white", border: "none", borderRadius: "9px", padding: "11px 24px", fontSize: "13px", fontWeight: "700", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>
+        Upgrade to Pro →
+      </button>
+    </div>
+  );
+}
+
+// ── ON-PAGE EMPTY STATE ────────────────────────────────────────
+function OnPageEmptyState() {
+  return (
+    <div style={{ paddingTop: "20px" }}>
+      <p style={{ fontSize: "13px", color: "#4a6b4c", marginBottom: "20px", lineHeight: "1.6" }}>
+        We'll check these 11 on-page signals and show you exactly what's passing, what's failing, and the AI-generated fix for each issue.
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+        {ONPAGE_CHECKS.map(check => (
+          <div key={check.key} style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{ width: "18px", height: "18px", borderRadius: "50%", border: "1.5px solid #d0e8d4", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#d0e8d4" }} />
+              </span>
+              <span style={{ fontSize: "13px", fontWeight: "600", color: "#0d1f0e" }}>{check.label}</span>
+            </div>
+            <p style={{ fontSize: "11px", color: "#9ab09c", lineHeight: "1.5", margin: "0 0 0 26px" }}>{check.desc}</p>
+            <p style={{ fontSize: "11px", color: "#b8c8b9", lineHeight: "1.4", margin: "6px 0 0 26px", fontStyle: "italic" }}>{check.what}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN COMPONENT ────────────────────────────────────────────
 export default function Audit({ setPage }) {
   const { getToken } = useAuth();
-
-  // Pre-fill URL if navigated from GetStarted
-  const prefill = sessionStorage.getItem("prefillUrl") || "";
-  if (prefill) sessionStorage.removeItem("prefillUrl");
-
-  const [url, setUrl] = useState(prefill);
-  const [activeToolTab, setActiveToolTab] = useState("tool");
+  const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState({});
+  const [activeTab, setActiveTab] = useState("onpage");
+  const [currentPlan, setCurrentPlan] = useState("free");
   const [noCredits, setNoCredits] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState({
-    content: true, technical: true, schema: true, march2026: true, performance: true,
-  });
-  const [copied, setCopied] = useState(null);
 
-  function copyFix(key, text) {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+  useEffect(() => { fetchPlan(); }, []);
+
+  async function fetchPlan() {
+    try {
+      const token = await getToken();
+      const res = await fetch(`${BASE}/api/plan`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      setCurrentPlan(data.plan || "free");
+    } catch {}
   }
 
-  function toggleGroup(key) {
-    setExpandedGroups(g => ({ ...g, [key]: !g[key] }));
+  function toggleExpanded(key) {
+    setExpanded(e => ({ ...e, [key]: !e[key] }));
   }
 
   async function runAudit() {
@@ -91,275 +174,279 @@ export default function Audit({ setPage }) {
     setError(null);
     setResult(null);
     setNoCredits(false);
+    setExpanded({});
+    setActiveTab("onpage");
     try {
       const token = await getToken();
-      const res = await fetch("https://dablin-backend-production.up.railway.app/api/audit", {
+      const res = await fetch(`${BASE}/api/audit`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
       if (res.status === 402) {
         setNoCredits(true);
         if (data.error) setError(data.error);
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ event: "plan_limit_reached", tool: "seo_audit" });
         return;
       }
       if (!res.ok) throw new Error(data.error || "Audit failed");
       setResult(data);
+      trackEvent("seo_audit_completed", { url });
       window.dataLayer = window.dataLayer || [];
       const passed = Object.values(data.checks || {}).filter(Boolean).length;
-      const total = Object.keys(data.checks || {}).length || 13;
-      window.dataLayer.push({ event: 'seo_audit_completed', url, score: Math.round(passed / total * 100), passed, total });    } catch (e) {
+      const total = Object.keys(data.checks || {}).length;
+      window.dataLayer.push({ event: "seo_audit_completed", url, score: Math.round(passed / total * 100), passed, total });
+    } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
   }
 
-  const totalChecks = ALL_CHECKS.length;
-  const passed = result ? ALL_CHECKS.filter(c => result.checks[c.key]).length : 0;
-  const score = result ? Math.round((passed / totalChecks) * 100) : null;
+  const onpagePassed = result ? ONPAGE_CHECKS.filter(c => result.checks[c.key]).length : 0;
+  const techPassed   = result ? TECHNICAL_CHECKS.filter(c => result.checks[c.key]).length : 0;
+  const algoPassed   = result ? ALGORITHM_CHECKS.filter(c => result.checks[c.key]).length : 0;
+  const totalPassed  = result ? ALL_CHECKS.filter(c => result.checks[c.key]).length : 0;
+  const totalChecks  = ALL_CHECKS.length;
+  const overallScore = result ? Math.round((totalPassed / totalChecks) * 100) : null;
+  const canAccessTab = (tab) => tab.free || currentPlan === "pro" || currentPlan === "agency";
+
+  const tabBtn = (tab) => {
+    const isActive = activeTab === tab.id;
+    const locked = !canAccessTab(tab);
+    return {
+      display: "flex", alignItems: "center", gap: "7px",
+      padding: "11px 18px", border: "none", cursor: "pointer",
+      fontFamily: "'Roboto', sans-serif", fontSize: "13px", fontWeight: "600",
+      borderBottom: isActive ? "2px solid #1a7a3a" : "2px solid transparent",
+      background: "transparent",
+      color: isActive ? "#1a7a3a" : locked ? "#c0c8c0" : "#4a6b4c",
+      transition: "color 0.15s, border-color 0.15s",
+      whiteSpace: "nowrap",
+    };
+  };
 
   return (
-    <div style={{ fontFamily:"'Roboto',sans-serif" }}>
-      <div style={{ display:"flex", gap:"0", borderBottom:"2px solid #d4e8d6" }}>
-        {[["tool","SEO Audit"],["history","History"]].map(([id,label]) => (
-          <button key={id} onClick={() => setActiveToolTab(id)}
-            style={{ padding:"11px 24px", fontSize:"13px", fontWeight:"600",
-              color: activeToolTab===id ? "#2d7a3a" : "#5a7a5e", background:"none", border:"none",
-              cursor:"pointer", borderBottom: activeToolTab===id ? "2px solid #2d7a3a" : "2px solid transparent",
-              marginBottom:"-2px", transition:"all 0.2s" }}>
-            {label}
-          </button>
-        ))}
-      </div>
-      {activeToolTab === "history" && <ToolHistory type="seo-audit" />}
-      {activeToolTab === "tool" && <div className="audit-page">
+    <div style={{ fontFamily: "'Roboto', sans-serif", maxWidth: "860px", margin: "0 auto" }}>
       <style>{`
-        .audit-page { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
-        .audit-sub { font-size: 15px; color: #5a7a5e; margin-bottom: 32px; }
-        .audit-input-row { display: flex; gap: 12px; margin-bottom: 32px; }
-        .audit-url-input {
-          flex: 1; padding: 12px 16px; border: 1px solid #d4e8d6;
-          border-radius: 8px; font-size: 14px; color: #1c2e1e;
-          outline: none; transition: border 0.2s;
-        }
-        .audit-url-input:focus { border-color: #2d7a3a; }
-        .audit-btn {
-          background: #2d7a3a; color: white; border: none;
-          padding: 12px 24px; border-radius: 8px; font-size: 14px;
-          font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
-        }
-        .audit-btn:hover { background: #3d9e4e; }
-        .audit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        .audit-score-card {
-          background: #f7fbf7; border: 1px solid #d4e8d6; border-radius: 14px;
-          padding: 28px; margin-bottom: 24px; display: flex; align-items: center; gap: 24px;
-        }
-        .audit-score-circle {
-          width: 80px; height: 80px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 22px; font-weight: 800; flex-shrink: 0;
-        }
-        .score-good { background: #e8f5ea; color: #2d7a3a; border: 3px solid #2d7a3a; }
-        .score-mid  { background: #fff8e1; color: #f59e0b; border: 3px solid #f59e0b; }
-        .score-bad  { background: #fef2f2; color: #ef4444; border: 3px solid #ef4444; }
-        .audit-score-info h3 { font-size: 18px; font-weight: 700; color: #0f1a10; margin-bottom: 4px; }
-        .audit-score-info p  { font-size: 14px; color: #5a7a5e; }
-
-        .check-group { margin-bottom: 12px; border: 1px solid #d4e8d6; border-radius: 12px; overflow: hidden; }
-        .check-group-header {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 20px; background: #f7fbf7; cursor: pointer;
-          user-select: none; transition: background 0.15s;
-        }
-        .check-group-header:hover { background: #eef7ef; }
-        .check-group-title { font-size: 14px; font-weight: 700; color: #0f1a10; }
-        .check-group-meta { display: flex; align-items: center; gap: 12px; }
-        .group-score { font-size: 12px; font-weight: 600; color: #5a7a5e; }
-        .group-chevron { font-size: 11px; color: #5a7a5e; }
-
-        .check-group-body { display: flex; flex-direction: column; }
-        .audit-check {
-          display: flex; align-items: flex-start; gap: 16px;
-          padding: 14px 20px; border-top: 1px solid #eef5ef;
-          background: white;
-        }
-        .check-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-        .check-label { font-size: 14px; font-weight: 600; color: #0f1a10; margin-bottom: 2px; }
-        .check-desc { font-size: 12px; color: #5a7a5e; }
-        .check-desc.fail { color: #c0392b; }
-
-        .fix-box {
-          margin-top: 10px;
-          background: #f0faf1;
-          border: 1px solid #b7debb;
-          border-radius: 8px;
-          padding: 12px 14px;
-        }
-        .fix-box-label {
-          font-size: 11px;
-          font-weight: 700;
-          color: #2d7a3a;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 6px;
-        }
-        .fix-box-content {
-          font-size: 12px;
-          color: #1c2e1e;
-          white-space: pre-wrap;
-          word-break: break-word;
-          font-family: monospace;
-          line-height: 1.5;
-          margin-bottom: 8px;
-        }
-        .fix-copy-btn {
-          background: #2d7a3a;
-          color: white;
-          border: none;
-          padding: 5px 14px;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-        .fix-copy-btn:hover { background: #3d9e4e; }
-        .no-credits-banner {
-          background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 12px;
-          padding: 20px 24px; display: flex; align-items: center;
-          justify-content: space-between; gap: 16px; margin-bottom: 24px;
-        }
-        .no-credits-text h4 { font-size: 15px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
-        .no-credits-text p  { font-size: 13px; color: #b45309; margin: 0; }
-        .no-credits-btn {
-          background: #f59e0b; color: white; border: none; padding: 10px 20px;
-          border-radius: 8px; font-size: 13px; font-weight: 700;
-          cursor: pointer; white-space: nowrap; flex-shrink: 0;
-        }
-        .no-credits-btn:hover { background: #d97706; }
-
-        .audit-error {
-          background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px;
-          padding: 16px; color: #ef4444; font-size: 14px;
-        }
-        .audit-coming-soon {
-          background: #f7fbf7; border: 1px solid #d4e8d6; border-radius: 14px;
-          padding: 48px 24px; text-align: center; color: #5a7a5e;
-        }
-        .audit-coming-soon h3 { font-size: 18px; font-weight: 700; color: #0f1a10; margin-bottom: 8px; }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Roboto+Condensed:wght@700;800&family=Roboto+Mono:wght@400&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
       `}</style>
 
-      <p className="audit-sub">
-        Paste a product page URL and Dablin runs 18 SEO checks — including Google March 2026 signals (Information Gain, AI Overview eligibility), schema, technical SEO, and performance.
-      </p>
-
-      <div className="audit-input-row">
-        <input
-          className="audit-url-input"
-          type="url"
-          placeholder="https://yourstore.com/products/your-product"
-          value={url}
-          onChange={e => setUrl(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && runAudit()}
-        />
-        <button className="audit-btn" onClick={runAudit} disabled={loading || !url.trim()}>
-          {loading ? "Auditing..." : "Audit SEO"}
-        </button>
+      {/* ── URL INPUT ── */}
+      <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "14px", padding: "20px", marginBottom: "20px" }}>
+        <p style={{ fontSize: "13px", color: "#4a6b4c", marginBottom: "12px", lineHeight: "1.5" }}>
+          Paste your website URL. Dablin runs 18 SEO checks across On-Page, Off-Page, Technical SEO and Algorithm signals — with AI fixes for every issue.
+        </p>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <input
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && runAudit()}
+            placeholder="https://yourwebsite.com"
+            style={{ flex: 1, padding: "10px 14px", border: "1.5px solid #d0e8d4", borderRadius: "8px", fontSize: "14px", fontFamily: "'Roboto', sans-serif", color: "#0d1f0e", outline: "none" }}
+          />
+          <button
+            onClick={runAudit}
+            disabled={loading || !url.trim()}
+            style={{ background: loading ? "#d0e8d4" : "#1a7a3a", color: "white", border: "none", borderRadius: "8px", padding: "10px 22px", fontSize: "14px", fontWeight: "700", cursor: loading ? "not-allowed" : "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap", transition: "background 0.2s" }}
+          >
+            {loading ? "Auditing…" : "Audit SEO"}
+          </button>
+        </div>
+        {error && <div style={{ marginTop: "10px", fontSize: "13px", color: "#c0392b" }}>{error}</div>}
+        {noCredits && (
+          <div style={{ marginTop: "10px", background: "#fff8e8", border: "1px solid #fcd34d", borderRadius: "8px", padding: "10px 14px", fontSize: "13px", color: "#b45309" }}>
+            You've reached your plan limit.{" "}
+            <button onClick={() => setPage?.("pricing")} style={{ background: "none", border: "none", color: "#1a7a3a", fontWeight: "700", cursor: "pointer", fontSize: "13px", padding: 0, textDecoration: "underline" }}>Upgrade →</button>
+          </div>
+        )}
       </div>
 
-      {noCredits && (
-        <div className="no-credits-banner">
-          <div className="no-credits-text">
-            <h4>Plan limit reached</h4>
-            <p>You've reached your monthly audit limit. Upgrade your plan to continue.</p>
-          </div>
-          <button className="no-credits-btn" onClick={() => setPage("pricing")}>Upgrade Plan</button>
-        </div>
-      )}
+      {/* ── MAIN PANEL ── */}
+      <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "14px", overflow: "hidden" }}>
 
-      {error && (
-        <div className="audit-error">{error}</div>
-      )}
-
-      {result && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-            <ShareButton type="seo-audit" data={result} />
-          </div>
-          <div className="audit-score-card">
-            <div className={`audit-score-circle ${score >= 75 ? "score-good" : score >= 50 ? "score-mid" : "score-bad"}`}>
-              {score}%
-            </div>
-            <div className="audit-score-info">
-              <h3>{score >= 75 ? "Good SEO health" : score >= 50 ? "Needs improvement" : "Critical issues found"}</h3>
-              <p>{passed} of {totalChecks} checks passed{result.pageSpeed ? ` · PageSpeed ${result.pageSpeed}` : ''}</p>
-            </div>
-          </div>
-
-          {CHECK_GROUPS.map(group => {
-            const groupPassed = group.checks.filter(c => result.checks[c.key]).length;
-            const isOpen = expandedGroups[group.key];
-            return (
-              <div className="check-group" key={group.key}>
-                <div className="check-group-header" onClick={() => toggleGroup(group.key)}>
-                  <span className="check-group-title">{group.label}</span>
-                  <div className="check-group-meta">
-                    <span className="group-score"
-                      style={{ color: groupPassed === group.checks.length ? "#2d7a3a" : groupPassed === 0 ? "#c0392b" : "#e08a00" }}>
-                      {groupPassed}/{group.checks.length} passed
-                    </span>
-                    <span className="group-chevron">{isOpen ? "▲" : "▼"}</span>
-                  </div>
-                </div>
-                {isOpen && (
-                  <div className="check-group-body">
-                    {group.checks.map(c => {
-                      const passed = result.checks[c.key];
-                      const fix = result.fixes?.[c.key];
-                      return (
-                        <div className="audit-check" key={c.key}>
-                          <span className="check-icon">{passed ? "✅" : "❌"}</span>
-                          <div style={{ flex: 1 }}>
-                            <div className="check-label">{c.label}</div>
-                            <div className={`check-desc ${!passed ? "fail" : ""}`}>
-                              {passed ? c.desc : result.issues?.[c.key] || c.desc}
-                            </div>
-                            {!passed && fix && (
-                              <div className="fix-box">
-                                <div className="fix-box-label">✦ AI Fix</div>
-                                <div className="fix-box-content">{fix}</div>
-                                <button className="fix-copy-btn" onClick={() => copyFix(c.key, fix)}>
-                                  {copied === c.key ? "✓ Copied!" : "Copy fix"}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+        {/* Score header — only when result */}
+        {result && (
+          <div style={{ background: "#0d1f0e", padding: "20px 24px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+            <ScoreCircle score={overallScore} />
+            <div>
+              <div style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: "22px", fontWeight: "800", color: "white", marginBottom: "4px" }}>
+                {overallScore >= 80 ? "Good SEO health" : overallScore >= 60 ? "Needs improvement" : "Critical issues found"}
               </div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "6px", fontFamily: "'Roboto Mono', monospace" }}>{result.url}</div>
+              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{totalPassed}/{totalChecks} checks passed</span>
+                {result.pageSpeed && <span style={{ fontSize: "12px", color: result.pageSpeed >= 70 ? "#6fcf8a" : "#f09595" }}>PageSpeed: {result.pageSpeed}/100</span>}
+              </div>
+            </div>
+            <div style={{ marginLeft: "auto", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {[
+                { label: "On-Page", val: `${onpagePassed}/${ONPAGE_CHECKS.length}`, ok: true },
+                { label: "Technical", val: canAccessTab(TABS[2]) ? `${techPassed}/${TECHNICAL_CHECKS.length}` : "🔒", ok: canAccessTab(TABS[2]) },
+                { label: "Algorithm", val: canAccessTab(TABS[3]) ? `${algoPassed}/${ALGORITHM_CHECKS.length}` : "🔒", ok: canAccessTab(TABS[3]) },
+              ].map(s => (
+                <div key={s.label} style={{ textAlign: "center", background: "rgba(255,255,255,0.07)", borderRadius: "8px", padding: "8px 14px", minWidth: "64px" }}>
+                  <div style={{ fontSize: "17px", fontWeight: "800", color: s.ok ? "#6fcf8a" : "rgba(255,255,255,0.2)", fontFamily: "'Roboto Condensed', sans-serif" }}>{s.val}</div>
+                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div style={{ display: "flex", borderBottom: "1px solid #eef2ee", overflowX: "auto" }}>
+          {TABS.map(tab => {
+            const locked = !canAccessTab(tab);
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={tabBtn(tab)}>
+                {tab.label}
+                {locked && (
+                  <span style={{ fontSize: "9px", background: "#f3f4f6", color: "#9ca3af", borderRadius: "4px", padding: "1px 5px", fontWeight: "700", letterSpacing: "0.03em" }}>PRO</span>
+                )}
+              </button>
             );
           })}
-        </>
-      )}
-
-      {!result && !error && !loading && !noCredits && (
-        <div className="audit-coming-soon">
-          <h3>Ready to audit</h3>
-          <p>Enter a product URL above and click "Audit SEO" to run 18 checks including Google March 2026 signals.</p>
         </div>
-      )}
-    </div>}
+
+        {/* Tab content */}
+        <div style={{ padding: "0 24px 28px" }}>
+
+          {/* Loading */}
+          {loading && (
+            <div style={{ textAlign: "center", padding: "48px 0" }}>
+              <div style={{ fontSize: "13px", color: "#4a6b4c" }}>Auditing {url}…</div>
+              <div style={{ fontSize: "11px", color: "#9ab09c", marginTop: "6px" }}>Running 18 checks · usually under 30 seconds</div>
+            </div>
+          )}
+
+          {/* ON-PAGE */}
+          {!loading && activeTab === "onpage" && (
+            result ? (
+              <div>
+                <div style={{ padding: "16px 0 8px", fontSize: "12px", color: "#4a6b4c", borderBottom: "1px solid #eef2ee", marginBottom: "4px", fontWeight: "600" }}>
+                  {onpagePassed}/{ONPAGE_CHECKS.length} on-page checks passed
+                </div>
+                {ONPAGE_CHECKS.map(check => (
+                  <CheckRow key={check.key} check={check} result={result} fix={result.fixes?.[check.key]}
+                    expanded={expanded[check.key]} onToggle={() => result.issues?.[check.key] && toggleExpanded(check.key)} />
+                ))}
+              </div>
+            ) : (
+              <OnPageEmptyState />
+            )
+          )}
+
+          {/* OFF-PAGE */}
+          {!loading && activeTab === "offpage" && (
+            canAccessTab(TABS[1]) ? (
+              <div style={{ padding: "24px 0", textAlign: "center", color: "#4a6b4c" }}>
+                <div style={{ fontSize: "24px", marginBottom: "12px" }}>🚧</div>
+                <div style={{ fontSize: "15px", fontWeight: "600", color: "#0d1f0e", marginBottom: "6px" }}>Off-Page analysis coming soon</div>
+                <div style={{ fontSize: "13px" }}>Domain authority, backlink tracking and referring domain analysis will be in the next release.</div>
+              </div>
+            ) : (
+              <LockedTab tab={TABS[1]} onUpgrade={() => setPage?.("pricing")} />
+            )
+          )}
+
+          {/* TECHNICAL */}
+          {!loading && activeTab === "technical" && (
+            canAccessTab(TABS[2]) ? (
+              result ? (
+                <div>
+                  <div style={{ padding: "16px 0 8px", fontSize: "12px", color: "#4a6b4c", borderBottom: "1px solid #eef2ee", marginBottom: "4px", fontWeight: "600" }}>
+                    {techPassed}/{TECHNICAL_CHECKS.length} technical checks passed
+                    {result.pageSpeed && <span style={{ marginLeft: "12px", color: result.pageSpeed >= 70 ? "#1a7a3a" : "#c0392b" }}>PageSpeed: {result.pageSpeed}/100</span>}
+                  </div>
+                  {TECHNICAL_CHECKS.map(check => (
+                    <CheckRow key={check.key} check={check} result={result} fix={result.fixes?.[check.key]}
+                      expanded={expanded[check.key]} onToggle={() => result.issues?.[check.key] && toggleExpanded(check.key)} />
+                  ))}
+                </div>
+              ) : (
+                <div style={{ paddingTop: "20px" }}>
+                  <p style={{ fontSize: "13px", color: "#4a6b4c", marginBottom: "20px", lineHeight: "1.6" }}>
+                    We'll run 5 technical checks and show you exactly what's slowing your page down, what's misconfigured, and the AI fix for each issue.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0", border: "1px solid #eef2ee", borderRadius: "10px", overflow: "hidden", maxWidth: "520px" }}>
+                    {TECHNICAL_CHECKS.map((c, i) => (
+                      <div key={c.key} style={{ padding: "14px 16px", borderBottom: i < TECHNICAL_CHECKS.length - 1 ? "1px solid #eef2ee" : "none", background: "white" }}>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#0d1f0e", marginBottom: "2px" }}>{c.label}</div>
+                        <div style={{ fontSize: "11px", color: "#9ab09c" }}>{c.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : (
+              <LockedTab tab={TABS[2]} onUpgrade={() => setPage?.("pricing")} />
+            )
+          )}
+
+          {/* ALGORITHM */}
+          {!loading && activeTab === "algorithm" && (
+            canAccessTab(TABS[3]) ? (
+              result ? (
+                <div>
+                  <div style={{ padding: "16px 0 8px", fontSize: "12px", color: "#4a6b4c", borderBottom: "1px solid #eef2ee", marginBottom: "4px", fontWeight: "600" }}>
+                    {algoPassed}/{ALGORITHM_CHECKS.length} Google March 2026 signals passing
+                  </div>
+                  <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: "8px", padding: "10px 14px", margin: "12px 0", fontSize: "12px", color: "#b45309" }}>
+                    ⚡ Google's March 2026 core update. Failing these signals can significantly reduce your ranking potential.
+                  </div>
+                  {ALGORITHM_CHECKS.map(check => (
+                    <CheckRow key={check.key} check={check} result={result} fix={result.fixes?.[check.key]}
+                      expanded={expanded[check.key]} onToggle={() => result.issues?.[check.key] && toggleExpanded(check.key)} />
+                  ))}
+                  {result.word_count && (
+                    <div style={{ marginTop: "16px", background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "8px", padding: "14px" }}>
+                      <div style={{ fontSize: "12px", color: "#4a6b4c", marginBottom: "8px", fontWeight: "600" }}>Page signals detected</div>
+                      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+                        <div><div style={{ fontSize: "11px", color: "#9ab09c" }}>Word count</div><div style={{ fontSize: "16px", fontWeight: "700", color: result.word_count >= 600 ? "#1a7a3a" : "#c0392b" }}>{result.word_count}</div></div>
+                        <div><div style={{ fontSize: "11px", color: "#9ab09c" }}>Images</div><div style={{ fontSize: "16px", fontWeight: "700", color: "#0d1f0e" }}>{result.images_total ?? "—"}</div></div>
+                        <div><div style={{ fontSize: "11px", color: "#9ab09c" }}>Missing alt</div><div style={{ fontSize: "16px", fontWeight: "700", color: result.images_missing_alt > 0 ? "#c0392b" : "#1a7a3a" }}>{result.images_missing_alt ?? "—"}</div></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ paddingTop: "20px" }}>
+                  <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: "8px", padding: "10px 14px", marginBottom: "16px", fontSize: "12px", color: "#b45309", maxWidth: "520px" }}>
+                    ⚡ Google's March 2026 update introduced 2 new ranking signals. Enter a URL above to check if your page passes.
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0", border: "1px solid #eef2ee", borderRadius: "10px", overflow: "hidden", maxWidth: "520px" }}>
+                    {ALGORITHM_CHECKS.map((c, i) => (
+                      <div key={c.key} style={{ padding: "14px 16px", borderBottom: i < ALGORITHM_CHECKS.length - 1 ? "1px solid #eef2ee" : "none", background: "white" }}>
+                        <div style={{ fontSize: "13px", fontWeight: "600", color: "#0d1f0e", marginBottom: "2px" }}>{c.label}</div>
+                        <div style={{ fontSize: "11px", color: "#9ab09c" }}>{c.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : (
+              <LockedTab tab={TABS[3]} onUpgrade={() => setPage?.("pricing")} />
+            )
+          )}
+        </div>
+
+        {/* Footer */}
+        {result && (
+          <div style={{ borderTop: "1px solid #eef2ee", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+            <div style={{ fontSize: "12px", color: "#9ab09c" }}>
+              {totalChecks - totalPassed} issue{totalChecks - totalPassed !== 1 ? "s" : ""} found · click any failed check to see the AI fix
+            </div>
+            <button
+              onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/seo-audit-sample-report`)}
+              style={{ background: "none", border: "1px solid #d0e8d4", borderRadius: "8px", padding: "6px 14px", fontSize: "12px", fontWeight: "600", color: "#1a7a3a", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}
+            >
+              ↗ Share results
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
