@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState } from "react";
 import PageLayout from "./PageLayout";
 import { trackEvent } from "../../analytics";
@@ -38,6 +39,16 @@ export default function PageContact() {
 
   return (
     <PageLayout activePath="/contact">
+      <Helmet>
+        <title>Contact Dablin — We read every message</title>
+        <meta name="description" content="Have a question about Dablin, need help with your account, or want to give feedback? Send us a message and we'll get back to you within 24 hours." />
+        <meta property="og:title" content="Contact Dablin — We read every message" />
+        <meta property="og:description" content="Have a question about Dablin, need help with your account, or want to give feedback? We'll get back to you within 24 hours." />
+        <meta property="og:url" content="https://dablin.co/contact" />
+        <meta name="twitter:title" content="Contact Dablin — We read every message" />
+        <meta name="twitter:description" content="Have a question or feedback? Send us a message and we'll get back to you within 24 hours." />
+        <link rel="canonical" href="https://dablin.co/contact" />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
