@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState, useEffect, useRef } from "react";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
@@ -160,6 +161,16 @@ const FAQ = [
 export default function PageSeoAudit() {
   return (
     <PageLayout activePath="/seo-audit">
+      <Helmet>
+        <title>SEO Audit — 18 checks, AI fixes | Dablin</title>
+        <meta name="description" content="Paste any URL and get an 18-check SEO audit with AI-generated fixes in 30 seconds. Covers On-Page, Technical SEO, Core Web Vitals and Google March 2026 signals. Free to start." />
+        <meta property="og:title" content="SEO Audit — 18 checks, AI fixes | Dablin" />
+        <meta property="og:description" content="Paste any URL and get an 18-check SEO audit with AI-generated fixes in 30 seconds. Free to start at dablin.co." />
+        <meta property="og:url" content="https://dablin.co/seo-audit" />
+        <meta name="twitter:title" content="SEO Audit — 18 checks, AI fixes | Dablin" />
+        <meta name="twitter:description" content="Paste any URL and get an 18-check SEO audit with AI-generated fixes in 30 seconds. Free to start." />
+        <link rel="canonical" href="https://dablin.co/seo-audit" />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
