@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState, useEffect } from "react";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
@@ -150,6 +151,16 @@ const FAQ = [
 export default function PageDashboard() {
   return (
     <PageLayout activePath="/seo-geo-dashboard">
+      <Helmet>
+        <title>SEO &amp; GEO Dashboard — Track and fix your visibility issues | Dablin</title>
+        <meta name="description" content="Scan your URL and get a prioritised Kanban board of SEO and AI visibility fixes. Drag tickets from To Do to Done as you fix them. Track your progress across Google and AI search." />
+        <meta property="og:title" content="SEO &amp; GEO Dashboard — Track and fix your visibility issues | Dablin" />
+        <meta property="og:description" content="Scan your URL and get a prioritised Kanban board of SEO and AI visibility fixes. Track your progress across Google and AI search." />
+        <meta property="og:url" content="https://dablin.co/seo-geo-dashboard" />
+        <meta name="twitter:title" content="SEO &amp; GEO Dashboard — Track and fix your visibility issues | Dablin" />
+        <meta name="twitter:description" content="Prioritised Kanban board of SEO and AI visibility fixes. Track your progress across Google and AI search." />
+        <link rel="canonical" href="https://dablin.co/seo-geo-dashboard" />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
