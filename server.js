@@ -883,6 +883,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     // ── CHECK 2: Schema markup ───────────────────────────────
     const schemaScripts = $('script[type="application/ld+json"]');
     const schemaOk = schemaScripts.length > 0;
+    console.log("[audit] schema scripts found:", schemaScripts.length, "for URL:", url);
 
     // ── CHECK 3: Image alt text ──────────────────────────────
     const images = $("img");
