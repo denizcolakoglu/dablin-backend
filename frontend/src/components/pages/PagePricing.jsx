@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState } from "react";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
@@ -90,6 +91,16 @@ export default function PagePricing() {
 
   return (
     <PageLayout activePath="/pricing">
+      <Helmet>
+        <title>Dablin Pricing — Starter €9, Pro €19, Agency €49</title>
+        <meta name="description" content="SEO Audit, GEO checks and AI visibility tools for brands and e-commerce. Starter from €9/month. No setup fees, cancel anytime. Free plan available." />
+        <meta property="og:title" content="Dablin Pricing — Starter €9, Pro €19, Agency €49" />
+        <meta property="og:description" content="SEO Audit, GEO checks and AI visibility tools. Starter from €9/month. No setup fees, cancel anytime. Free plan available." />
+        <meta property="og:url" content="https://dablin.co/pricing" />
+        <meta name="twitter:title" content="Dablin Pricing — Starter €9, Pro €19, Agency €49" />
+        <meta name="twitter:description" content="SEO Audit, GEO checks and AI visibility tools. Starter from €9/month. Free plan available." />
+        <link rel="canonical" href="https://dablin.co/pricing" />
+      </Helmet>
 
       {/* HERO */}
       <div className="pp-section" style={{ background: "#eef8f0", padding: "80px 48px 96px", textAlign: "center" }}>
