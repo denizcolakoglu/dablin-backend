@@ -202,9 +202,13 @@ export default function PageSeoAudit() {
             </a>
           </div>
 
-          {/* Right: animation */}
+          {/* Right: GIF demo */}
           <div className="seo-hero-right" style={{ flex: 1, minWidth: 0 }}>
-            <SeoAuditDemo />
+            <img
+           src="/seo-audit-demo.gif"
+            alt="Dablin SEO Audit in action"
+            style={{ width: "100%", borderRadius: "14px", border: "1px solid #eef2ee", boxShadow: "0 4px 24px rgba(13,31,14,0.10)" }}
+          />
           </div>
         </div>
       </div>
