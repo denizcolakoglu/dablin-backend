@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import PageLayout from "./PageLayout";
 
 const ENTRIES = [
@@ -88,6 +89,16 @@ const TAG_LABELS = { new: 'New', fix: 'Fix', design: 'Design', improve: 'Improve
 export default function PageWhatsNew() {
   return (
     <PageLayout activePath="/whats-new">
+      <Helmet>
+        <title>What's New — Dablin changelog and updates</title>
+        <meta name="description" content="Every feature, fix and improvement shipped to Dablin — SEO Audit, GEO checks, AI Visibility tools. Updated every Friday." />
+        <meta property="og:title" content="What's New — Dablin changelog and updates" />
+        <meta property="og:description" content="Every feature, fix and improvement shipped to Dablin — SEO Audit, GEO checks, AI Visibility tools. Updated every Friday." />
+        <meta property="og:url" content="https://dablin.co/whats-new" />
+        <meta name="twitter:title" content="What's New — Dablin changelog and updates" />
+        <meta name="twitter:description" content="Every feature, fix and improvement shipped to Dablin. Updated every Friday." />
+        <link rel="canonical" href="https://dablin.co/whats-new" />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
