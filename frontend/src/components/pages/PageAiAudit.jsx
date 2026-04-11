@@ -149,6 +149,7 @@ export default function PageAiAudit() {
         <meta name="description" content="Check if ChatGPT, Gemini and Claude can find your brand. 12 technical GEO checks covering llms.txt, Organization schema and AI crawler access — with AI-generated fixes. Free to start." />
         <meta property="og:title" content="GEO Audit — Check AI Visibility for Your Brand | Dablin" />
         <meta property="og:description" content="Check if ChatGPT, Gemini and Claude can find your brand. 12 technical GEO checks with AI-generated fixes for every issue. Free to start at dablin.co." />
+        <meta property="og:image" content="https://dablin.co/geo-audit-og.png" />
         <meta property="og:url" content="https://dablin.co/ai-visibility-audit" />
         <meta name="twitter:title" content="GEO Audit — Check AI Visibility for Your Brand | Dablin" />
         <meta name="twitter:description" content="Check if ChatGPT, Gemini and Claude can find your brand. 12 technical GEO checks with AI-generated fixes. Free to start." />
