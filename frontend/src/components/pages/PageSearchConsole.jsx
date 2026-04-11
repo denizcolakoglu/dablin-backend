@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState } from "react";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
@@ -46,6 +47,16 @@ const FAQ = [
 export default function PageSearchConsole() {
   return (
     <PageLayout activePath="/google-search-console">
+      <Helmet>
+        <title>Google Search Console Integration — SEO insights inside Dablin</title>
+        <meta name="description" content="Connect Google Search Console to Dablin and we turn your raw GSC data into clear actions — which pages to fix, which keywords are close to ranking, and what's hurting your Core Web Vitals. No spreadsheets needed." />
+        <meta property="og:title" content="Google Search Console Integration — SEO insights inside Dablin" />
+        <meta property="og:description" content="Connect Google Search Console to Dablin and we turn your raw GSC data into clear actions. No spreadsheets needed." />
+        <meta property="og:url" content="https://dablin.co/google-search-console" />
+        <meta name="twitter:title" content="Google Search Console Integration — SEO insights inside Dablin" />
+        <meta name="twitter:description" content="Connect GSC to Dablin and turn raw data into clear SEO actions. No spreadsheets needed." />
+        <link rel="canonical" href="https://dablin.co/google-search-console" />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
