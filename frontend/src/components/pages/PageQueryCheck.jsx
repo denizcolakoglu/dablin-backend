@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState } from "react";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
@@ -120,6 +121,16 @@ const FAQ = [
 export default function PageQueryCheck() {
   return (
     <PageLayout activePath="/ai-query-check">
+      <Helmet>
+        <title>AI Query Check — Test any brand across ChatGPT, Gemini &amp; Claude | Dablin</title>
+        <meta name="description" content="Describe your brand in plain language and Dablin checks your visibility across ChatGPT, Gemini and Claude — no URL needed. See which competitors appear and which sources AI engines cite." />
+        <meta property="og:title" content="AI Query Check — Test any brand across ChatGPT, Gemini &amp; Claude | Dablin" />
+        <meta property="og:description" content="Describe your brand in plain language and Dablin checks your visibility across ChatGPT, Gemini and Claude — no URL needed." />
+        <meta property="og:url" content="https://dablin.co/ai-query-check" />
+        <meta name="twitter:title" content="AI Query Check — Test any brand across ChatGPT, Gemini &amp; Claude | Dablin" />
+        <meta name="twitter:description" content="Check your brand visibility across ChatGPT, Gemini and Claude — no URL needed. See competitors and sources." />
+        <link rel="canonical" href="https://dablin.co/ai-query-check" />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
