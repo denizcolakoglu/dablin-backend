@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState } from "react";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
@@ -146,6 +147,16 @@ function MockTable() {
 export default function PageAiCheck() {
   return (
     <PageLayout activePath="/ai-visibility-check">
+      <Helmet>
+        <title>AI Visibility Check — ChatGPT, Gemini &amp; Claude brand monitoring | Dablin</title>
+        <meta name="description" content="Check if ChatGPT, Gemini and Claude mention your brand across 7 targeted queries. See which competitors appear instead, which sources they cite, and get fixes to improve your AI visibility." />
+        <meta property="og:title" content="AI Visibility Check — ChatGPT, Gemini &amp; Claude brand monitoring | Dablin" />
+        <meta property="og:description" content="Check if ChatGPT, Gemini and Claude mention your brand across 7 targeted queries. See which competitors appear instead and get fixes to improve your AI visibility." />
+        <meta property="og:url" content="https://dablin.co/ai-visibility-check" />
+        <meta name="twitter:title" content="AI Visibility Check — ChatGPT, Gemini &amp; Claude brand monitoring | Dablin" />
+        <meta name="twitter:description" content="Check if ChatGPT, Gemini and Claude mention your brand across 7 targeted queries. See competitors, sources and fixes." />
+        <link rel="canonical" href="https://dablin.co/ai-visibility-check" />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
