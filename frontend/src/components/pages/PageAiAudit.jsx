@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { SignUpButton, SignInButton } from "@clerk/clerk-react";
 import PageLayout from "./PageLayout";
 import { trackEvent } from "../../analytics";
@@ -71,7 +72,7 @@ function AiAuditDemo() {
     <div style={{ borderRadius: '14px', border: '1px solid #d0e8d4', background: '#f8faf8', overflow: 'hidden', boxShadow: '0 8px 40px rgba(26,122,58,0.10)' }}>
       <div style={{ background: '#e8f5ea', padding: '9px 14px', display: 'flex', alignItems: 'center', gap: '7px', borderBottom: '1px solid #d0e8d4' }}>
         {['#ff5f57','#febc2e','#28c840'].map(c => <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, display: 'inline-block' }} />)}
-        <span style={{ flex: 1, textAlign: 'center', fontSize: '11px', color: '#4a6b4c' }}>dablin.co · AI Visibility Audit</span>
+        <span style={{ flex: 1, textAlign: 'center', fontSize: '11px', color: '#4a6b4c' }}>dablin.co · GEO & AI Visibility Audit</span>
       </div>
       <div style={{ padding: '20px', background: 'white' }}>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -79,7 +80,7 @@ function AiAuditDemo() {
             {urlVal}{phase === 'typing' ? <span style={{ borderRight: '2px solid #1a7a3a', animation: 'blink 0.8s infinite' }}>&nbsp;</span> : ''}
           </div>
           <button style={{ background: (phase === 'auditing' || phase === 'results') ? '#1a7a3a' : '#b0c9b4', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 14px', fontSize: '12px', fontWeight: '700', cursor: 'default', whiteSpace: 'nowrap' }}>
-            {phase === 'auditing' ? `Auditing${dots}` : 'Run AI Audit'}
+            {phase === 'auditing' ? `Auditing${dots}` : 'Run GEO Audit'}
           </button>
         </div>
         {showScore && (
@@ -130,19 +131,30 @@ const CHECKS = [
 ];
 
 const FAQ = [
-  { q: "What is the AI Visibility Audit?", a: "The AI Visibility Audit runs 12 checks to see how well AI-powered search engines like ChatGPT, Gemini, and Claude can find, crawl, and understand your pages. It covers brand identity signals, AI crawlability, and AI-readable content — with a ready-to-copy fix for every issue it finds." },
+  { q: "What is the GEO Audit?", a: "The GEO (Generative Engine Optimisation) Audit runs 12 checks to see how well AI-powered search engines like ChatGPT, Gemini, and Claude can find, crawl, and understand your pages. It covers brand identity signals, AI crawlability, and AI-readable content — with a ready-to-copy fix for every issue it finds." },
   { q: "What is llms.txt and why does it matter?", a: "llms.txt is a simple text file placed at the root of your website (yoursite.com/llms.txt) that tells AI models what your site does, who it's for, and what content they can use. Without it, AI engines have to guess — and often get it wrong. Dablin generates a ready-to-upload version for you if it's missing." },
-  { q: "How is this different from the SEO Audit?", a: "The SEO Audit focuses on Google ranking factors — meta tags, schema, headings, Core Web Vitals, and the new March 2026 signals. The AI Visibility Audit focuses on what AI engines need to find and cite your brand — llms.txt, Organization schema, sameAs links, AI crawler access, and more." },
-  { q: "What are AEO and GEO?", a: "AEO (Answer Engine Optimization) and GEO (Generative Engine Optimization) both refer to optimising content to be found and cited by AI-powered search tools like ChatGPT, Gemini, and Google's AI Overviews. Dablin's AI Visibility Audit covers the technical checks that matter most for both." },
+  { q: "How is this different from the SEO Audit?", a: "The SEO Audit focuses on Google ranking factors — meta tags, schema, headings, Core Web Vitals, and the new March 2026 signals. The GEO Audit focuses on what AI engines need to find and cite your brand — llms.txt, Organization schema, sameAs links, AI crawler access, and more." },
+  { q: "What are AEO and GEO?", a: "AEO (Answer Engine Optimization) and GEO (Generative Engine Optimization) both refer to optimising content to be found and cited by AI-powered search tools like ChatGPT, Gemini, and Google's AI Overviews. Dablin's GEO Audit covers the technical checks that matter most for both." },
   { q: "Which AI engines does this check for?", a: "The audit checks signals that affect all major AI engines: ChatGPT (GPTBot), Google Gemini (Google-Extended), Claude (ClaudeBot), Perplexity (PerplexityBot), and Microsoft Copilot. This includes robots.txt crawler access, schema markup, llms.txt, and response time." },
   { q: "Does it work for any website?", a: "Yes. Any publicly accessible URL can be audited — Shopify stores, WooCommerce, WordPress, Amazon, or any custom site. You can also audit competitor pages to see how their AI visibility compares to yours." },
   { q: "What AI fixes does it generate?", a: "For every failed check, Dablin generates a ready-to-copy fix — the exact JSON-LD schema block, llms.txt content, robots.txt rule, or HTML tag you need. Paste it directly into your CMS. No developer needed." },
-  { q: "How much does it cost?", a: "The AI Visibility Audit is included in all Dablin plans. See the Pricing page for plan details." },
+  { q: "How much does it cost?", a: "The GEO Audit is included in all Dablin plans. See the Pricing page for plan details." },
 ];
 
 export default function PageAiAudit() {
   return (
     <PageLayout activePath="/ai-visibility-audit">
+      <Helmet>
+        <title>GEO Audit — Check AI Visibility for Your Brand | Dablin</title>
+        <meta name="description" content="Check if ChatGPT, Gemini and Claude can find your brand. 12 technical GEO checks covering llms.txt, Organization schema and AI crawler access — with AI-generated fixes. Free to start." />
+        <meta property="og:title" content="GEO Audit — Check AI Visibility for Your Brand | Dablin" />
+        <meta property="og:description" content="Check if ChatGPT, Gemini and Claude can find your brand. 12 technical GEO checks with AI-generated fixes for every issue. Free to start at dablin.co." />
+        <meta property="og:url" content="https://dablin.co/ai-visibility-audit" />
+        <meta name="twitter:title" content="GEO Audit — Check AI Visibility for Your Brand | Dablin" />
+        <meta name="twitter:description" content="Check if ChatGPT, Gemini and Claude can find your brand. 12 technical GEO checks with AI-generated fixes. Free to start." />
+        <link rel="canonical" href="https://dablin.co/ai-visibility-audit" />
+      </Helmet>
+
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@700;800&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -166,16 +178,16 @@ export default function PageAiAudit() {
         <div className="ai-hero-grid" style={{ display: 'flex', alignItems: 'flex-start', gap: '64px', maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ flex: '0 0 400px' }}>
             <h1 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(40px,5vw,60px)', fontWeight: '800', lineHeight: '1.0', letterSpacing: '-2.5px', color: '#0d1f0e', marginBottom: '20px' }}>
-              AI Visibility<br />
-              <span style={{ color: '#1a7a3a' }}>Audit.</span><br />
+              GEO Audit.<br />
+              <span style={{ color: '#1a7a3a' }}>AI Visibility.</span><br />
               12 checks.
             </h1>
             <p style={{ fontSize: '17px', color: '#4a6b4c', fontWeight: '300', lineHeight: '1.65', marginBottom: '28px' }}>
-              12 technical checks that identify exactly what's stopping ChatGPT, Gemini, and Claude from finding and citing your brand — with a ready-to-copy fix for every issue.
+              Check if ChatGPT, Gemini and Claude can find your brand. 12 technical checks covering llms.txt, Organization schema, AI crawler access and more — with a ready-to-copy fix for every issue.
             </p>
             <div onClick={() => trackEvent('sign_up_click', { location: 'ai_audit_page_hero' })}>
               <SignUpButton mode="modal">
-                <button className="ai-btn-primary">Audit my page</button>
+                <button className="ai-btn-primary">Run GEO Audit</button>
               </SignUpButton>
             </div>
           </div>
@@ -190,7 +202,7 @@ export default function PageAiAudit() {
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
             <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>What we check</p>
-            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '12px' }}>12 checks across 3 categories</h2>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,44px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px', marginBottom: '12px' }}>12 GEO checks across 3 categories</h2>
             <p style={{ fontSize: '16px', color: '#4a6b4c', maxWidth: '480px', margin: '0 auto', lineHeight: '1.6' }}>Every failed check comes with an AI-generated fix ready to copy and paste.</p>
           </div>
           <div className="ai-checks-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
@@ -216,11 +228,11 @@ export default function PageAiAudit() {
         </div>
       </div>
 
-      {/* ── WHY AI VISIBILITY MATTERS ── */}
+      {/* ── WHY GEO MATTERS ── */}
       <div className="ai-section" style={{ background: '#0d1f0e', padding: 'clamp(48px,6vw,96px) 56px' }}>
         <div className="ai-dark-grid" style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', gap: '64px', alignItems: 'center' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'inline-block', background: '#1a7a3a', color: 'white', borderRadius: '20px', padding: '4px 14px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', marginBottom: '20px' }}>Why it matters</div>
+            <div style={{ display: 'inline-block', background: '#1a7a3a', color: 'white', borderRadius: '20px', padding: '4px 14px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', marginBottom: '20px' }}>Why GEO matters</div>
             <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(26px,3vw,36px)', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', marginBottom: '14px', lineHeight: '1.1' }}>AI search is replacing<br />traditional search.</h2>
             <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.65', fontWeight: '300' }}>ChatGPT alone has over 300 million weekly users asking product questions. If AI engines can't find or trust your brand, you're invisible to an audience that's growing faster than Google.</p>
           </div>
@@ -244,7 +256,7 @@ export default function PageAiAudit() {
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>Before &amp; after</p>
-            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,40px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px' }}>What a typical audit finds</h2>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,40px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px' }}>What a typical GEO audit finds</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             {[
@@ -270,7 +282,7 @@ export default function PageAiAudit() {
         <div style={{ maxWidth: '780px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
             <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a7a3a', marginBottom: '12px' }}>FAQ</p>
-            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,40px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px' }}>Common questions</h2>
+            <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(28px,4vw,40px)', fontWeight: '800', color: '#0d1f0e', letterSpacing: '-1px' }}>Common questions about GEO</h2>
           </div>
           <div style={{ borderTop: '1px solid #eef2ee' }}>
             {FAQ.map((item, i) => <FaqItem key={i} q={item.q} a={item.a} />)}
@@ -283,11 +295,11 @@ export default function PageAiAudit() {
         <h2 style={{ fontFamily: "'Roboto Condensed', sans-serif", fontSize: 'clamp(32px,5vw,56px)', fontWeight: '800', color: 'white', letterSpacing: '-1.5px', marginBottom: '16px' }}>
           Find out if AI engines<br /><span style={{ color: '#6fcf8a' }}>know your brand.</span>
         </h2>
-        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>12 checks. AI fix for every issue. Results in 20 seconds.</p>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginBottom: '36px', lineHeight: '1.6' }}>12 GEO checks. AI fix for every issue. Results in 20 seconds.</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div onClick={() => trackEvent('sign_up_click', { location: 'ai_audit_page_cta' })}>
             <SignUpButton mode="modal">
-              <button className="ai-btn-primary">Run AI Visibility Audit →</button>
+              <button className="ai-btn-primary">Run GEO Audit →</button>
             </SignUpButton>
           </div>
           <SignInButton mode="modal">
