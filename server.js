@@ -1041,12 +1041,27 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     // ── CHECK 18: Sitemap reference ───────────────────────────
     let sitemapOk = false;
     try {
-      const sitemapFetch = await fetch(`${parsedUrl.origin}/sitemap.xml`, {
-        method: "HEAD",
+      // First check robots.txt for Sitemap: directives
+      const robotsFetch = await fetch(`${parsedUrl.origin}/robots.txt`, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; DablinSEOBot/1.0)" },
         signal: AbortSignal.timeout(5000),
       });
-      sitemapOk = sitemapFetch.ok;
+      if (robotsFetch.ok) {
+        const robotsText = await robotsFetch.text();
+        sitemapOk = /^Sitemap:/im.test(robotsText);
+      }
+      // Fallback: check common sitemap paths
+      if (!sitemapOk) {
+        const paths = ['/sitemap.xml', '/sitemap_index.xml', '/sitemap/'];
+        for (const path of paths) {
+          const r = await fetch(`${parsedUrl.origin}${path}`, {
+            method: "HEAD",
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; DablinSEOBot/1.0)" },
+            signal: AbortSignal.timeout(5000),
+          });
+          if (r.ok) { sitemapOk = true; break; }
+        }
+      }
     } catch {}
 
     // ── PAGESPEED INSIGHTS (non-blocking) ─────────────────────
