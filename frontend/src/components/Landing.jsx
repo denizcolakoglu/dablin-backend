@@ -1610,7 +1610,6 @@ export default function Landing() {
         </div>
       </footer>
 
-      <GoogleUpdatePopup />
     </div>
     </>
   );
