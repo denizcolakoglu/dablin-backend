@@ -280,7 +280,7 @@ function AppShell() {
 }
 
 export default function App() {
-  return (
+  return (<>
     <Routes>
       <Route path="/generate-product-description" element={<PageGenerate />} />
       <Route path="/seo-audit" element={<PageSeoAudit />} />
@@ -321,6 +321,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    <PushOptIn />
+    <PushOptIn /></>
   );
 }
