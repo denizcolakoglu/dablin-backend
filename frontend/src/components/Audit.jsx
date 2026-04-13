@@ -569,7 +569,8 @@ export default function Audit({ setPage }) {
           {!loading && activeTab === "technical" && (
             canAccessTab(TABS[2]) ? (
               result ? (
-                <div>
+                <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
                   <div style={{ padding: "16px 0 8px", fontSize: "12px", color: "#4a6b4c", borderBottom: "1px solid #eef2ee", marginBottom: "4px", fontWeight: "600" }}>
                     {techPassed}/{TECHNICAL_CHECKS.length} technical checks passed
                     {result.pageSpeed && <span style={{ marginLeft: "12px", color: result.pageSpeed >= 70 ? "#1a7a3a" : "#c0392b" }}>PageSpeed: {result.pageSpeed}/100</span>}
@@ -578,6 +579,20 @@ export default function Audit({ setPage }) {
                     <CheckRow key={check.key} check={check} result={result} fix={result.fixes?.[check.key]}
                       expanded={expanded[check.key]} onToggle={() => result.issues?.[check.key] && toggleExpanded(check.key)} />
                   ))}
+                  </div>
+                  <div style={{ width: "160px", flexShrink: 0 }}>
+                    <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "16px", textAlign: "center" }}>
+                      <div style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.8px", color: "#9ab09c", marginBottom: "10px" }}>Technical score</div>
+                      <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: "52px", fontWeight: "800", color: techPassed / TECHNICAL_CHECKS.length >= 0.8 ? "#1a7a3a" : techPassed / TECHNICAL_CHECKS.length >= 0.6 ? "#b45309" : "#c0392b", lineHeight: 1 }}>
+                        {Math.round(techPassed / TECHNICAL_CHECKS.length * 100)}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#9ab09c", marginTop: "4px", marginBottom: "12px" }}>out of 100</div>
+                      <div style={{ height: "4px", background: "#eef2ee", borderRadius: "2px", overflow: "hidden", marginBottom: "12px" }}>
+                        <div style={{ height: "100%", width: `${Math.round(techPassed / TECHNICAL_CHECKS.length * 100)}%`, background: techPassed / TECHNICAL_CHECKS.length >= 0.8 ? "#1a7a3a" : techPassed / TECHNICAL_CHECKS.length >= 0.6 ? "#b45309" : "#c0392b", borderRadius: "2px", transition: "width 0.6s" }} />
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#9ab09c" }}>{techPassed} of {TECHNICAL_CHECKS.length} checks passed</div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div style={{ paddingTop: "20px" }}>
@@ -603,7 +618,8 @@ export default function Audit({ setPage }) {
           {!loading && activeTab === "algorithm" && (
             canAccessTab(TABS[3]) ? (
               result ? (
-                <div>
+                <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
                   <div style={{ padding: "16px 0 8px", fontSize: "12px", color: "#4a6b4c", borderBottom: "1px solid #eef2ee", marginBottom: "4px", fontWeight: "600" }}>
                     {algoPassed}/{ALGORITHM_CHECKS.length} Google March 2026 signals passing
                   </div>
@@ -624,6 +640,20 @@ export default function Audit({ setPage }) {
                       </div>
                     </div>
                   )}
+                  </div>
+                  <div style={{ width: "160px", flexShrink: 0 }}>
+                    <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "10px", padding: "16px", textAlign: "center" }}>
+                      <div style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.8px", color: "#9ab09c", marginBottom: "10px" }}>Algorithm score</div>
+                      <div style={{ fontFamily: "'Roboto Condensed',sans-serif", fontSize: "52px", fontWeight: "800", color: algoPassed / ALGORITHM_CHECKS.length >= 0.8 ? "#1a7a3a" : algoPassed / ALGORITHM_CHECKS.length >= 0.6 ? "#b45309" : "#c0392b", lineHeight: 1 }}>
+                        {Math.round(algoPassed / ALGORITHM_CHECKS.length * 100)}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#9ab09c", marginTop: "4px", marginBottom: "12px" }}>out of 100</div>
+                      <div style={{ height: "4px", background: "#eef2ee", borderRadius: "2px", overflow: "hidden", marginBottom: "12px" }}>
+                        <div style={{ height: "100%", width: `${Math.round(algoPassed / ALGORITHM_CHECKS.length * 100)}%`, background: algoPassed / ALGORITHM_CHECKS.length >= 0.8 ? "#1a7a3a" : algoPassed / ALGORITHM_CHECKS.length >= 0.6 ? "#b45309" : "#c0392b", borderRadius: "2px", transition: "width 0.6s" }} />
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#9ab09c" }}>{algoPassed} of {ALGORITHM_CHECKS.length} checks passed</div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div style={{ paddingTop: "20px" }}>
