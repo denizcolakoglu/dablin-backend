@@ -25,6 +25,7 @@ import PageGoogleAds from "./components/pages/PageGoogleAds";
 import PageSeoReport from "./components/pages/PageSeoReport";
 import PageAiCheckReport from "./components/pages/PageAiCheckReport";
 import SharedResult from "./components/SharedResult";
+import PushOptIn from "./components/PushOptIn";
 
 // ── Google March 2026 Popup ───────────────────────────────────
 function GoogleUpdatePopup() {
@@ -320,5 +321,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <PushOptIn />
   );
 }

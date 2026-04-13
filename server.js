@@ -14,6 +14,14 @@ const helmet       = require("helmet");
 const rateLimit    = require("express-rate-limit");
 const { requireAuth, clerkMiddleware, getAuth } = require("@clerk/express");
 const stripe       = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const webpush      = require("web-push");
+
+// Configure VAPID for push notifications
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL || "mailto:hello@dablin.co",
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 // ── PLAN CONFIG ───────────────────────────────────────────────────────────────
 const PLANS = {
@@ -2546,6 +2554,133 @@ app.get("/api/gsc/data", requireAuth(), async (req, res) => {
   } catch (err) {
     console.error("GSC data error:", err);
     res.status(500).json({ error: "Failed to fetch Search Console data: " + err.message });
+  }
+});
+
+// ── PUSH NOTIFICATIONS ───────────────────────────────────────────────────────
+
+// Subscribe to push notifications
+app.post("/api/push/subscribe", async (req, res) => {
+  try {
+    const { endpoint, keys } = req.body;
+    const auth = getAuth(req);
+    const userId = auth?.userId || null;
+
+    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+      return res.status(400).json({ error: "Invalid subscription data" });
+    }
+
+    await pool.query(`
+      INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, active)
+      VALUES ($1, $2, $3, $4, TRUE)
+      ON CONFLICT (endpoint) 
+      DO UPDATE SET user_id = $1, p256dh = $3, auth = $4, active = TRUE
+    `, [userId, endpoint, keys.p256dh, keys.auth]);
+
+    console.log("[push] New subscription:", endpoint.slice(0, 60) + "...");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[push] Subscribe error:", err);
+    res.status(500).json({ error: "Failed to save subscription" });
+  }
+});
+
+// Unsubscribe from push notifications
+app.post("/api/push/unsubscribe", async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+
+    if (!endpoint) {
+      return res.status(400).json({ error: "Endpoint required" });
+    }
+
+    await pool.query(
+      "UPDATE push_subscriptions SET active = FALSE WHERE endpoint = $1",
+      [endpoint]
+    );
+
+    console.log("[push] Unsubscribed:", endpoint.slice(0, 60) + "...");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[push] Unsubscribe error:", err);
+    res.status(500).json({ error: "Failed to unsubscribe" });
+  }
+});
+
+// Send push notification (admin only)
+app.post("/api/push/send", async (req, res) => {
+  try {
+    const { title, body, url, adminKey } = req.body;
+
+    if (adminKey !== process.env.PUSH_ADMIN_KEY) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    if (!title || !body) {
+      return res.status(400).json({ error: "Title and body required" });
+    }
+
+    const { rows: subscriptions } = await pool.query(
+      "SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE active = TRUE"
+    );
+
+    console.log(`[push] Sending "${title}" to ${subscriptions.length} subscribers`);
+
+    const payload = JSON.stringify({ title, body, url: url || "https://dablin.co" });
+
+    let sent = 0, failed = 0;
+    const failedEndpoints = [];
+
+    await Promise.all(subscriptions.map(async (sub) => {
+      try {
+        await webpush.sendNotification({
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth }
+        }, payload);
+        sent++;
+      } catch (err) {
+        failed++;
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          failedEndpoints.push(sub.endpoint);
+        }
+      }
+    }));
+
+    if (failedEndpoints.length > 0) {
+      await pool.query(
+        "UPDATE push_subscriptions SET active = FALSE WHERE endpoint = ANY($1)",
+        [failedEndpoints]
+      );
+      console.log(`[push] Deactivated ${failedEndpoints.length} expired subscriptions`);
+    }
+
+    console.log(`[push] Sent: ${sent}, Failed: ${failed}`);
+    res.json({ success: true, sent, failed, total: subscriptions.length });
+  } catch (err) {
+    console.error("[push] Send error:", err);
+    res.status(500).json({ error: "Failed to send notifications" });
+  }
+});
+
+// Get push stats (admin only)
+app.get("/api/push/stats", async (req, res) => {
+  try {
+    if (req.query.adminKey !== process.env.PUSH_ADMIN_KEY) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { rows } = await pool.query(`
+      SELECT 
+        COUNT(*) FILTER (WHERE active = TRUE) as active,
+        COUNT(*) FILTER (WHERE active = FALSE) as inactive,
+        COUNT(*) as total
+      FROM push_subscriptions
+    `);
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("[push] Stats error:", err);
+    res.status(500).json({ error: "Failed to get stats" });
   }
 });
 
