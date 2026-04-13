@@ -19,29 +19,30 @@ export function usePushNotifications() {
   const [permission, setPermission] = useState('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // FIX 1: was `true`, causing button to show "Enabling..." on mount
 
   useEffect(() => {
     const checkSupport = async () => {
       const supported = 'serviceWorker' in navigator && 'PushManager' in window;
       setIsSupported(supported);
 
-      if (!supported) {
-        setLoading(false);
-        return;
-      }
+      if (!supported) return;
 
       setPermission(Notification.permission);
 
       try {
-        const registration = await navigator.serviceWorker.ready;
+        // FIX 2: add a timeout so navigator.serviceWorker.ready can't hang forever
+        const registration = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Service worker ready timeout')), 5000)
+          )
+        ]);
         const subscription = await registration.pushManager.getSubscription();
         setIsSubscribed(!!subscription);
       } catch (err) {
         console.error('Error checking subscription:', err);
       }
-
-      setLoading(false);
     };
 
     checkSupport();
@@ -53,9 +54,16 @@ export function usePushNotifications() {
     try {
       setLoading(true);
 
-      // Register service worker if not already
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      await navigator.serviceWorker.ready;
+      // Register service worker
+      await navigator.serviceWorker.register('/sw.js');
+
+      // FIX 2: same timeout guard here — prevents infinite "Enabling..." if sw.js fails
+      const registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Service worker ready timeout')), 5000)
+        )
+      ]);
 
       // Request permission
       const perm = await Notification.requestPermission();
@@ -104,10 +112,8 @@ export function usePushNotifications() {
       const subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
-        // Unsubscribe from push manager
         await subscription.unsubscribe();
 
-        // Remove from backend
         await fetch('https://dablin-backend-production.up.railway.app/api/push/unsubscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
