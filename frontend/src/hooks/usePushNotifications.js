@@ -73,7 +73,7 @@ export function usePushNotifications() {
       });
 
       // Send subscription to backend
-      const response = await fetch('/api/push/subscribe', {
+      const response = await fetch('https://dablin-backend-production.up.railway.app/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription.toJSON())
@@ -108,7 +108,7 @@ export function usePushNotifications() {
         await subscription.unsubscribe();
 
         // Remove from backend
-        await fetch('/api/push/unsubscribe', {
+        await fetch('https://dablin-backend-production.up.railway.app/api/push/unsubscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ endpoint: subscription.endpoint })
