@@ -963,7 +963,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     if (/paypal|stripe-button|apple-pay|google-pay/.test(htmlLower)) ecomScore += 1;
     if (/name="quantity"|type="number".*cart/.test(htmlLower)) ecomScore += 1;
     const hasPlatformFingerprint = /cdn\.shopify\.com|myshopify\.com|woocommerce|wc-cart|wc-block|magento|prestashop|bigcommerce|ecwid\.com/.test(htmlLower);
-    const isEcom = hasPlatformFingerprint || ecomScore >= 6;
+    const isEcom = hasPlatformFingerprint || ecomScore >= 7;
 
     // SaaS signals
     let saasScore = 0;
@@ -974,7 +974,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     if (/dashboard|sign.?up|log.?in|get.started/i.test(html)) saasScore += 1;
     if (/api|integration|webhook|sdk/i.test(html)) saasScore += 1;
     const isSaaS = !isEcom && saasScore >= 3;
-    console.log("[siteType debug] ecomScore:", ecomScore, "saasScore:", saasScore, "isEcom:", isEcom, "isSaaS:", isSaaS);
+    
 
     // ── CHECK 10: Product/Software schema (context-aware) ─────
     let productSchemaOk = false;
