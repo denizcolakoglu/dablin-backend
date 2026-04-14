@@ -156,16 +156,35 @@ function OnPageLayout({ result, fixes, expanded, onToggle }) {
       <div style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.8px", color: "#9ab09c", marginBottom: "10px" }}>{title}</div>
       {checks.map((check, i) => (
         <div key={check.key} style={{ borderTop: i > 0 ? "1px solid #eef2ee" : "none", paddingTop: i > 0 ? "10px" : 0, marginTop: i > 0 ? "10px" : 0 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
-            <div>
-              <div style={{ fontSize: "13px", fontWeight: "600", color: "#0d1f0e", marginBottom: "2px" }}>{check.label}</div>
-              <div style={{ fontSize: "11px", color: "#9ab09c", lineHeight: "1.4" }}>{check.desc}</div>
-              {!result && <div style={{ fontSize: "11px", color: "#b8c8b9", lineHeight: "1.4", marginTop: "3px", fontStyle: "italic" }}>{check.what}</div>}
-            </div>
-            {result ? statusPill(check) : (
-              <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: "1.5px solid #d0e8d4", flexShrink: 0, display: "inline-block", marginTop: "2px" }} />
-            )}
-          </div>
+          {(() => {
+            const isProductSchemaCheck = check.key === "productSchema";
+            const siteType = result?.siteType;
+            const isSkipped = isProductSchemaCheck && siteType === "content";
+            const dynamicLabel = isProductSchemaCheck
+              ? siteType === "ecom" ? "Product schema"
+              : siteType === "saas" ? "Software application schema"
+              : "Product / software schema"
+              : check.label;
+            const dynamicDesc = isProductSchemaCheck
+              ? siteType === "ecom" ? "Product type schema for Google Shopping eligibility"
+              : siteType === "saas" ? "SoftwareApplication schema for rich results eligibility"
+              : "Not applicable for content or blog sites"
+              : check.desc;
+            return (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", opacity: isSkipped ? 0.45 : 1 }}>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: isSkipped ? "#9ab09c" : "#0d1f0e", marginBottom: "2px" }}>{dynamicLabel}</div>
+                  <div style={{ fontSize: "11px", color: "#9ab09c", lineHeight: "1.4" }}>{dynamicDesc}</div>
+                  {!result && <div style={{ fontSize: "11px", color: "#b8c8b9", lineHeight: "1.4", marginTop: "3px", fontStyle: "italic" }}>{check.what}</div>}
+                </div>
+                {result ? (isSkipped ? (
+                  <span style={{ fontSize: "11px", fontWeight: "700", padding: "2px 9px", borderRadius: "20px", background: "#f3f4f6", color: "#9ab09c", border: "1px solid #e5e7eb", whiteSpace: "nowrap" }}>N/A</span>
+                ) : statusPill(check)) : (
+                  <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: "1.5px solid #d0e8d4", flexShrink: 0, display: "inline-block", marginTop: "2px" }} />
+                )}
+              </div>
+            );
+          })()}
           {/* AI fix */}
           {result && result.issues[check.key] && (
             <div>
@@ -178,10 +197,10 @@ function OnPageLayout({ result, fixes, expanded, onToggle }) {
                   <pre style={{ fontSize: "11px", color: "#0d1f0e", whiteSpace: "pre-wrap", fontFamily: "'Roboto Mono',monospace", lineHeight: "1.6", margin: 0 }}>{fixes[check.key]}</pre>
                 </div>
               )}
-              {check.key === "productSchema" && (
-                <div style={{ background: "white", border: "1px solid #eef2ee", borderRadius: "7px", padding: "7px 10px", marginTop: "6px", fontSize: "11px", color: "#6b7280", display: "flex", gap: "5px" }}>
-                  <span style={{ color: "#b45309", flexShrink: 0 }}>ℹ</span>
-                  <span><strong style={{ color: "#4a6b4c" }}>Not an e-commerce page?</strong> You can safely skip this — Product schema is only needed for product pages.</span>
+              {check.key === "productSchema" && result?.siteType === "content" && (
+                <div style={{ background: "#f8faf8", border: "1px solid #eef2ee", borderRadius: "7px", padding: "7px 10px", marginTop: "6px", fontSize: "11px", color: "#9ab09c", display: "flex", gap: "5px" }}>
+                  <span style={{ flexShrink: 0 }}>ℹ</span>
+                  <span>Not applicable — product schema is not required for content or blog sites.</span>
                 </div>
               )}
             </div>

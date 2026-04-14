@@ -1289,6 +1289,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       images_missing_alt: missingAlt,
       word_count: wordCount,
       pageSpeed,
+      siteType: isEcom ? "ecom" : isSaaS ? "saas" : "content",
     });
 
   } catch (err) {
