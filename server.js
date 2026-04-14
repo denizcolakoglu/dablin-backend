@@ -946,15 +946,61 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     const viewport = $('meta[name="viewport"]').attr("content") || "";
     const viewportOk = viewport.length > 0;
 
-    // ── CHECK 10: Product schema type ────────────────────────
+    // ── SITE TYPE DETECTION ───────────────────────────────────
+    const htmlLower = html.toLowerCase();
+    const urlLower = url.toLowerCase();
+
+    // Ecom signals
+    let ecomScore = 0;
+    if (/cdn\.shopify\.com|myshopify\.com/.test(htmlLower)) ecomScore += 3;
+    if (/woocommerce|wc-cart|wc-block/.test(htmlLower)) ecomScore += 3;
+    if (/magento|mage\/|prestashop|bigcommerce|ecwid\.com/.test(htmlLower)) ecomScore += 3;
+    if (/\/products\/|\/product\/|\/shop\/|\/store\/|\/collections\/|\/catalog\//.test(urlLower)) ecomScore += 2;
+    if (/add.to.cart|add to bag|buy now/i.test(html)) ecomScore += 2;
+    if (/data-product-id|data-variant-id|data-sku/.test(htmlLower)) ecomScore += 2;
+    if (/"@type"\s*:\s*"Product"/i.test(html)) ecomScore += 2;
+    if (/og:type.*product|product:price/.test(htmlLower)) ecomScore += 2;
+    if (/paypal|stripe-button|apple-pay|google-pay/.test(htmlLower)) ecomScore += 1;
+    if (/name="quantity"|type="number".*cart/.test(htmlLower)) ecomScore += 1;
+    const isEcom = ecomScore >= 3;
+
+    // SaaS signals
+    let saasScore = 0;
+    if (/free.trial|start.for.free|try.for.free/i.test(html)) saasScore += 2;
+    if (/per.month|\/month|per.year|\/year|billed.annually/i.test(html)) saasScore += 2;
+    if (/pricing|plans?.&.pricing|choose.a.plan/i.test(html)) saasScore += 1;
+    if (/SoftwareApplication|WebApplication/.test(html)) saasScore += 3;
+    if (/dashboard|sign.?up|log.?in|get.started/i.test(html)) saasScore += 1;
+    if (/api|integration|webhook|sdk/i.test(html)) saasScore += 1;
+    const isSaaS = !isEcom && saasScore >= 3;
+
+    // ── CHECK 10: Product/Software schema (context-aware) ─────
     let productSchemaOk = false;
-    schemaScripts.each((_, el) => {
-      try {
-        const json = JSON.parse($(el).html());
-        const types = Array.isArray(json) ? json.map(j => j["@type"]) : [json["@type"]];
-        if (types.some(t => t === "Product")) productSchemaOk = true;
-      } catch {}
-    });
+    let productSchemaSkipped = false;
+
+    if (isEcom) {
+      // Ecom: must have Product schema
+      schemaScripts.each((_, el) => {
+        try {
+          const json = JSON.parse($(el).html());
+          const types = Array.isArray(json) ? json.map(j => j["@type"]) : [json["@type"]];
+          if (types.some(t => t === "Product")) productSchemaOk = true;
+        } catch {}
+      });
+    } else if (isSaaS) {
+      // SaaS: check for SoftwareApplication schema
+      schemaScripts.each((_, el) => {
+        try {
+          const json = JSON.parse($(el).html());
+          const types = Array.isArray(json) ? json.map(j => j["@type"]) : [json["@type"]];
+          if (types.some(t => t === "SoftwareApplication" || t === "WebApplication")) productSchemaOk = true;
+        } catch {}
+      });
+    } else {
+      // Content/blog/agency: skip entirely, no penalty
+      productSchemaOk = true;
+      productSchemaSkipped = true;
+    }
 
     // ── CHECK 11: Breadcrumb schema ──────────────────────────
     let breadcrumbOk = false;
@@ -1116,7 +1162,10 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
       issues.og = `Missing Open Graph tags: ${missing.join(", ")}`;
     }
     if (!viewportOk) issues.viewport = "No viewport meta tag — page may not be mobile-friendly";
-    if (!productSchemaOk) issues.productSchema = "No Product schema found — missing Google Shopping eligibility";
+    if (!productSchemaOk) {
+      if (isEcom) issues.productSchema = "No Product schema found — missing Google Shopping eligibility and rich results";
+      else if (isSaaS) issues.productSchema = "No SoftwareApplication schema found — add it to improve rich results eligibility for your app";
+    }
     if (!breadcrumbOk) issues.breadcrumb = "No BreadcrumbList schema — navigation context missing for Google";
     if (!reviewSchemaOk) issues.reviewSchema = "No review/rating schema — missing star ratings in search results";
     if (!internalLinksOk) issues.internalLinks = `Only ${internalLinks} internal link${internalLinks === 1 ? "" : "s"} found — aim for at least 3 to improve crawlability and topical authority`;
@@ -1164,7 +1213,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
             : `This meta description is too short (${metaDesc.length} chars). Expand to 120-155 chars. Return ONLY the new text, no quotes.\nCurrent: ${metaDesc}\n${contentContext}`,
           og: `Write Open Graph meta tags for this page. Return ONLY valid HTML meta tags for og:title, og:description, og:image (use a placeholder image URL). No explanation.\n${contentContext}`,
           schema: `Write a basic JSON-LD schema for this page. Return ONLY the <script type="application/ld+json"> block. No explanation.\n${contentContext}`,
-          productSchema: `Write a complete JSON-LD Product schema with name, description, url, and offers. Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
+          productSchema: isEcom ? `Write a complete JSON-LD Product schema with name, description, url, and offers (price, availability). Return ONLY the <script type="application/ld+json"> block.\n${contentContext}` : `Write a complete JSON-LD SoftwareApplication schema with name, description, url, applicationCategory, and offers (price, priceCurrency). Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
           breadcrumb: `Write a JSON-LD BreadcrumbList schema for this page. Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
           reviewSchema: `Add aggregateRating to a Product schema (ratingValue: 4.5, reviewCount: 12). Return ONLY the <script type="application/ld+json"> block.\n${contentContext}`,
           canonical: canonicalIssue
