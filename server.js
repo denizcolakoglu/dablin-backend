@@ -962,6 +962,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     if (/og:type.*product|product:price/.test(htmlLower)) ecomScore += 2;
     if (/paypal|stripe-button|apple-pay|google-pay/.test(htmlLower)) ecomScore += 1;
     if (/name="quantity"|type="number".*cart/.test(htmlLower)) ecomScore += 1;
+    console.log("[ecom debug] ecomScore:", ecomScore, "saasScore:", saasScore, "url:", url);
     const hasPlatformFingerprint = /cdn\.shopify\.com|myshopify\.com|woocommerce|wc-cart|wc-block|magento|prestashop|bigcommerce|ecwid\.com/.test(htmlLower);
     const isEcom = hasPlatformFingerprint || ecomScore >= 6;
 
