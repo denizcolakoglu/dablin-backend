@@ -974,6 +974,7 @@ app.post("/api/audit", requireAuth(), async (req, res) => {
     if (/dashboard|sign.?up|log.?in|get.started/i.test(html)) saasScore += 1;
     if (/api|integration|webhook|sdk/i.test(html)) saasScore += 1;
     const isSaaS = !isEcom && saasScore >= 3;
+    console.log("[siteType debug] ecomScore:", ecomScore, "saasScore:", saasScore, "isEcom:", isEcom, "isSaaS:", isSaaS);
     
 
     // ── CHECK 10: Product/Software schema (context-aware) ─────
